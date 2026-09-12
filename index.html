@@ -123,8 +123,11 @@
   #intro .icard.on { opacity: 1; }
   #intro .true { font-family: Georgia, "Times New Roman", serif; font-size: clamp(34px, 6vw, 84px); letter-spacing: 0.35em; text-transform: uppercase; font-weight: normal; margin: 0; }
   #intro .story { font-family: Georgia, "Times New Roman", serif; font-size: clamp(19px, 2.1vw, 34px); line-height: 1.7; max-width: 1100px; margin: 0; }
+  #intro .title .photos .ph { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transform: scale(1); transition: opacity 1.4s ease, transform 4.2s linear; filter: grayscale(1) sepia(0.35) contrast(1.05) brightness(0.5); }
+  #intro .title .photos .ph.on { opacity: 1; transform: scale(1.07); }
+  #intro .title .tt { position: relative; }
   #intro .title h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(38px, 7vw, 96px); letter-spacing: 0.12em; font-weight: normal; margin: 0; text-shadow: 0 2px 40px rgba(0, 0, 0, 0.85); transform: scale(0.96); transition: transform 6s ease-out; }
-  #intro .title.on h1 { transform: scale(1.04); }
+  #intro .title.on h1 { transform: scale(1.04); transition-duration: 11s; }
   #intro .title .sub { letter-spacing: 0.45em; text-transform: uppercase; font-size: 13px; color: #d8b56a; margin-top: 20px; }
   #intro .scenes { padding: 0; }
   #intro .still { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transform: scale(1); transition: opacity 1s ease, transform 7s linear; filter: sepia(0.22) saturate(0.88) contrast(1.05); }
@@ -133,7 +136,11 @@
   #intro .bars i:first-child { top: 0; } #intro .bars i:last-child { bottom: 0; }
   #intro .grain { position: absolute; inset: -20%; pointer-events: none; opacity: 0.13; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); animation: grain 0.5s steps(4) infinite; }
   @keyframes grain { 0% { transform: translate(0, 0); } 25% { transform: translate(-3%, 2%); } 50% { transform: translate(2%, -3%); } 75% { transform: translate(-1%, -2%); } 100% { transform: translate(3%, 1%); } }
-  #intro .skip { position: absolute; right: 26px; bottom: 11vh; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; opacity: 0.45; }
+  #intro .skip { position: absolute; right: 26px; bottom: 11vh; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; opacity: 0.55; cursor: pointer; padding: 6px 10px; border: 1px solid rgba(241,232,210,0.35); border-radius: 3px; }
+  /* mission-start cinematic: letterbox bars, no instruments until the crew are aboard */
+  body.cine::before, body.cine::after { content: ""; position: fixed; left: 0; right: 0; height: 9vh; background: #000; z-index: 30; pointer-events: none; }
+  body.cine::before { top: 0; } body.cine::after { bottom: 0; }
+  body.cine #hud, body.cine #lever, body.cine #plot, body.cine #asv, body.cine #gun-cam { display: none !important; }
   /* automated gunner window: the GL canvas draws the gunner's view under this frame */
   #gun-cam { position: fixed; top: 44px; right: 14px; width: 300px; display: none; border: 2px solid #c8b27a; border-radius: 4px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6); overflow: hidden; font-family: monospace; font-size: 12px; }
   #gun-cam .bar { display: flex; justify-content: space-between; align-items: center; padding: 3px 8px; background: rgba(20, 18, 12, 0.85); color: #f1e8d2; }

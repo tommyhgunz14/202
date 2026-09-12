@@ -94,6 +94,21 @@ about six seconds of stills of the crew walking out along the jetty and boarding
 Kodachrome-style images generated with Atlas, `assets/intro/`, with a slow push-in and film
 grain). Any key, click or controller button skips to the menu.
 
+After "A True Story.." and the situation card, the title sits over three of the archive
+photographs dissolving into one another, then the three crew stills follow. Only Escape,
+Enter, Space, a controller button or the skip label end the intro, so a click to focus the
+window does not lose it.
+
+Every sortie opens in the world: the crew walk out along the pontoon at New Camp, cross the
+gangplank and climb into the moored aircraft one by one while the camera dollies along the
+pontoon, and only then are the engines started (about twelve seconds; Escape, Enter, Space or
+a controller button skips). The figures, and the marshallers and groundcrew on the pontoon,
+are built to an Atlas reference sheet of 1941 Coastal Command aircrew: Irvin jackets, Mae
+Wests, fleece-topped flying boots, parachute bags, side caps, overalls and bats, jointed at
+hips, knees, shoulders and elbows with a walk cycle (`src/world/crew.js`). Inside the moles the
+water is sheltered, so the swell no longer washes over the pontoon; the windsock and the
+yellow flag are cloth in a light wind.
+
 The sortie screen carries a cinematic panel on the right: the aircraft's recognition card, the
 crew walking out and boarding, and two of seven period photographs in the style of RAF official
 pictures (a London refuelling at the Gun Wharf, a briefing on the North Mole, a Swordfish on the

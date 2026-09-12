@@ -27,6 +27,7 @@ const VERT_WAVES = WAVES.filter((w) => w[2] >= 60);
 // build the vertex shader with real amplitudes (template above keeps the structure readable)
 const VERT_SRC = /* glsl */`
 uniform float uTime;
+uniform vec3 uShelter;   // harbour centre x, z and radius: the moles keep the swell out
 varying vec3 vWorld;
 varying float vWave;
 void main() {
@@ -34,6 +35,7 @@ void main() {
   vec3 p = wp.xyz; float t = uTime;
   float h = 0.0;
   ${VERT_WAVES.map(([dx, dz, L, A, s], i) => `{ float k = 6.2832 / ${L.toFixed(1)}; float w = sqrt(9.81 * k) * ${s.toFixed(2)}; h += ${A.toFixed(3)} * sin(k * (${dx.toFixed(3)} * p.x + ${dz.toFixed(3)} * p.z) - w * t + ${(i * 1.7).toFixed(2)}); }`).join('\n  ')}
+  h *= mix(0.06, 1.0, smoothstep(uShelter.z, uShelter.z * 1.7, length(p.xz - uShelter.xy)));
   wp.y += h;
   vWave = h;
   vWorld = wp.xyz;
@@ -53,6 +55,7 @@ uniform float uWorldHalf;
 uniform vec3 uShallowCol;
 uniform vec2 uNearC;
 uniform float uNearHalf;
+uniform vec3 uShelter;
 varying vec3 vWorld;
 varying float vWave;
 ${NOISE}
@@ -82,6 +85,9 @@ void main() {
   dz += near * (0.55 * n1z + 0.35 * n2z);
   float far = 1.0 - exp(-dist * 0.00045);
   dx *= 1.0 - 0.8 * far; dz *= 1.0 - 0.8 * far;
+  // calm inside the moles: the long-wave slope goes, only a little ripple stays
+  float shelter = mix(0.25, 1.0, smoothstep(uShelter.z, uShelter.z * 1.7, length(p.xz - uShelter.xy)));
+  dx *= shelter; dz *= shelter;
   vec3 N = normalize(vec3(-dx, 1.0, -dz));
   // colour: depth tint by wave height, sky by Fresnel
   float fres = pow(1.0 - max(dot(N, V), 0.0), 3.5);
@@ -138,6 +144,7 @@ export function buildSea(sunDir, fogColor, fogDensity, depthTex = null) {
       uFogDensity: { value: fogDensity },
       uDepth: { value: depthTex }, uWorldHalf: { value: WORLD_HALF }, uShallowCol: { value: new THREE.Color(0x2f9c95) },
       uNearC: { value: new THREE.Vector2(0, 0) }, uNearHalf: { value: 0 },
+      uShelter: { value: new THREE.Vector3(1e9, 1e9, 1) },
     },
   });
   const group = new THREE.Group();
@@ -158,10 +165,12 @@ export function buildSea(sunDir, fogColor, fogDensity, depthTex = null) {
 
 // Shared sea clock: main.js advances it and feeds the shader from it, so seaHeight() below
 // matches what is drawn.
-export const SEA = { t: 0 };
+export const SEA = { t: 0, shelter: { x: 1e9, z: 1e9, r: 1 } };
+// same shelter factor as the vertex shader, so floating objects agree with the drawn surface
+function shelterAt(x, z) { const d = Math.hypot(x - SEA.shelter.x, z - SEA.shelter.z), r = SEA.shelter.r; const k = Math.min(1, Math.max(0, (d - r) / (r * 0.7))); return 0.06 + 0.94 * k * k * (3 - 2 * k); }
 // Height of the swell at a world point (matches the vertex shader) for floating objects.
 export function seaHeight(x, z, t = SEA.t) {
   let h = 0;
   VERT_WAVES.forEach(([dx, dz, L, A, s], i) => { const k = Math.PI * 2 / L, w = Math.sqrt(9.81 * k) * s; h += A * Math.sin(k * (dx * x + dz * z) - w * t + i * 1.7); });
-  return h;
+  return h * shelterAt(x, z);
 }

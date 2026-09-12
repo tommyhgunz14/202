@@ -4,7 +4,7 @@ import { buildTerrain, terrainHeight, buildDepthTexture } from './world/terrain.
 import { buildSea, SEA, seaHeight } from './world/sea.js';
 import { buildSky, buildClouds } from './world/sky.js';
 import { loadPanorama, buildPanoramaSky } from './world/skybox.js';
-import { buildHarbour, JETTY, ENTRANCE, updateMarshallers } from './world/harbour.js';
+import { buildHarbour, JETTY, ENTRANCE, updateMarshallers, updateFlags } from './world/harbour.js';
 import { loadOrPlaceholder, findNamed, findAllNamed } from './loader.js';
 import { Flight } from './flight.js';
 import { Input } from './input.js';
@@ -21,6 +21,7 @@ import { UI } from './ui.js';
 import { buildCockpitInterior, buildGunnerOverlay } from './cockpitModel.js';
 import { spawnBandit } from './bandits.js';
 import { runIntro } from './intro.js';
+import { startWalkout } from './walkout.js';
 import { MISSIONS, SKIES, PILOT } from './data/missions.js';
 import { AIRCRAFT } from './data/aircraft.js';
 
@@ -83,6 +84,7 @@ function applySky(name) {
   sky = buildSky(dir, p); scene.add(sky);
   if (sea) scene.remove(sea);
   sea = buildSea(dir, p.fog, p.fogDensity, depthTex); scene.add(sea);
+  if (harbour) { const sh = harbour.userData.shelter; sea.material.uniforms.uShelter.value.set(sh.x, sh.z, sh.r); SEA.shelter = sh; }
   scene.fog = new THREE.FogExp2(p.fog, p.fogDensity);
   const gen = ++skyGen;
   (panoramas[name] ||= loadPanorama(`assets/sky/${name}.jpg`).catch(() => null)).then((tex) => {
@@ -153,6 +155,7 @@ function clearMission() {
   G.plane = null; G.flight = null;
   for (const b of G.bandits) scene.remove(b.group);
   G.bandits = []; G.pendingBandits = []; G.gunners = {}; pipClose();
+  if (G.cine) { G.cine.dispose(); G.cine = null; document.body.classList.remove('cine'); }
   if (G.interior) { cockpitScene.remove(G.interior.group); G.interior = null; }
   if (G.gunOverlay) { cockpitScene.remove(G.gunOverlay.group); G.gunOverlay = null; }
   for (const t of weapons.tracers) scene.remove(t.mesh);
@@ -241,14 +244,13 @@ async function startMission(mission, spec) {
   G.events = [];
   G.view = 'chase';
   if (mission.rules && mission.rules.range) hud.log('Range procedure: cycle the gun positions with V / Y; the rafts score bullseye inside 10 m, near inside 25 m, wide inside 50 m.');
-  hud.log(`${mission.date} — ${mission.title}. ${spec.name} ${spec.code} moored in Gibraltar harbour. Engines running.`);
-  hud.log(`Captain: ${PILOT.rank1} ${PILOT.name}. Taxi out through the north entrance (the marshallers will see you off), then full throttle in the Bay and hold the nose up past ${(spec.stall * 1.1).toFixed(0)} mph.`);
   audio.init(); audio.resume();
   audio.music.setMood('patrol');
-  audio.startEngines(spec.engines.startsWith('4') ? 4 : spec.engines.startsWith('2') ? 2 : 1, spec.id === 'swordfish' ? 70 : 55);
-  setTimeout(() => G.running && audio.say('voice_bow_ready', 999), 2500);
-  document.getElementById('hud').style.display = 'block';
   document.body.classList.add('flying');
+  // the crew walk out along the pontoon and board before the engines are started
+  const BEAMS = { catalina: 3.1, london: 3.2, sunderland: 3.4, swordfish: 2.2 };
+  G.cine = startWalkout(scene, plane, JETTY, harbour.userData.pontoon, { crew: spec.crew, beam: BEAMS[spec.id] || 3 });
+  document.body.classList.add('cine');
   if (titlePlane) titlePlane.visible = false;
   G.running = true;
 }
@@ -256,6 +258,18 @@ ui.onStart = startMission;
 // launch intro: shown once per page load, before the title menu (skippable)
 ui.hide();
 runIntro(document.body, input, { onDone: () => { ui.show(); if (audio.ctx) audio.music.setMood('menu'); } });
+
+// crew aboard: engines started, HUD shown, briefing on the log (also reached by skipping)
+function finishWalkout() {
+  if (!G.cine) return;
+  G.cine.dispose(); G.cine = null; document.body.classList.remove('cine');
+  const spec = G.spec, mission = G.mission;
+  hud.log(`${mission.date} — ${mission.title}. ${spec.name} ${spec.code} moored in Gibraltar harbour. Crew aboard, engines running.`);
+  hud.log(`Captain: ${PILOT.rank1} ${PILOT.name}. Taxi out through the north entrance (the marshallers will see you off), then full throttle in the Bay and hold the nose up past ${(spec.stall * 1.1).toFixed(0)} mph.`);
+  audio.startEngines(spec.engines.startsWith('4') ? 4 : spec.engines.startsWith('2') ? 2 : 1, spec.id === 'swordfish' ? 70 : 55);
+  setTimeout(() => G.running && audio.say('voice_bow_ready', 999), 2500);
+  document.getElementById('hud').style.display = 'block';
+}
 
 // ---------- automated gunners: intercom and the window at top right ----------
 const GUN_LABELS = { gun_dorsal: 'Midships gunner', gun_tail: 'Tail gunner', gun_waist_l: 'Port gunner', gun_waist_r: 'Starboard gunner', gun_nose: 'Bow gunner' };
@@ -443,6 +457,15 @@ function fmtClock(s) { const h = Math.floor(s / 3600) % 24, m = Math.floor(s / 6
 
 function update(dt) {
   const f = G.flight, p = f.obj.position;
+  if (G.cine) {
+    // the walk-out: Escape, Enter, Space or a controller button (edge keys read before poll clears them)
+    const m = input.menuPoll();
+    const ctl = input.poll(dt);
+    G.cine.update(dt, camera);
+    updateFlags(G.time); G.time += dt;
+    if (G.cine.finished || m.accept || m.back || ctl.pause || ctl.fire) finishWalkout();
+    return;
+  }
   const ctl = input.poll(dt);
   if (ctl.pause) { G.paused = !G.paused; pauseEl.style.display = G.paused ? 'flex' : 'none'; }
   if (G.paused) return;
@@ -770,6 +793,7 @@ function update(dt) {
     st.guide = G.taxiedOut ? 'IN THE BAY \u2014 full throttle, hold the nose up to lift off' : 'TAXI OUT: north entrance brg ' + be.toFixed(0).padStart(3, '0') + '\u00b0 \u00b7 ' + de.toFixed(0) + ' m \u2014 keep under 15 mph between the moles';
   }
   updateMarshallers(p, f.onWater, G.time);
+  updateFlags(G.time);
   // hide the hull below the sea surface: clip at the local swell height while on or just above it
   waterClip.constant = (f.onWater || p.y < 6) ? -(seaHeight(p.x, p.z) - 0.02) : 1e6;
   // gulls over the harbour when taxiing

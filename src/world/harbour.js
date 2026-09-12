@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildFigure, animateFigure } from './crew.js';
 import { HARBOUR, PLACES } from '../data/geo.js';
 import { toWorld } from '../config.js';
 import { terrainHeight } from './terrain.js';
@@ -43,6 +44,7 @@ const drum = new THREE.MeshStandardMaterial({ color: 0x4a4f55, roughness: 0.6, m
 export const JETTY = { x: 0, z: 0, heading: 0 };
 export const ENTRANCE = { x: 0, z: 0 };   // mid-point of the north entrance between the North and Detached Moles
 export const MARSHALLERS = [];            // figures on the pontoon that wave the aircraft in
+const FLAGS = [];                          // windsock and flag meshes with vertex animation
 
 const khaki = new THREE.MeshStandardMaterial({ color: 0x8a7d5a, roughness: 0.95 });
 const skin = new THREE.MeshStandardMaterial({ color: 0xc9a07a, roughness: 0.9 });
@@ -52,19 +54,8 @@ const paddle = new THREE.MeshStandardMaterial({ color: 0xffd23c, roughness: 0.7,
 // A marshaller: RAF working dress, cap, a bat in each hand; the arms pivot at the shoulder so the
 // game can wave them. Groundcrew are the same figure with the bats left out.
 function figure(x, y, z, facing, bats = true) {
-  const f = new THREE.Group(); f.position.set(x, y, z); f.rotation.y = facing;
-  const legs = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.85, 0.22), navy); legs.position.y = 0.43; f.add(legs);
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.6, 0.26), khaki); torso.position.y = 1.15; f.add(torso);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), skin); head.position.y = 1.6; f.add(head);
-  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.08, 10), navy); cap.position.y = 1.7; f.add(cap);
-  const arms = [];
-  for (const s of [-1, 1]) {
-    const shoulder = new THREE.Group(); shoulder.position.set(s * 0.28, 1.4, 0); f.add(shoulder);
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.62, 0.12), khaki); arm.position.y = -0.31; shoulder.add(arm);
-    if (bats) { const bat = new THREE.Mesh(new THREE.CircleGeometry(0.16, 12), paddle); bat.material.side = THREE.DoubleSide; bat.position.set(0, -0.72, 0); shoulder.add(bat); }
-    arms.push(shoulder);
-  }
-  f.userData.arms = arms; f.userData.bats = bats;
+  // marshallers in overalls with bats, groundcrew in battledress and cork jackets (crew.js)
+  const f = buildFigure(bats ? 'marshaller' : 'groundcrew'); f.position.set(x, y, z); f.rotation.y = facing;
   return f;
 }
 
@@ -94,17 +85,28 @@ function buildJetty(g) {
   const hut = new THREE.Mesh(new THREE.BoxGeometry(4, 2.6, 3), new THREE.MeshStandardMaterial({ color: 0x6f6d66, roughness: 0.8 })); hut.position.set(px + 4, 2.5, pz - 16); g.add(hut);
   const bowser = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 3, 12), new THREE.MeshStandardMaterial({ color: 0x8a2f24, roughness: 0.6 })); bowser.rotation.z = Math.PI / 2; bowser.position.set(px - 4, 1.9, pz + 15); g.add(bowser);
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 9, 6), white); pole.position.set(px, 5.5, pz - 19); g.add(pole);
-  const sock = new THREE.Mesh(new THREE.ConeGeometry(0.5, 2.4, 8, 1, true), new THREE.MeshStandardMaterial({ color: 0xff7a1a, side: THREE.DoubleSide })); sock.rotation.z = Math.PI / 2; sock.position.set(px - 1.4, 9.6, pz - 19); g.add(sock);
+  // windsock: a tapered sleeve on a swivel, its cloth rippled and sagging by vertex animation
+  const sockGeo = new THREE.CylinderGeometry(0.22, 0.5, 2.6, 10, 8, true); sockGeo.rotateZ(Math.PI / 2); sockGeo.translate(-1.3, 0, 0);
+  const sock = new THREE.Mesh(sockGeo, new THREE.MeshStandardMaterial({ color: 0xff7a1a, side: THREE.DoubleSide, roughness: 0.9 }));
+  sock.position.set(px, 9.6, pz - 19); g.add(sock);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.03, 6, 16), drum); ring.rotation.y = Math.PI / 2; sock.add(ring);
+  sock.userData.rest = sockGeo.attributes.position.array.slice(); FLAGS.push({ mesh: sock, kind: 'sock' });
   const fpole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 14, 6), white); fpole.position.set(px, 8, pz + 19); g.add(fpole);
-  const flag = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 2), new THREE.MeshStandardMaterial({ color: 0xffd23c, side: THREE.DoubleSide, emissive: 0x6a5000, emissiveIntensity: 0.6 })); flag.position.set(px - 1.7, 14.2, pz + 19); g.add(flag);
+  const flagGeo = new THREE.PlaneGeometry(3.2, 2, 18, 8); flagGeo.translate(-1.6, 0, 0);
+  const flag = new THREE.Mesh(flagGeo, new THREE.MeshStandardMaterial({ color: 0xffd23c, side: THREE.DoubleSide, emissive: 0x6a5000, emissiveIntensity: 0.6, roughness: 0.9 }));
+  flag.position.set(px - 0.1, 14.2, pz + 19); g.add(flag);
+  flag.userData.rest = flagGeo.attributes.position.array.slice(); FLAGS.push({ mesh: flag, kind: 'flag' });
   JETTY.x = px - 12; JETTY.z = pz; JETTY.heading = Math.PI / 2;
   g.userData.jetty = JETTY;
+  g.userData.pontoon = { x: px, z: pz, halfW: 7, deckY: 1.2, hut: { x: px + 4, z: pz - 16 } };
   // marshallers at the pontoon's west edge facing out over the water, groundcrew by the hut
   for (const [mx, mz, bats] of [[px - 6.5, pz - 6, true], [px - 6.5, pz + 8, true], [px + 2, pz - 12, false], [px + 5, pz + 10, false]]) {
     const fig = figure(mx, 1.2, mz, -Math.PI / 2, bats); g.add(fig); MARSHALLERS.push(fig);
   }
   const e0 = toWorld(HARBOUR.northMole[2][0], HARBOUR.northMole[2][1]), e1 = toWorld(HARBOUR.detachedMole[0][0], HARBOUR.detachedMole[0][1]);
   ENTRANCE.x = (e0.x + e1.x) / 2 - 20; ENTRANCE.z = (e0.z + e1.z) / 2;
+  // sheltered water: the swell is broken by the moles, so inside this radius the sea lies flat
+  g.userData.shelter = { x: (px + ENTRANCE.x) / 2 - 150, z: (pz + ENTRANCE.z) / 2, r: 900 };
 }
 
 export function buildHarbour() {
@@ -167,14 +169,47 @@ export function buildHarbour() {
 
 // Wave the aircraft in: bats overhead and crossing when it is inside 400 m on the water, a slow
 // "come ahead" sweep further out, arms down otherwise.
+// cloth in a light westerly: waves run down the flag from the hoist, growing toward the fly,
+// with a slower flap laid over; the windsock swings on its swivel and its tail sags and ripples
+export function updateFlags(t) {
+  const gust = 0.7 + 0.3 * Math.sin(t * 0.37) * Math.sin(t * 0.91 + 1.3);
+  for (const { mesh, kind } of FLAGS) {
+    const pos = mesh.geometry.attributes.position, rest = mesh.userData.rest;
+    if (kind === 'flag') {
+      for (let i = 0; i < pos.count; i++) {
+        const x = rest[i * 3], y = rest[i * 3 + 1];
+        const u = -x / 3.2;                                    // 0 at the hoist, 1 at the fly
+        const wave = Math.sin(u * 9.0 - t * 7.5) * 0.3 * u + Math.sin(u * 4.0 - t * 3.1 + y) * 0.14 * u + Math.sin(u * 15.0 - t * 11.0) * 0.05 * u;
+        pos.setXYZ(i, x, y - 0.12 * u * u * (1.2 - gust) + Math.sin(u * 6.0 - t * 5.0) * 0.05 * u, wave * gust);
+      }
+      mesh.rotation.y = 0.15 * Math.sin(t * 0.8) + 0.1 * Math.sin(t * 2.3);
+    } else {
+      for (let i = 0; i < pos.count; i++) {
+        const x = rest[i * 3], y = rest[i * 3 + 1], z = rest[i * 3 + 2];
+        const u = -x / 2.6;                                    // 0 at the ring, 1 at the tail
+        const sag = -1.1 * u * u * (1.15 - gust);              // tail droops as the wind falls
+        const ripple = Math.sin(u * 7.0 - t * 6.0) * 0.13 * u + Math.sin(u * 13.0 - t * 9.5) * 0.04 * u;
+        pos.setXYZ(i, x, y + sag + ripple, z + Math.sin(u * 5.0 - t * 4.2 + 0.7) * 0.07 * u);
+      }
+      mesh.rotation.y = 0.35 * Math.sin(t * 0.55) + 0.12 * Math.sin(t * 1.9);
+    }
+    pos.needsUpdate = true; mesh.geometry.computeVertexNormals();
+  }
+}
+
 export function updateMarshallers(planePos, onWater, t) {
   const d = Math.hypot(planePos.x - JETTY.x, planePos.z - JETTY.z);
   for (const fig of MARSHALLERS) {
-    const arms = fig.userData.arms; if (!arms) continue;
-    const hasBats = !!fig.userData.bats;
+    const u = fig.userData; if (!u.arms) continue;
     let target = 0;
-    if (onWater && hasBats && d < 400) target = d < 60 ? Math.PI * 0.95 : Math.PI * 0.75 + Math.sin(t * 5) * 0.55;
-    else if (onWater && hasBats && d < 1200) target = Math.PI * 0.5 + Math.sin(t * 2.2) * 0.5;
-    for (const a of arms) a.rotation.z = a.rotation.z + ((a === arms[0] ? target : -target) - a.rotation.z) * 0.15;
+    if (onWater && u.bats && d < 400) target = d < 60 ? Math.PI * 0.95 : Math.PI * 0.75 + Math.sin(t * 5) * 0.55;
+    else if (onWater && u.bats && d < 1200) target = Math.PI * 0.5 + Math.sin(t * 2.2) * 0.5;
+    u.batsUp = target > 0.2;
+    for (let i = 0; i < 2; i++) {
+      const sh = u.arms[i].shoulder, goal = i === 0 ? target : -target;
+      sh.rotation.z += (goal - sh.rotation.z) * 0.15;
+      if (u.batsUp) { sh.rotation.x = 0; u.arms[i].elbow.rotation.x = -0.15; }
+    }
+    animateFigure(fig, t, 0);
   }
 }
