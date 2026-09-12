@@ -173,7 +173,12 @@ src/data/           aircraft specs, missions, coastline/peaks
 assets/             one Three.js module per aircraft / vessel (404 contract)
 docs/               STYLE-LOCK.md, ASSET-BRIEF.md, HISTORY.md (sources & accuracy)
 tools/geo-test.mjs  quick check of land/sea classification
+tools/atlas-review.mjs  sends captured frames to the exported Atlas art-review API
 ```
+
+While `node serve.mjs` is running, the page can save what it is drawing: `POST /_capture?name=x`
+with a JPEG data URL as the body writes `captures/x.jpg` (ignored by git). `window.DBG.frame()`
+renders one frame on demand, which is how the review captures were taken.
 
 ## Accuracy
 
