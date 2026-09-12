@@ -68,8 +68,11 @@ void main() {
   ${WAVES.map(([ddx, ddz, L, A, s], i) => `{ float k = 6.2832 / ${L.toFixed(1)}; float w = sqrt(9.81 * k) * ${s.toFixed(2)}; float c = ${A.toFixed(3)} * k * cos(k * (${ddx.toFixed(3)} * p.x + ${ddz.toFixed(3)} * p.z) - w * t + ${(i * 1.7).toFixed(2)}); dx += c * ${ddx.toFixed(3)}; dz += c * ${ddz.toFixed(3)}; }`).join('\n  ')}
   // ripple from scrolled noise, two scales, fading with distance
   float near = exp(-dist * 0.0018);
-  vec2 q1 = p.xz * 0.28 + vec2(t * 0.35, -t * 0.22);
-  vec2 q2 = p.xz * 0.075 + vec2(-t * 0.12, t * 0.09);
+  // seen from height the surface should barely shimmer: ripple and surf motion slow as the camera climbs
+  float hiSlow = mix(1.0, 0.2, clamp(cameraPosition.y / 120.0, 0.0, 1.0));
+  float tr = t * hiSlow;
+  vec2 q1 = p.xz * 0.28 + vec2(tr * 0.35, -tr * 0.22);
+  vec2 q2 = p.xz * 0.075 + vec2(-tr * 0.12, tr * 0.09);
   float e = 0.35;
   float n1x = vnoise(q1 + vec2(e, 0.0)) - vnoise(q1 - vec2(e, 0.0));
   float n1z = vnoise(q1 + vec2(0.0, e)) - vnoise(q1 - vec2(0.0, e));
@@ -97,7 +100,9 @@ void main() {
   vec3 col = mix(base, uSky, fres * 0.7 * (1.0 - 0.5 * shallow));
   // surf: broken white water where the swell runs into the last couple of metres of depth
   float surfBand = (1.0 - smoothstep(-0.2, 2.6, depth)) * smoothstep(-1.2, 0.0, depth);
-  float surfN = fbm(p.xz * 0.35 + vec2(t * 0.25, -t * 0.18)) + 0.35 * sin(depth * 2.5 - t * 1.6);
+  // the breakers creep rather than race: slow base motion, slowed again as the camera climbs
+  float ts = t * 0.35 * hiSlow;
+  float surfN = fbm(p.xz * 0.35 + vec2(ts * 0.25, -ts * 0.18)) + 0.35 * sin(depth * 2.5 - ts * 1.6);
   float surf = surfBand * smoothstep(0.35, 0.75, surfN) * near;
   col = mix(col, vec3(0.94, 0.96, 0.97), clamp(surf, 0.0, 1.0) * 0.85);
   // sun glitter: broad soft lobe plus a tight one, both modulated by ripple so it sparkles
