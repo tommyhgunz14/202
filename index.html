@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guardians of the Rock — 202 Squadron, Gibraltar</title>
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.js", "three/addons/utils/BufferGeometryUtils.js": "./vendor/BufferGeometryUtils.js", "three/addons/loaders/GLTFLoader.js": "./vendor/GLTFLoader.js" } }</script>
+<style>
+  :root { --paper: #e7dfc8; --ink: #1c1a16; --blue: #1f3468; --red: #a02a30; --brass: #b08d3e; --ok: #4fa36a; --bad: #d84a3a; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1b2a; font-family: "Gill Sans", "Trebuchet MS", "Segoe UI", sans-serif; color: var(--paper); }
+  #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  /* menus */
+  #ui { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(8,20,32,0.25), rgba(4,10,18,0.7)); overflow: auto; padding: 20px; }
+  .title-card { text-align: center; max-width: 720px; }
+  .crest { display: inline-block; width: 92px; height: 92px; border-radius: 50%; border: 4px solid var(--brass); line-height: 84px; font-size: 34px; font-weight: 700; color: var(--brass); letter-spacing: 2px; background: rgba(0,0,0,0.35); margin-bottom: 10px; }
+  h1 { font-size: 44px; margin: 4px 0; letter-spacing: 1px; font-weight: 600; }
+  h2 { font-size: 18px; font-weight: 400; margin: 2px 0 12px; color: #c9c2ac; letter-spacing: 2px; text-transform: uppercase; }
+  h3 { margin: 14px 0 6px; font-weight: 600; color: var(--brass); font-size: 15px; letter-spacing: 1px; text-transform: uppercase; }
+  .tag { color: #bfb9a5; font-size: 16px; }
+  .hint, .small { color: #9d9884; font-size: 12.5px; }
+  .card { background: rgba(14, 22, 30, 0.92); border: 1px solid rgba(176,141,62,0.45); border-radius: 6px; padding: 22px 28px; max-width: 980px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .card h1 { font-size: 30px; }
+  .card .sub { color: #bfb9a5; margin-top: -4px; }
+  .brief { font-size: 15px; line-height: 1.5; color: #e2dcc8; }
+  .menu { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 16px; align-items: center; }
+  .nav { display: inline-flex; }
+  button { font: inherit; background: rgba(255,255,255,0.06); color: var(--paper); border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; padding: 10px 16px; cursor: pointer; }
+  button:hover { background: rgba(255,255,255,0.14); }
+  button.primary { background: var(--blue); border-color: #4b64a8; font-weight: 600; }
+  button.sel { outline: 2px solid var(--brass); background: rgba(176,141,62,0.18); }
+  .mission-list { display: flex; flex-direction: column; gap: 6px; max-height: 60vh; overflow: auto; }
+  .mission { display: grid; grid-template-columns: 110px 1fr; text-align: left; gap: 0 14px; padding: 8px 12px; }
+  .mission .date { color: var(--brass); font-family: monospace; grid-row: span 2; align-self: center; }
+  .mission .mtitle { font-weight: 600; font-size: 16px; }
+  .mission .msub { color: #bfb9a5; font-size: 12.5px; }
+  .ac-ref { display: block; width: 100%; max-height: 240px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(176,141,62,0.35); margin-bottom: 8px; }
+  .ac-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .ac-detail { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
+  .spec { border-collapse: collapse; font-size: 13px; width: 100%; }
+  .spec td { padding: 3px 8px 3px 0; vertical-align: top; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .spec td:first-child { color: #bfb9a5; width: 90px; white-space: nowrap; }
+  .score { display: grid; grid-template-columns: 90px 1fr 28px; align-items: center; gap: 8px; margin: 5px 0; font-size: 13px; }
+  .score i { display: block; height: 10px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+  .score b { display: block; height: 100%; background: linear-gradient(90deg, #6f8fc9, #b08d3e); }
+  .score.total { border-top: 1px solid rgba(255,255,255,0.15); padding-top: 6px; font-weight: 600; }
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .controls table { font-size: 13px; border-collapse: collapse; }
+  .controls td { padding: 3px 10px 3px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .controls td:first-child { color: var(--brass); white-space: nowrap; font-family: monospace; }
+  .orb pre { background: #efe8d3; color: #2a2418; font-family: "Courier New", monospace; font-size: 12px; padding: 12px; border-radius: 3px; white-space: pre-wrap; max-height: 32vh; overflow: auto; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); }
+  code { background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px; }
+  /* HUD */
+  #hud { position: fixed; inset: 0; pointer-events: none; display: none; }
+  #hud-top { position: absolute; top: 0; left: 0; right: 0; display: flex; gap: 18px; flex-wrap: wrap; padding: 8px 14px; background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0)); font-size: 13px; font-family: monospace; }
+  #hud-top b { color: #ffd27a; }
+  #hud-objectives { position: absolute; top: 44px; left: 14px; font-size: 13.5px; background: rgba(0,0,0,0.35); padding: 8px 10px; border-radius: 4px; max-width: 360px; }
+  #hud-objectives .done { color: var(--ok); } #hud-objectives .failed { color: var(--bad); text-decoration: line-through; }
+  #hud-log { position: absolute; left: 14px; bottom: 14px; width: 520px; font-size: 13px; background: rgba(0,0,0,0.38); padding: 8px 10px; border-radius: 4px; line-height: 1.35; }
+  #hud-log .ok { color: #8fe0a7; } #hud-log .bad { color: #ff8a7a; }
+  #hud-contact { position: absolute; top: 44px; right: 14px; font-size: 13px; background: rgba(0,0,0,0.4); padding: 8px 10px; border-radius: 4px; display: none; text-align: right; }
+  #hud-contact .refcard { display: block; width: 220px; height: 124px; object-fit: cover; border: 1px solid rgba(255,255,255,0.25); border-radius: 3px; margin: 0 0 6px auto; }
+  .idbar { display: inline-block; width: 120px; height: 6px; background: rgba(255,255,255,0.15); vertical-align: middle; margin-right: 6px; }
+  .idbar i { display: block; height: 100%; background: #ffd27a; }
+  #hud-warn { position: absolute; top: 46%; left: 0; right: 0; text-align: center; color: #ff7a5a; font-weight: 700; font-size: 24px; letter-spacing: 6px; text-shadow: 0 0 8px #000; }
+  #hud-guide { position: absolute; top: 60%; left: 0; right: 0; text-align: center; color: #ffd27a; font-family: monospace; font-size: 14px; text-shadow: 0 0 6px #000; }
+  #track-tag { position: absolute; display: none; transform: translate(-50%, -140%); padding: 2px 6px; font-family: monospace; font-size: 11px; color: #ffd27a; background: rgba(0,0,0,0.45); border: 1px solid rgba(255,210,122,0.5); border-radius: 3px; white-space: nowrap; }
+  #track-tag::after { content: ""; position: absolute; left: 50%; bottom: -10px; margin-left: -1px; width: 2px; height: 10px; background: rgba(255,210,122,0.7); }
+  #reticle { position: absolute; left: 50%; top: 50%; width: 60px; height: 60px; margin: -30px 0 0 -30px; border: 2px solid rgba(255,210,122,0.8); border-radius: 50%; display: none; }
+  #reticle::before, #reticle::after { content: ""; position: absolute; background: rgba(255,210,122,0.8); }
+  #reticle::before { left: 50%; top: 8px; bottom: 8px; width: 2px; margin-left: -1px; }
+  #reticle::after { top: 50%; left: 8px; right: 8px; height: 2px; margin-top: -1px; }
+  /* bomb-aimer's sight */
+  #bombsight { position: absolute; inset: 0; display: none; }
+  #bombsight .grat { position: absolute; left: 50%; top: 20%; bottom: 10%; width: 2px; margin-left: -1px; background: linear-gradient(rgba(255,210,122,0), rgba(255,210,122,0.8) 20%, rgba(255,210,122,0.8) 80%, rgba(255,210,122,0)); }
+  #bombsight .drift { position: absolute; left: 30%; right: 30%; top: 62%; height: 2px; background: rgba(255,210,122,0.5); }
+  #impact { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 2px solid #ffd27a; border-radius: 50%; box-shadow: 0 0 6px #000; }
+  #impact i { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; background: #ffd27a; border-radius: 50%; }
+  #impact span { position: absolute; left: 40px; top: 6px; white-space: nowrap; font-family: monospace; font-size: 12px; color: #ffd27a; text-shadow: 0 0 4px #000; }
+  #impact.on { border-color: #ff5a3a; } #impact.on i { background: #ff5a3a; } #impact.on span { color: #ff5a3a; font-weight: 700; }
+  #bombsight .readout { position: absolute; left: 50%; bottom: 12%; transform: translateX(-50%); font-family: monospace; font-size: 13px; color: #ffd27a; text-shadow: 0 0 4px #000; background: rgba(0,0,0,0.35); padding: 4px 8px; border-radius: 3px; }
+  /* instruments */
+  #asv { position: fixed; right: 14px; bottom: 14px; width: 220px; height: 220px; border: 3px solid #2a2d31; border-radius: 6px; background: #0a1a10; display: none; }
+  #plot { position: fixed; right: 244px; bottom: 14px; width: 260px; height: 220px; border: 3px solid #2a2d31; border-radius: 6px; display: none; }
+  #cockpit { position: fixed; left: 0; top: 0; width: 1400px; height: 520px; display: none; }
+  body.flying #asv, body.flying #plot { display: block; }
+  /* in the cockpit view the panels lift clear of the instrument panel */
+  body.cockpit #hud-log { bottom: 28%; width: 420px; }
+  body.cockpit #asv { bottom: 6px; transform: scale(0.68); transform-origin: bottom right; }
+  body.cockpit #plot { bottom: 6px; right: 172px; transform: scale(0.68); transform-origin: bottom right; }
+  body.cockpit #lever { top: 40%; }
+  /* throttle quadrant */
+  #lever { position: fixed; left: 14px; top: 50%; transform: translateY(-50%); width: 92px; height: 300px; display: none; pointer-events: none; font-family: monospace; font-size: 10px; color: #c9c6b5; }
+  body.flying #lever { display: block; }
+  #lever .track { position: absolute; left: 34px; top: 16px; bottom: 16px; width: 10px; background: #2a2b2e; border: 1px solid #55575b; border-radius: 5px; }
+  #lever .knob { position: absolute; left: 20px; width: 38px; height: 16px; margin-top: -8px; background: linear-gradient(#e2c98a, #8f6d2a); border: 1px solid #3a2c10; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.6); }
+  #lever .ticks { position: absolute; left: 4px; top: 16px; bottom: 16px; width: 28px; }
+  #lever .ticks span { position: absolute; right: 0; transform: translateY(-50%); }
+  #lever .ias { position: absolute; left: 66px; top: 16px; bottom: 16px; width: 8px; background: #1a1c1f; border: 1px solid #55575b; border-radius: 4px; overflow: hidden; }
+  #lever .ias i { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(#ffd27a, #b8532f); }
+  #lever .ias b { position: absolute; left: -2px; right: -2px; height: 2px; background: #ff5a3a; }
+  #lever .lbl { position: absolute; left: 0; right: 0; text-align: center; }
+  #lever .lbl.top { top: -2px; }
+  #lever .val { position: absolute; left: 0; right: 0; text-align: center; top: 300px; color: #ffd27a; font-size: 12px; }
+  #pause { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.55); flex-direction: column; gap: 10px; }
+  #pause h1 { font-size: 36px; }
+  @media (max-width: 900px) { .ac-detail, .controls { grid-template-columns: 1fr; } #hud-log { width: 60vw; } #plot { display: none !important; } }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="hud">
+  <div id="hud-top"></div>
+  <div id="hud-objectives"></div>
+  <div id="hud-contact"></div>
+  <div id="hud-warn"></div>
+  <div id="hud-guide"></div>
+  <div id="track-tag"></div>
+  <div id="reticle"></div>
+  <div id="bombsight"><div class="grat"></div><div class="drift"></div><div id="impact"><i></i><span></span></div><div class="readout" id="bs-read"></div></div>
+  <div id="hud-log"></div>
+</div>
+<div id="lever">
+  <div class="lbl top">THROTTLE · IAS</div>
+  <div class="ticks"><span style="top:0%">FULL</span><span style="top:25%">3/4</span><span style="top:50%">1/2</span><span style="top:75%">1/4</span><span style="top:100%">SHUT</span></div>
+  <div class="track"></div><div class="knob" id="lever-knob"></div>
+  <div class="ias"><i id="ias-bar"></i><b id="ias-stall"></b></div>
+  <div class="val" id="lever-val"></div>
+</div>
+<canvas id="cockpit"></canvas>
+<canvas id="plot" width="260" height="220"></canvas>
+<canvas id="asv" width="220" height="220"></canvas>
+<div id="pause">
+  <h1>Paused</h1>
+  <div class="menu">
+    <button id="btn-resume" class="primary">Resume</button>
+    <button id="btn-view">Switch view</button>
+    <button id="btn-abandon">Abandon sortie</button>
+  </div>
+</div>
+<div id="ui"></div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

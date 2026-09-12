@@ -1,0 +1,6 @@
+node_modules/
+assets/_verify/
+_verify/
+*.tmp.jpg
+.DS_Store
+Thumbs.db

@@ -1,0 +1,171 @@
+# Guardians of the Rock
+
+A browser game about **No. 202 Squadron RAF at Gibraltar, 1939–1943**, flown from the seat of
+Squadron Leader (later Wing Commander) **T. Q. Horner**. Flying-boat patrols over the Strait of
+Gibraltar: find and identify the shipping in the narrows, report it by W/T, and attack the enemy
+submarines with guns and depth charges while leaving the neutrals alone.
+
+Built to the [404 game recipe](https://github.com/404-Repo/404-game-recipe): every aircraft and
+vessel is a Three.js module that returns a `Group` (no mesh files, no textures), verified from
+four sides with the recipe's harness. Runs from a folder with no build step.
+
+## Run it
+
+```bash
+npm start
+```
+
+then open <http://localhost:8202>. (Any static file server works; the game is plain ES modules
+with a vendored `three.module.js`.)
+
+## Play
+
+- **Title → Begin** gives the pilot's page, then the **Operations Record Book**: nine sorties on
+  real dates from the squadron's Gibraltar record, plus a free patrol.
+- **Choose your aircraft** from those the squadron had on that date. Each type shows its
+  performance and eight scores (speed, endurance, climb, agility, payload, defence, detection,
+  toughness) which also drive the flight model:
+  - Saro London Mk II (1939–41) · Fairey Swordfish floatplane (1940–41)
+  - Consolidated Catalina Mk I (1941–) · Short Sunderland Mk I (Dec 1941–Sep 1942)
+- Take off from the Bay: full throttle, hold the nose up past 70–80 mph.
+- **Identify** a vessel by flying within 800 m of it below 1,500 ft. **Report** it (R / X button)
+  to bring the destroyers in. **Attack** submarines low along their length; depth charges sink at
+  ~10 ft/s and detonate at the set depth (25 / 50 / 100 ft).
+- Return and alight in Gibraltar harbour to complete the sortie. The debrief is written as a
+  Form 541 Operations Record Book entry.
+
+## Controls
+
+USB controller (Gamepad API, standard mapping — Xbox, PlayStation and most generic pads):
+
+| Control | Action |
+|---|---|
+| Left stick | Pitch (pull back = nose up) and roll |
+| Right stick X | Rudder |
+| RT / LT, D-pad ↑ ↓ | Throttle |
+| A or RB | Fire guns |
+| B | Drop depth charge / bomb |
+| X | W/T sighting report |
+| Y | Cockpit ⇄ chase view |
+| LB | Depth-charge setting |
+| D-pad ← → | ASV range scale |
+| L3 | Water brake |
+| Start | Pause |
+
+Keyboard: arrows/WASD pitch & roll, Q/E rudder, Shift/Ctrl throttle, Space guns, B drop,
+R report, V view, F depth setting, T ASV range, X brake, Esc pause.
+
+## On the water
+
+The hull floats at its draft and rises on to the step as speed builds, with bow wash and a wake
+astern; the throttle quadrant on the left of the screen shows the lever position beside an
+airspeed strip (red line = stall speed). Ships cruise continuous routes, keep clear of the shore
+and trail wakes.
+
+## Sound
+
+Everything is synthesised in the browser (no audio files): a layered radial-engine model with
+prop-beat and exhaust roar that comes forward when the throttle moves and settles into the
+background, wind rising with airspeed, water wash on the hull while taxiing, and a generative
+string-pad music bed that shifts mood from menu to patrol, to tension on an enemy contact, to a
+pulse under combat. See `src/audio.js` and docs/SOUND.md for ideas on going further.
+
+## Gun positions and bandits
+
+V / Y cycles chase → cockpit → every manned gun the type carries (bow, midships and tail Lewis
+guns on the London; bow, blisters and tunnel on the Catalina; turrets and hatches on the
+Sunderland; the rear Vickers K on the Swordfish). At a gun the stick aims within the mount's arc (left/right as normal, push forward to raise the barrel)
+and the pilot holds the aircraft straight and level. Vichy fighters — Curtiss H-75s of GC I/5
+from Morocco — turn up on some sorties and make firing passes from astern; the crew gunners
+engage automatically and you can take a gun yourself.
+
+## Practice range
+
+The first entry in the operations book is a range four miles south-east of Europa Point: two
+moored rafts with bull's-eyes for depth-charge practice (bullseye inside 10 m = 100, near inside
+25 m = 60, wide inside 50 m = 25), a condemned coaster and a dummy submarine for the guns.
+Accuracy is scored, and hits leave scorch marks, sparks and, when a target is badly hurt, fire.
+
+## Taxiing out
+
+Every sortie starts alongside the jetty at New Camp with the marshallers waving you off. Taxi
+out through the north entrance between the North and Detached Moles (the HUD gives bearing and
+distance) and open up in the Bay. Destroyers you call in engage a surfaced target with their
+4.7-inch guns as they close, and put a shot across the bows of a blockade-runner.
+
+## Landing
+
+Alight in the Bay or the harbour, then taxi to the seaplane jetty at RAF New Camp (the yellow
+flag at the north end of the harbour; bearing and distance are shown once you are down) and stop
+alongside under 3 knots to end the sortie.
+
+## Skies (Atlas)
+
+The four skies (dawn, morning, afternoon, dusk) are photographic 360-degree panoramas generated
+with the Atlas platform (`assets/sky/*.jpg`, 4096x2048). The game finds the sun in each one,
+turns the sky so it matches the sortie's lighting, and takes fog, haze and water colour from the
+image. Delete a file and that time of day falls back to the built-in shader sky.
+`tools/atlas.mjs` is a small JSON-RPC client for the Atlas MCP server (needs `ATLAS_API_KEY`).
+
+## Surfaces and sound (Atlas)
+
+Nine seamless PBR texture sets (albedo, normal, roughness) generated with Atlas dress the world:
+limestone and scrub blended across the terrain by steepness, terracotta tiles and lime render on
+the town, dressed stone on the moles, decking on the jetty, corrugated iron on the catchments,
+tarmac on the runway (`assets/tex/`). Twenty-four generated clips in `assets/sfx/` replace the
+synthesised layers when present: radial-engine idle, cruise and full-power loops crossfaded by
+rpm, water wash, wind, gulls over the harbour, Vickers K and Browning bursts, depth-charge and
+shell splashes, explosions, hits, Morse, and ten crew intercom lines (contact, charges away,
+straddle, fighter astern, she is diving, neutral, W/T sent, down, alongside). Delete any file and
+the synth stands in.
+
+## Reference art and 3D models (Atlas)
+
+Studio-style reference pictures of every vessel and aircraft, generated in their correct schemes,
+appear as recognition cards in the contact panel once a vessel is identified and on the aircraft
+selection screen (`assets/refs/`). Generated GLB meshes are supported too: drop
+`assets/models/<asset>.glb` next to a code asset and `src/models.js` normalises it (length, ground
+level, bow forward, named nodes carried across); `tools/viewer.html?name=<asset>` checks it from
+four sides, and `assets/models/models.json` holds per-model overrides. The Atlas image-to-3D
+backends were not available at this workspace's access level, so the game ships with the code
+assets and the pipeline ready for when they are.
+
+## Tracking a dived boat
+
+When a submarine goes under, her dark shadow stays visible from low level in the clear water until
+about 35 m depth (a tag over it gives range and depth), her periscope cuts a small white feather
+while she is shallow and moving, and a damaged boat vents a trail of bubbles. The plot marks a
+DATUM at her last known position with a dashed circle that grows at her submerged speed, and the
+ASV paints a faint periscope echo inside a quarter of the range scale.
+
+## Instruments
+
+- **ASV Mk II** (Catalina, Sunderland): drawn as the real A-scope — range up the trace, echoes
+  to port or starboard, coastline as a ragged land return. The London and Swordfish have no set.
+- **Navigator's plot**: chart of the Strait, own position, base bearing/distance, identified
+  contacts and W/T reports.
+- **Cockpit panel** (first-person view): airspeed, horizon, climb, altimeter, direction
+  indicator, turn & slip, RPM and boost per engine, stores, fuel, damage.
+
+## Layout
+
+```
+index.html          shell, HUD and menus
+src/main.js         game loop, missions, camera, scoring
+src/flight.js       flight model (type-differentiated)
+src/input.js        keyboard + gamepad
+src/weapons.js      guns, depth charges, splashes, explosions
+src/vessels.js      ship / submarine AI (lookouts, crash dive, flak, destroyer hunts)
+src/radar.js        ASV A-scope and the plot
+src/cockpit.js      instrument panel
+src/world/          terrain (Strait geography), sea, sky, Gibraltar harbour
+src/data/           aircraft specs, missions, coastline/peaks
+assets/             one Three.js module per aircraft / vessel (404 contract)
+docs/               STYLE-LOCK.md, ASSET-BRIEF.md, HISTORY.md (sources & accuracy)
+tools/geo-test.mjs  quick check of land/sea classification
+```
+
+## Accuracy
+
+See [docs/HISTORY.md](docs/HISTORY.md) for what is documented, what is representative and what
+is abridged for play.

@@ -1,0 +1,123 @@
+import * as THREE from 'three';
+import { WORLD_HALF } from '../config.js';
+
+// Sea surface. Vertex: seven directional waves of different lengths, headings and phases summed
+// (no two share a direction, so the swell never reads as a grid). Fragment: the analytic slope of
+// those waves plus two octaves of scrolled value noise for ripple, fading with distance to avoid
+// aliasing; colour from depth-mix, sky reflection by Fresnel, sun glitter, sparse foam flecks on
+// the steepest crests, and the scene fog.
+
+const NOISE = /* glsl */`
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vnoise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+float fbm(vec2 p) { return 0.55 * vnoise(p) + 0.3 * vnoise(p * 2.13 + 7.7) + 0.15 * vnoise(p * 4.31 + 3.1); }
+`;
+
+// wave set: direction (unit), wavelength (m), amplitude (m), speed factor
+const WAVES = [
+  [0.93, 0.36, 260, 0.75, 1.0], [0.62, -0.78, 180, 0.55, 1.1], [-0.20, 0.98, 120, 0.4, 1.25],
+  [0.99, -0.12, 70, 0.28, 1.4], [-0.71, -0.70, 46, 0.18, 1.6], [0.31, 0.95, 28, 0.12, 1.9], [-0.95, 0.30, 17, 0.07, 2.2],
+];
+// build the vertex shader with real amplitudes (template above keeps the structure readable)
+const VERT_SRC = /* glsl */`
+uniform float uTime;
+varying vec3 vWorld;
+varying float vWave;
+void main() {
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vec3 p = wp.xyz; float t = uTime;
+  float h = 0.0;
+  ${WAVES.map(([dx, dz, L, A, s], i) => `{ float k = 6.2832 / ${L.toFixed(1)}; float w = sqrt(9.81 * k) * ${s.toFixed(2)}; h += ${A.toFixed(3)} * sin(k * (${dx.toFixed(3)} * p.x + ${dz.toFixed(3)} * p.z) - w * t + ${(i * 1.7).toFixed(2)}); }`).join('\n  ')}
+  wp.y += h;
+  vWave = h;
+  vWorld = wp.xyz;
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}`;
+
+const FRAG = /* glsl */`
+uniform vec3 uSunDir;
+uniform vec3 uDeep;
+uniform vec3 uShallow;
+uniform vec3 uSky;
+uniform vec3 uFogColor;
+uniform float uFogDensity;
+uniform float uTime;
+varying vec3 vWorld;
+varying float vWave;
+${NOISE}
+void main() {
+  vec3 V = normalize(cameraPosition - vWorld);
+  vec3 p = vWorld; float t = uTime;
+  float dist = length(cameraPosition - vWorld);
+  // analytic slope of the long waves
+  float dx = 0.0, dz = 0.0;
+  ${WAVES.map(([ddx, ddz, L, A, s], i) => `{ float k = 6.2832 / ${L.toFixed(1)}; float w = sqrt(9.81 * k) * ${s.toFixed(2)}; float c = ${A.toFixed(3)} * k * cos(k * (${ddx.toFixed(3)} * p.x + ${ddz.toFixed(3)} * p.z) - w * t + ${(i * 1.7).toFixed(2)}); dx += c * ${ddx.toFixed(3)}; dz += c * ${ddz.toFixed(3)}; }`).join('\n  ')}
+  // ripple from scrolled noise, two scales, fading with distance
+  float near = exp(-dist * 0.0018);
+  vec2 q1 = p.xz * 0.28 + vec2(t * 0.35, -t * 0.22);
+  vec2 q2 = p.xz * 0.075 + vec2(-t * 0.12, t * 0.09);
+  float e = 0.35;
+  float n1x = vnoise(q1 + vec2(e, 0.0)) - vnoise(q1 - vec2(e, 0.0));
+  float n1z = vnoise(q1 + vec2(0.0, e)) - vnoise(q1 - vec2(0.0, e));
+  float n2x = vnoise(q2 + vec2(e, 0.0)) - vnoise(q2 - vec2(e, 0.0));
+  float n2z = vnoise(q2 + vec2(0.0, e)) - vnoise(q2 - vec2(0.0, e));
+  dx += near * (0.55 * n1x + 0.35 * n2x);
+  dz += near * (0.55 * n1z + 0.35 * n2z);
+  float far = 1.0 - exp(-dist * 0.00045);
+  dx *= 1.0 - 0.8 * far; dz *= 1.0 - 0.8 * far;
+  vec3 N = normalize(vec3(-dx, 1.0, -dz));
+  // colour: depth tint by wave height, sky by Fresnel
+  float fres = pow(1.0 - max(dot(N, V), 0.0), 3.5);
+  vec3 base = mix(uDeep, uShallow, clamp(vWave * 0.35 + 0.35, 0.0, 1.0));
+  // subtle large-scale colour variation so the surface is not one flat tone
+  base *= 0.9 + 0.2 * fbm(p.xz * 0.004 + t * 0.01);
+  vec3 col = mix(base, uSky, fres * 0.7);
+  // sun glitter: broad soft lobe plus a tight one, both modulated by ripple so it sparkles
+  vec3 H = normalize(uSunDir + V);
+  float nh = max(dot(N, H), 0.0);
+  float spec = pow(nh, 160.0) * 0.9 + pow(nh, 18.0) * 0.06;
+  col += vec3(1.0, 0.96, 0.88) * spec * (0.6 + 0.4 * near);
+  // foam flecks on steep crests, sparse
+  float crest = clamp((vWave - 0.9) * 1.2, 0.0, 1.0);
+  float fl = fbm(p.xz * 0.6 + vec2(t * 0.3, -t * 0.2));
+  float foam = smoothstep(0.62, 0.8, fl) * crest * near;
+  col = mix(col, vec3(0.93, 0.95, 0.96), foam * 0.7);
+  float fog = 1.0 - exp(-uFogDensity * uFogDensity * dist * dist);
+  col = mix(col, uFogColor, clamp(fog, 0.0, 1.0));
+  gl_FragColor = vec4(col, 1.0);
+}`;
+
+export function buildSea(sunDir, fogColor, fogDensity) {
+  const geo = new THREE.PlaneGeometry(WORLD_HALF * 2.4, WORLD_HALF * 2.4, 220, 220);
+  geo.rotateX(-Math.PI / 2);
+  const mat = new THREE.ShaderMaterial({
+    vertexShader: VERT_SRC, fragmentShader: FRAG,
+    uniforms: {
+      uTime: { value: 0 },
+      uSunDir: { value: sunDir.clone().normalize() },
+      uDeep: { value: new THREE.Color(0x0a3049) },
+      uShallow: { value: new THREE.Color(0x1b6482) },
+      uSky: { value: new THREE.Color(0x9fc0d8) },
+      uFogColor: { value: new THREE.Color(fogColor) },
+      uFogDensity: { value: fogDensity },
+    },
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.y = 0;
+  mesh.renderOrder = -1;
+  return mesh;
+}
+
+// Shared sea clock: main.js advances it and feeds the shader from it, so seaHeight() below
+// matches what is drawn.
+export const SEA = { t: 0 };
+// Height of the swell at a world point (matches the vertex shader) for floating objects.
+export function seaHeight(x, z, t = SEA.t) {
+  let h = 0;
+  WAVES.forEach(([dx, dz, L, A, s], i) => { const k = Math.PI * 2 / L, w = Math.sqrt(9.81 * k) * s; h += A * Math.sin(k * (dx * x + dz * z) - w * t + i * 1.7); });
+  return h;
+}
