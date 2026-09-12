@@ -15,6 +15,14 @@ const PEAKS_W = PEAKS.map(([la, lo, h, r, dir, asp]) => {
 // cliffs. Heights along the ridge from Rock Gun (north, 400 m) to O'Hara's Battery (426 m) then
 // dropping over Windmill Hill to the Europa flats.
 const ROCK = { n: toWorld(36.1625, -5.3435), s: toWorld(36.1230, -5.3440) };
+// where a point sits relative to the ridge: t 0 north .. 1 south, s + = west (world metres)
+export function rockFrame(x, z) {
+  const dx = ROCK.s.x - ROCK.n.x, dz = ROCK.s.z - ROCK.n.z, L = Math.hypot(dx, dz);
+  const ux = dx / L, uz = dz / L;
+  const px = x - ROCK.n.x, pz = z - ROCK.n.z;
+  return { t: (px * ux + pz * uz) / L, s: px * -uz + pz * ux };
+}
+export function rockWestFace(x, z) { const { t, s } = rockFrame(x, z); return t > -0.01 && t < 0.78 && s > -6 && s < 140; }
 function rockHeight(x, z) {
   // parametric position along the ridge
   const dx = ROCK.s.x - ROCK.n.x, dz = ROCK.s.z - ROCK.n.z, L = Math.hypot(dx, dz);
@@ -73,6 +81,18 @@ export function terrainHeight(x, z) {
 
 const LIMESTONE = new THREE.Color(0xb9b09a), LIMESTONE_DK = new THREE.Color(0x8f877a), SCRUB = new THREE.Color(0x5f7040), SCRUB_DRY = new THREE.Color(0x8a8a58);
 const SAND = new THREE.Color(0xe2d4ad), SAND_WET = new THREE.Color(0xb9a884), SHORE_ROCK = new THREE.Color(0x6a635a), MEADOW = new THREE.Color(0x77884a);
+const FIELDS = [new THREE.Color(0xc4b070), new THREE.Color(0x7f8c58), new THREE.Color(0x86984c), new THREE.Color(0x9b7f5c), new THREE.Color(0xb3a866), new THREE.Color(0x6f7f4a)];
+const fhash = (i, j) => { const s = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return s - Math.floor(s); };
+// which field a point lies in: cells of ~150 m on a grid turned 31 degrees, jittered by a hash
+function fieldAt(x, z) {
+  const c = 0.857, s = 0.515;
+  const u = (x * c - z * s) / 150, v = (x * s + z * c) / 210;
+  const i = Math.floor(u), j = Math.floor(v);
+  const id = fhash(i, j);
+  const eu = Math.min(u - i, i + 1 - u), ev = Math.min(v - j, j + 1 - v);
+  const edge = Math.min(1, Math.min(eu, ev) * 12);   // hedge / wall line between fields
+  return { col: FIELDS[Math.floor(id * FIELDS.length) % FIELDS.length], edge, id };
+}
 function shade(h, slope, x = 0, z = 0) {
   // world y in metres; slope = 1 - normal.y (0 flat, 0.5 ≈ 60°). Beaches where the land runs
   // gently into the sea, dark rock where it drops steeply, scrub and dry grass on the slopes,
@@ -88,10 +108,16 @@ function shade(h, slope, x = 0, z = 0) {
   }
   if (h < 12) c.copy(slope < 0.08 ? MEADOW : SCRUB_DRY).lerp(SCRUB, Math.min(1, h / 12) * 0.8 + n * 0.2);
   else c.copy(SCRUB).lerp(SCRUB_DRY, n * 0.35);
+  // farmed patchwork on the gentle low ground
+  const flat = THREE.MathUtils.clamp(1 - slope / 0.13, 0, 1) * THREE.MathUtils.clamp((h - 3.5) / 5, 0, 1) * (1 - THREE.MathUtils.clamp((h - 90) / 60, 0, 1));
+  if (flat > 0) { const f = fieldAt(x, z); c.lerp(f.col, flat * 0.8 * (0.6 + 0.4 * f.edge)); }
   const rockByHeight = THREE.MathUtils.clamp((h - 90) / 120, 0, 1);
   const rockBySlope = THREE.MathUtils.clamp((slope - 0.18) / 0.22, 0, 1);
-  const rock = Math.max(rockByHeight, rockBySlope);
+  let rock = Math.max(rockByHeight, rockBySlope);
+  if (rock > 0 && rockWestFace(x, z)) { rock *= 0.25 + 0.2 * n; c.copy(SCRUB).lerp(new THREE.Color(0x4d6238), 0.5 + 0.3 * n); }
   c.lerp(slope > 0.35 ? LIMESTONE_DK : LIMESTONE, rock * (0.75 + 0.25 * n));
+  // bedding planes in the limestone
+  if (rock > 0.3) c.lerp(LIMESTONE_DK, rock * 0.18 * (0.5 + 0.5 * Math.sin(h * 0.42 + n * 2.0)));
   c.userData = rock;
   return c;
 }

@@ -9,6 +9,17 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 
 createServer(async (req, res) => {
   try {
+    // development helper: POST /_capture?name=x with a data-URL body saves captures/x.jpg
+    if (req.method === 'POST' && req.url.startsWith('/_capture')) {
+      const name = (new URL(req.url, 'http://x').searchParams.get('name') || 'frame').replace(/[^a-z0-9_-]/gi, '');
+      let body = ''; req.on('data', (d) => body += d); await new Promise((r) => req.on('end', r));
+      const m = body.match(/^data:image\/\w+;base64,(.+)$/);
+      if (!m) { res.writeHead(400); return res.end('bad'); }
+      const { mkdirSync, writeFileSync } = await import('fs');
+      mkdirSync(join(ROOT, 'captures'), { recursive: true });
+      writeFileSync(join(ROOT, 'captures', name + '.jpg'), Buffer.from(m[1], 'base64'));
+      res.writeHead(200); return res.end('ok');
+    }
     let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     if (p === '/') p = '/index.html';
     const file = normalize(join(ROOT, p));

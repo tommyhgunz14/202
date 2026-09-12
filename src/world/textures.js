@@ -75,9 +75,17 @@ export function terrainDetail(material, scrubTex, rockTex, metres = 60, sandTex 
       .replace('#include <common>', '#include <common>\nuniform sampler2D tScrub;\nuniform sampler2D tRock;\nuniform sampler2D tSand;\nuniform float uTile;\nvarying float vRock;\nvarying float vSand;\nvarying vec3 vWPos;')
       .replace('#include <color_fragment>', `#include <color_fragment>
         vec2 tuv = vWPos.xz * uTile;
-        // two scales of each map, offset and mixed, so the repeat does not read as a grid
-        vec3 dS = mix(texture2D(tScrub, tuv).rgb, texture2D(tScrub, tuv * 0.37 + 0.5).rgb, 0.5);
-        vec3 dR = mix(texture2D(tRock, tuv * 1.7).rgb, texture2D(tRock, tuv * 0.61 + 0.25).rgb, 0.5);
+        mat2 rot = mat2(0.83, 0.56, -0.56, 0.83);
+        vec2 ruv = rot * tuv;
+        // two scales of each map, the second turned, so the repeat does not read as a grid
+        vec3 dS = mix(texture2D(tScrub, tuv).rgb, texture2D(tScrub, ruv * 0.37 + 0.5).rgb, 0.5);
+        vec3 dR = mix(texture2D(tRock, tuv * 1.7).rgb, texture2D(tRock, ruv * 0.61 + 0.25).rgb, 0.5);
+        // slow brightness variation across hundreds of metres hides the tile period entirely
+        vec2 mp = vWPos.xz * 0.0022; vec2 mi = floor(mp), mf = fract(mp); mf = mf * mf * (3.0 - 2.0 * mf);
+        float mh00 = fract(sin(dot(mi, vec2(127.1, 311.7))) * 43758.5453), mh10 = fract(sin(dot(mi + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5453);
+        float mh01 = fract(sin(dot(mi + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5453), mh11 = fract(sin(dot(mi + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);
+        float macro = mix(mix(mh00, mh10, mf.x), mix(mh01, mh11, mf.x), mf.y);
+        dS *= 0.82 + 0.36 * macro; dR *= 0.85 + 0.3 * macro;
         vec3 dSa = texture2D(tSand, tuv * 3.1).rgb;
         vec3 detail = mix(mix(dS, dR, clamp(vRock, 0.0, 1.0)), dSa, clamp(vSand, 0.0, 1.0));
         // keep the painted tint, let the photo supply the grain

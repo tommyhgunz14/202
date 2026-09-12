@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { terrainHeight, MED, GIB } from './terrain.js';
+import { terrainHeight, MED, GIB, rockWestFace } from './terrain.js';
 import { PLACES } from '../data/geo.js';
 import { toWorld } from '../config.js';
 
@@ -18,17 +18,18 @@ function slopeAt(x, z) {
 }
 
 const towns = PLACES.map((p) => toWorld(p.lat, p.lon));
+const rockWest = rockWestFace;
 function nearTown(x, z) { let best = 1e9; for (const t of towns) best = Math.min(best, Math.hypot(t.x - x, t.z - z)); return best; }
 
 // geometry builders: front +Z irrelevant, base at y = 0, unit height ~1 so instances scale it
 function pineGeo() {
   const trunk = new THREE.CylinderGeometry(0.05, 0.08, 0.5, 6).translate(0, 0.25, 0);
-  const canopy = new THREE.SphereGeometry(0.42, 6, 4).scale(1, 0.62, 1).translate(0, 0.72, 0);   // stone pine umbrella
+  const canopy = new THREE.SphereGeometry(0.5, 7, 5).scale(1, 0.6, 1).translate(0, 0.72, 0);   // stone pine umbrella
   return { trunk, canopy };
 }
 function oakGeo() {
   const trunk = new THREE.CylinderGeometry(0.06, 0.1, 0.3, 6).translate(0, 0.15, 0);
-  const canopy = new THREE.SphereGeometry(0.4, 6, 4).scale(1.1, 0.8, 1).translate(0, 0.52, 0);
+  const canopy = new THREE.SphereGeometry(0.46, 7, 5).scale(1.15, 0.8, 1).translate(0, 0.52, 0);
   return { trunk, canopy };
 }
 function bushGeo() { return { canopy: new THREE.SphereGeometry(0.5, 5, 3).scale(1.2, 0.6, 1).translate(0, 0.3, 0) }; }
@@ -56,11 +57,13 @@ function mergeSimple(geos) {
 }
 
 const KINDS = {
-  pine: { geo: pineGeo, trunk: 0x5a4632, canopy: [0x2f4a2a, 0x3d5a30, 0x365234], h: [9, 16], count: 7000, rule: (h, s, tn) => h > 25 && h < 330 && s < 0.5 && tn > 250 ? 0.9 : 0 },
-  oak: { geo: oakGeo, trunk: 0x5e4a36, canopy: [0x56673a, 0x66744a, 0x4c5f3a], h: [6, 10], count: 5000, rule: (h, s, tn) => h > 4 && h < 140 && s < 0.35 && tn > 300 ? 0.8 : 0 },
-  bush: { geo: bushGeo, trunk: null, canopy: [0x6b7a44, 0x7a8452, 0x5c6b3d, 0x8a8a58], h: [1.5, 3.2], count: 18000, rule: (h, s, tn) => h > 2.5 && h < 380 && s < 0.6 && tn > 150 ? 1 : 0 },
-  cypress: { geo: cypressGeo, trunk: 0x4a3a2a, canopy: [0x223522, 0x2a3f28], h: [8, 14], count: 500, rule: (h, s, tn) => h > 2 && h < 120 && s < 0.3 && tn < 900 && tn > 120 ? 0.9 : 0 },
-  palm: { geo: palmGeo, trunk: 0x7a6248, canopy: [0x4f7a3a, 0x5c8a42], h: [8, 13], count: 300, rule: (h, s, tn) => h > 1.5 && h < 25 && s < 0.2 && tn < 700 && tn > 80 ? 0.9 : 0 },
+  pine: { geo: pineGeo, trunk: 0x5a4632, canopy: [0x44633a, 0x4f7042, 0x5a7a4a], h: [9, 16], count: 7000, grove: [60, 220], rule: (h, s, tn) => h > 25 && h < 330 && s < 0.5 && tn > 250 ? 0.9 : 0 },
+  oak: { geo: oakGeo, trunk: 0x5e4a36, canopy: [0x6f7f4c, 0x7d8c58, 0x687a4a], h: [6, 10], count: 5000, grove: [80, 300], rule: (h, s, tn) => h > 4 && h < 140 && s < 0.35 && tn > 300 ? 0.8 : 0 },
+  bush: { geo: bushGeo, trunk: null, canopy: [0x8a925a, 0x989a64, 0x7c8a54, 0xa39c6a], h: [1.5, 3.2], count: 18000, grove: [40, 160], rule: (h, s, tn) => h > 2.5 && h < 380 && s < 0.6 && tn > 150 ? 1 : 0 },
+  cypress: { geo: cypressGeo, trunk: 0x4a3a2a, canopy: [0x2e4a2e, 0x3a5a36], h: [8, 14], count: 500, rule: (h, s, tn) => h > 2 && h < 120 && s < 0.3 && tn < 900 && tn > 120 ? 0.9 : 0 },
+  rockScrub: { geo: bushGeo, trunk: null, canopy: [0x4f6a3c, 0x5a7444, 0x66804a, 0x587048], h: [2, 4.5], count: 9000, region: 'gib', grove: [30, 90], rule: (h, s, tn, x, z) => rockWest(x, z) && h > 14 && h < 205 && s < 3.0 ? 1 : 0 },
+  rockPine: { geo: pineGeo, trunk: 0x5a4632, canopy: [0x3f5c36, 0x4a6a3e, 0x557846], h: [7, 12], count: 1200, region: 'gib', grove: [40, 120], rule: (h, s, tn, x, z) => rockWest(x, z) && h > 18 && h < 195 && s < 2.4 ? 0.9 : 0 },
+  palm: { geo: palmGeo, trunk: 0x7a6248, canopy: [0x5f8a45, 0x6c9a4e], h: [8, 13], count: 300, rule: (h, s, tn) => h > 1.5 && h < 25 && s < 0.2 && tn < 700 && tn > 80 ? 0.9 : 0 },
 };
 
 export function buildVegetation() {
@@ -70,28 +73,47 @@ export function buildVegetation() {
   for (const [name, K] of Object.entries(KINDS)) {
     const parts = K.geo();
     const placements = [];
+    // grove centres: the woods and scrub of the Campo grow in patches, not as an even sprinkle
+    const groves = [];
+    if (K.grove) {
+      let gt = 0;
+      while (groves.length < K.count / 25 && gt < K.count) {
+        gt++;
+        const R = K.region === 'gib' ? regions[1] : regions[Math.floor(rnd() * regions.length)];
+        const x = R.x + (rnd() * 2 - 1) * R.half, z = R.z + (rnd() * 2 - 1) * R.half;
+        const h = terrainHeight(x, z);
+        if (h > 1.5 && K.rule(h, slopeAt(x, z), nearTown(x, z), x, z) > 0) groves.push({ x, z, r: K.grove[0] + rnd() * (K.grove[1] - K.grove[0]) });
+      }
+    }
     let tries = 0;
-    while (placements.length < K.count && tries < K.count * 6) {
+    while (placements.length < K.count && tries < K.count * 8) {
       tries++;
-      const R = name === 'palm' || name === 'cypress' ? regions[0] : regions[Math.floor(rnd() * regions.length)];
-      const x = R.x + (rnd() * 2 - 1) * R.half, z = R.z + (rnd() * 2 - 1) * R.half;
+      let x, z;
+      if (groves.length && rnd() < 0.8) {
+        const gv = groves[Math.floor(rnd() * groves.length)];
+        const a = rnd() * Math.PI * 2, r = gv.r * Math.sqrt(rnd());
+        x = gv.x + Math.cos(a) * r; z = gv.z + Math.sin(a) * r;
+      } else {
+        const R = K.region === 'gib' ? regions[1] : name === 'palm' || name === 'cypress' ? regions[0] : regions[Math.floor(rnd() * regions.length)];
+        x = R.x + (rnd() * 2 - 1) * R.half; z = R.z + (rnd() * 2 - 1) * R.half;
+      }
       const h = terrainHeight(x, z);
       if (h < 1.5) continue;
       const s = slopeAt(x, z), tn = nearTown(x, z);
-      const p = K.rule(h, s, tn);
+      const p = K.rule(h, s, tn, x, z);
       if (p <= 0 || rnd() > p) continue;
       // clumping: pines and oaks like company
       if ((name === 'pine' || name === 'oak') && rnd() < 0.5 && placements.length) {
         const nb = placements[Math.floor(rnd() * placements.length)];
         const cx = nb.x + (rnd() - 0.5) * 40, cz = nb.z + (rnd() - 0.5) * 40;
         const ch = terrainHeight(cx, cz);
-        if (ch > 1.5 && K.rule(ch, slopeAt(cx, cz), nearTown(cx, cz)) > 0) { placements.push({ x: cx, z: cz, h: ch }); continue; }
+        if (ch > 1.5 && K.rule(ch, slopeAt(cx, cz), nearTown(cx, cz), cx, cz) > 0) { placements.push({ x: cx, z: cz, h: ch }); continue; }
       }
       placements.push({ x, z, h });
     }
     for (const [partName, geo] of Object.entries(parts)) {
       const isTrunk = partName === 'trunk';
-      const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, flatShading: !isTrunk });
+      const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, flatShading: !isTrunk, emissive: isTrunk ? 0x000000 : 0x1c2412 });
       const mesh = new THREE.InstancedMesh(geo, mat, placements.length);
       mesh.castShadow = !isTrunk; mesh.receiveShadow = true;
       placements.forEach((pl, i) => {

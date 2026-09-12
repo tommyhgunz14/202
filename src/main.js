@@ -433,17 +433,17 @@ function update(dt) {
       const k = f.planing, sp = f.speed;
       const vis = Math.min(1, sp / 8);
       wakeFade = vis;
-      const wakeLen = 60 + sp * 5;
+      const wakeLen = 80 + sp * 7;
       // centre trail from the step/stern
       const stern = p.clone().addScaledVector(fw0, -hullLen * 0.45);
       planeWake.centre.visible = true;
       planeWake.centre.position.set(stern.x - Math.sin(yaw) * wakeLen * 0.5, seaHeight(stern.x, stern.z) + 0.2, stern.z - Math.cos(yaw) * wakeLen * 0.5);
-      planeWake.centre.rotation.set(0, yaw, 0); planeWake.centre.scale.set(beam * (3.5 + k * 3), 1, wakeLen);
-      planeWake.centre.material.uniforms.uOpacity.value = 0.75 * vis; planeWake.centre.material.uniforms.uTime.value = G.time * (0.5 + sp / 20);
+      planeWake.centre.rotation.set(0, yaw, 0); planeWake.centre.scale.set(beam * (3.5 + k * 5), 1, wakeLen);
+      planeWake.centre.material.uniforms.uOpacity.value = 0.85 * vis; planeWake.centre.material.uniforms.uTime.value = G.time * (0.5 + sp / 20);
       // stern wash: the churned water thrown up behind the step, widest just astern
       {
         const st = planeWake.stern; st.visible = true;
-        const len = hullLen * (0.8 + k * 0.6), wid = beam * (2.2 + k * 3.5);
+        const len = hullLen * (1.0 + k * 1.2), wid = beam * (2.5 + k * 5.5);
         const head = p.clone().addScaledVector(fw0, -hullLen * 0.25);
         st.position.set(head.x - Math.sin(yaw) * len * 0.5, seaHeight(head.x, head.z) + 0.3, head.z - Math.cos(yaw) * len * 0.5);
         st.rotation.set(0, yaw, 0); st.scale.set(wid, 1, len);
@@ -457,33 +457,33 @@ function update(dt) {
         const origin = p.clone().addScaledVector(fw0, hullLen * 0.35).addScaledVector(sideV, -sgn * beam * 0.9);
         st.visible = true;
         st.position.set(origin.x - Math.sin(ang) * len * 0.5, seaHeight(origin.x, origin.z) + 0.2, origin.z - Math.cos(ang) * len * 0.5);
-        st.rotation.set(0, ang, 0); st.scale.set(beam * 1.8, 1, len);
-        st.material.uniforms.uOpacity.value = 0.55 * vis * (0.4 + 0.6 * k); st.material.uniforms.uTime.value = G.time * (0.4 + sp / 25);
+        st.rotation.set(0, ang, 0); st.scale.set(beam * 2.4, 1, len);
+        st.material.uniforms.uOpacity.value = 0.7 * vis * (0.4 + 0.6 * k); st.material.uniforms.uTime.value = G.time * (0.4 + sp / 25);
       }
       // wash sheets off the chines while on the step
       for (const [key, sgn] of [['washL', 1], ['washR', -1]]) {
         const st = planeWake[key];
-        const on = k > 0.35;
+        const on = k > 0.15;
         st.visible = on;
         if (on) {
-          const len = hullLen * 0.9, spread = beam * (1.2 + k * 2.2);
+          const len = hullLen * 1.2, spread = beam * (1.8 + k * 4.5);
           const origin = p.clone().addScaledVector(fw0, hullLen * 0.42).addScaledVector(sideV, -sgn * beam * 0.7);
           const ang = yaw + sgn * 0.42;
           st.position.set(origin.x - Math.sin(ang) * len * 0.5, seaHeight(origin.x, origin.z) + 0.4, origin.z - Math.cos(ang) * len * 0.5);
           st.rotation.set(0, ang, 0); st.scale.set(spread, 1, len);
-          st.material.uniforms.uOpacity.value = 0.9 * Math.min(1, (k - 0.35) / 0.4); st.material.uniforms.uTime.value = G.time * 1.5;
+          st.material.uniforms.uOpacity.value = 1.0 * Math.min(1, (k - 0.15) / 0.35); st.material.uniforms.uTime.value = G.time * 1.5;
         }
       }
       // chine spray: sheets of droplets thrown out and back from the forward hull
       if (sp > 3) {
-        sprayAcc += dt * Math.min(70, 8 + sp * 1.4 + k * 25);
+        sprayAcc += dt * Math.min(150, 8 + sp * 2.2 + k * 60);
         while (sprayAcc > 1) {
           sprayAcc -= 1;
           const s = Math.random() < 0.5 ? 1 : -1;
           const along = hullLen * (0.05 + Math.random() * 0.45);
           const pos = p.clone().addScaledVector(fw0, along).addScaledVector(sideV, -s * beam * (0.8 + Math.random() * 0.3)).setY(seaHeight(p.x, p.z) + 0.25);
-          const vel = sideV.clone().multiplyScalar(-s * (2.5 + Math.random() * 4 + k * 9)).addScaledVector(fw0, -sp * 0.15 + Math.random() * 2).setY(1.2 + Math.random() * 2.5 + k * 4);
-          weapons.spray(pos, vel, 0.8 + Math.random() * 1.4 + k * 1.2, 0.4 + Math.random() * 0.4);
+          const vel = sideV.clone().multiplyScalar(-s * (2.5 + Math.random() * 5 + k * 13)).addScaledVector(fw0, -sp * 0.15 + Math.random() * 2).setY(1.2 + Math.random() * 3 + k * 7);
+          weapons.spray(pos, vel, 1.4 + Math.random() * 2.2 + k * 3.5, 0.6 + Math.random() * 0.6);
         }
       }
     } else {
@@ -871,6 +871,7 @@ function frame() {
   }
 }
 function loop() { requestAnimationFrame(loop); frame(); }
+window.DBG.frame = frame;
 loop();
 // Fallback: some embedded browsers throttle or suspend requestAnimationFrame; keep the sim alive.
 setInterval(() => { if (performance.now() - lastFrame > 100) frame(); }, 33);

@@ -4,3 +4,4 @@ _verify/
 *.tmp.jpg
 .DS_Store
 Thumbs.db
+captures/
