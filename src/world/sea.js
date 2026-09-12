@@ -91,8 +91,10 @@ void main() {
   gl_FragColor = vec4(col, 1.0);
 }`;
 
+// Two tiers share one material: a coarse far plane covering the whole world and a fine patch
+// (10 m vertex spacing) that follows the camera so the swell has real shape close in.
 export function buildSea(sunDir, fogColor, fogDensity) {
-  const geo = new THREE.PlaneGeometry(WORLD_HALF * 2.4, WORLD_HALF * 2.4, 220, 220);
+  const geo = new THREE.PlaneGeometry(WORLD_HALF * 2.4, WORLD_HALF * 2.4, 160, 160);
   geo.rotateX(-Math.PI / 2);
   const mat = new THREE.ShaderMaterial({
     vertexShader: VERT_SRC, fragmentShader: FRAG,
@@ -106,10 +108,17 @@ export function buildSea(sunDir, fogColor, fogDensity) {
       uFogDensity: { value: fogDensity },
     },
   });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.y = 0;
-  mesh.renderOrder = -1;
-  return mesh;
+  const group = new THREE.Group();
+  group.material = mat;   // shared by both tiers; main.js reads uniforms from here
+  const far = new THREE.Mesh(geo, mat); far.renderOrder = -1; far.frustumCulled = false; group.add(far);
+  const NEAR = 2600, SEG = 260;   // 10 m spacing
+  const ng = new THREE.PlaneGeometry(NEAR, NEAR, SEG, SEG); ng.rotateX(-Math.PI / 2);
+  const near = new THREE.Mesh(ng, mat); near.renderOrder = -1; near.position.y = 0.02; near.frustumCulled = false; group.add(near);
+  group.userData.near = near; group.userData.step = NEAR / SEG;
+  // call every frame with the camera position: the fine patch snaps to its own grid so it does
+  // not swim, and the far plane simply shows through beyond it
+  group.follow = (x, z) => { const st = group.userData.step; near.position.x = Math.round(x / st) * st; near.position.z = Math.round(z / st) * st; };
+  return group;
 }
 
 // Shared sea clock: main.js advances it and feeds the shader from it, so seaHeight() below

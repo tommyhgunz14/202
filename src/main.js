@@ -25,7 +25,7 @@ import { AIRCRAFT } from './data/aircraft.js';
 // ---------- renderer & scene ----------
 const canvas = document.getElementById('gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -838,6 +838,7 @@ function frame() {
   const dt = Math.min(0.05, clock.getDelta());
   SEA.t += dt; if (sea) sea.material.uniforms.uTime.value = SEA.t;
   if (G.running) update(dt); else { ui.poll(); titleCamera(dt); }
+  if (sea && sea.follow) sea.follow(camera.position.x, camera.position.z);
   renderer.clear();
   renderer.render(scene, camera);
   if (G.running && ((G.view === 'cockpit' && G.interior) || (G.view.startsWith('gun:') && G.gunOverlay))) {
