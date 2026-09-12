@@ -22,6 +22,11 @@ and a British male TTS voice). `src/samples.js` loads them; `audio.js` crossfade
 engine loops by rpm, uses the wind and water loops for ambience, plays the one-shots for guns,
 detonations, splashes and hits, and queues crew lines one at a time with a per-line cooldown.
 
+A third pass added 16 gunner intercom lines (`gun_spot_<position>`, `gun_spot_surface`,
+`gun_fire_<position>`, `gun_hits`, `gun_kill_1/2`, `gun_escape_1/2`) in the same British voice,
+used by the automated gunners: sighting, opening fire, hits, the kill, and the fighter breaking
+off. Positions are nose, dorsal, tail, waist_l and waist_r.
+
 ## Ideas for taking it further
 
 1. **Period radio bed** — a filtered "wireless" layer with static, a distant BBC-style voice

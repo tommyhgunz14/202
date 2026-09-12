@@ -79,6 +79,21 @@ and the pilot holds the aircraft straight and level. Vichy fighters — Curtiss 
 from Morocco — turn up on some sorties and make firing passes from astern; the crew gunners
 engage automatically and you can take a gun yourself.
 
+The gunners are crewed. Each position watches its own arc: when a gunner sights a bandit (or a
+surfaced U-boat) he calls it over the intercom, opens fire inside 700 m, reports hits, and
+claims the kill or reports the fighter breaking off for home. While a gunner is engaged a small
+window at the top right shows the view from his gun, titled with the position and weapon, with
+the state of the engagement (Sighted, Engaging, Kill!, Escaped). Taking a gun yourself silences
+that position's automatic fire.
+
+## Launch intro
+
+Each fresh load opens with a short cinematic: "A True Story..", a paragraph on the 1941
+situation and the squadron under Wing Commander T. Q. Horner, the title over the harbour, and
+about six seconds of stills of the crew walking out along the jetty and boarding (three
+Kodachrome-style images generated with Atlas, `assets/intro/`, with a slow push-in and film
+grain). Any key, click or controller button skips to the menu.
+
 ## Practice range
 
 The first entry in the operations book is a range four miles south-east of Europa Point: two

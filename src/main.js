@@ -20,6 +20,7 @@ import { Audio } from './audio.js';
 import { UI } from './ui.js';
 import { buildCockpitInterior, buildGunnerOverlay } from './cockpitModel.js';
 import { spawnBandit } from './bandits.js';
+import { runIntro } from './intro.js';
 import { MISSIONS, SKIES, PILOT } from './data/missions.js';
 import { AIRCRAFT } from './data/aircraft.js';
 
@@ -128,6 +129,7 @@ const ui = new UI(document.getElementById('ui'), input);
 const pauseEl = document.getElementById('pause');
 const BASE = toWorld(36.1400, -5.3720);   // the harbour moorings: alight within 1500 m
 
+const _side = new THREE.Vector3(), _size = new THREE.Vector2();
 const G = {
   running: false, paused: false, mission: null, spec: null, plane: null, flight: null,
   vessels: [], view: 'chase', stores: 0, ammo: 0, fireTimer: 0, dropTimer: 0, time: 0, clock: 0,
@@ -150,7 +152,7 @@ function clearMission() {
   if (G.plane) scene.remove(G.plane);
   G.plane = null; G.flight = null;
   for (const b of G.bandits) scene.remove(b.group);
-  G.bandits = []; G.pendingBandits = [];
+  G.bandits = []; G.pendingBandits = []; G.gunners = {}; pipClose();
   if (G.interior) { cockpitScene.remove(G.interior.group); G.interior = null; }
   if (G.gunOverlay) { cockpitScene.remove(G.gunOverlay.group); G.gunOverlay = null; }
   for (const t of weapons.tracers) scene.remove(t.mesh);
@@ -251,6 +253,60 @@ async function startMission(mission, spec) {
   G.running = true;
 }
 ui.onStart = startMission;
+// launch intro: shown once per page load, before the title menu (skippable)
+ui.hide();
+runIntro(document.body, input, { onDone: () => { ui.show(); if (audio.ctx) audio.music.setMood('menu'); } });
+
+// ---------- automated gunners: intercom and the window at top right ----------
+const GUN_LABELS = { gun_dorsal: 'Midships gunner', gun_tail: 'Tail gunner', gun_waist_l: 'Port gunner', gun_waist_r: 'Starboard gunner', gun_nose: 'Bow gunner' };
+const pipCam = new THREE.PerspectiveCamera(48, 300 / 180, 3.5, 60000);   // near plane clears the gunner's own hull; far reaches the sky sphere
+const pipEl = document.getElementById('gun-cam'), pipTitle = document.getElementById('gun-cam-title'), pipState = document.getElementById('gun-cam-state');
+function pipShow(g, st, label, cls = '') {
+  G.pip = { node: g.node, target: st.target, closeAt: Infinity };
+  pipTitle.textContent = `${GUN_LABELS[g.node] || g.name} · ${g.name}`;
+  pipState.textContent = label; pipState.className = cls;
+  document.body.classList.add('pip');
+}
+function pipSet(label, cls, closeIn) { if (!G.pip) return; pipState.textContent = label; pipState.className = cls; G.pip.closeAt = G.time + closeIn; }
+function pipClose() { G.pip = null; document.body.classList.remove('pip'); }
+function gunnerReport(g, st, kind) {
+  const pos = g.node.replace('gun_', ''), label = GUN_LABELS[g.node] || g.name, tg = st.target;
+  const air = tg && tg.kind === 'aircraft';
+  const mine = G.pip && G.pip.node === g.node;
+  if (kind === 'spot') {
+    ctx.log(`${label}: ${tg.name} ${air ? 'sighted' : 'in sight'}.`, air ? 'bad' : undefined);
+    audio.say(air ? 'gun_spot_' + pos : 'gun_spot_surface', 8);
+    if (!G.pip || G.pip.closeAt < Infinity) pipShow(g, st, 'Sighted');
+  } else if (kind === 'fire') {
+    ctx.log(`${label} opening fire on ${tg.name}.`);
+    audio.say('gun_fire_' + pos, 6);
+    pipShow(g, st, 'Engaging');
+  } else if (kind === 'kill') {
+    ctx.log(`${label}: ${tg.name} destroyed!`, 'ok'); G.score += 60;
+    audio.say(Math.random() < 0.5 ? 'gun_kill_1' : 'gun_kill_2', 2);
+    if (mine) pipSet('Kill!', 'kill', 4); else pipShow(g, st, 'Kill!', 'kill'), pipSet('Kill!', 'kill', 4);
+  } else if (kind === 'sunk') {
+    ctx.log(`${label}: ${tg.name} finished.`, 'ok');
+    if (mine) pipSet('Target sunk', 'kill', 3);
+  } else if (kind === 'escape') {
+    ctx.log(`${label}: ${tg.name} breaking off for home.`);
+    audio.say(Math.random() < 0.5 ? 'gun_escape_1' : 'gun_escape_2', 4);
+    if (mine) pipSet('Escaped', 'esc', 3);
+  } else if (kind === 'lost') {
+    if (mine) pipSet('Lost contact', 'esc', 2);
+  }
+}
+function updatePip() {
+  if (!G.pip) return;
+  if (G.time > G.pip.closeAt || !G.running) { pipClose(); return; }
+  const node = G.gunNodes[G.pip.node]; if (!node || !G.pip.target) { pipClose(); return; }
+  node.getWorldPosition(_v1);
+  _v3.copy(G.pip.target.group.position);
+  _v2.copy(_v3).sub(_v1).normalize();
+  // eye just ahead of the muzzle, a little above the line of fire, so the hull stays out of shot
+  pipCam.position.copy(_v1).addScaledVector(_v2, 0.8); pipCam.position.y += 0.3;
+  pipCam.up.set(0, 1, 0); pipCam.lookAt(_v3);
+}
 
 // ---------- helpers used by vessel AI ----------
 const ctx = {
@@ -323,7 +379,7 @@ function onDetonate(pos, depth) {
 }
 function onHit(v, amount, pos, byCharge = false) {
   if (v === 'player') { G.flight.hit(amount); audio.hitPlayer(); return; }
-  if (v.kind === 'aircraft') { v.damage(amount, ctx); weapons.spark(pos, 1); return; }
+  if (v.kind === 'aircraft') { v.damage(amount, ctx); weapons.spark(pos, 1); if (G.pip && v.alive) audio.say('gun_hits', 14); return; }
   if (v.faction === 'target') { if (!byCharge) G.range.hits += 2; v.damage(amount * (byCharge ? 0.6 : 3), ctx, pos); return; }
   const rules = G.mission.rules || {};
   const protectedName = (rules.noAttack || []).includes(v.name);
@@ -520,30 +576,54 @@ function update(dt) {
     weapons.fireTracer(_v1, dir, 500 + f.speed, false, 0.012);
     audio.gun(/Browning/.test(g.name) ? 'browning' : 'vickers');
   }
-  // crew gunners engage surfaced hostiles automatically
+  // automated gunners: each position watches its arc, calls the sighting, opens fire and
+  // reports the result over the intercom; the window at top right shows the gunner engaged
   G.crewGunTimer -= dt;
-  if (G.crewGunTimer <= 0) {
-    G.crewGunTimer = 0.09;
-    const hostiles = [...G.bandits.filter((b) => b.alive), ...G.vessels];
+  const gunTick = G.crewGunTimer <= 0; if (gunTick) G.crewGunTimer = 0.09;
+  {
+    const hostiles = [...G.bandits, ...G.vessels];
+    G.gunners = G.gunners || {};
     for (const g of G.spec.guns.slice(1)) {
       const node = G.gunNodes[g.node]; if (!node) continue;
-      if (manning && G.view === 'gun:' + g.node) continue;
-      for (const v of hostiles) {
-        if (v.kind === 'aircraft') { if (v.group.position.distanceTo(p) > 700) continue; }
-        else {
-          if (!v.alive || (v.faction !== 'german' && v.faction !== 'italian') || (v.kind === 'submarine' && !v.surfaced)) continue;
-          if (v.kind !== 'submarine' && v.hit <= 0) continue;   // do not shoot merchants unprovoked
-          if (v.group.position.distanceTo(p) > 650) continue;
-        }
-        node.getWorldPosition(_v1);
-        _v3.copy(v.group.position).setY(1).sub(_v1).normalize();
+      const st = G.gunners[g.node] || (G.gunners[g.node] = { state: 'idle', target: null, t: 0 });
+      st.t += dt;
+      if (manning && G.view === 'gun:' + g.node) { st.state = 'idle'; st.target = null; continue; }
+      node.getWorldPosition(_v1);
+      const gg = G.gunGeom[g.node];
+      const inArc = (v) => {
+        _v3.copy(v.group.position); if (v.kind !== 'aircraft') _v3.setY(1); _v3.sub(_v1).normalize();
         const rel = f.forward(_v2).dot(_v3);
-        const gg = G.gunGeom[g.node];
-        const ok = g.arc === 'rear' ? rel < -0.2 : g.arc === 'upper' ? true : (g.arc === 'left' || g.arc === 'right') ? _v3.dot(new THREE.Vector3(gg ? gg.side : 1, 0, 0).applyQuaternion(f.obj.quaternion)) > 0.3 : rel > 0.3;
-        if (!ok) continue;
-        weapons.fireTracer(_v1, _v3, 500, false, v.kind === 'aircraft' ? 0.05 : 0.03);
-        if (Math.random() < 0.3) audio.gun();
-        break;
+        return g.arc === 'rear' ? rel < -0.2 : g.arc === 'upper' ? true : (g.arc === 'left' || g.arc === 'right') ? _v3.dot(_side.set(gg ? gg.side : 1, 0, 0).applyQuaternion(f.obj.quaternion)) > 0.3 : rel > 0.3;
+      };
+      const valid = (v) => {
+        if (v.kind === 'aircraft') return v.alive && !v.remove && v.group.position.distanceTo(p) < 1000;
+        if (!v.alive || (v.faction !== 'german' && v.faction !== 'italian') || (v.kind === 'submarine' && !v.surfaced)) return false;
+        if (v.kind !== 'submarine' && v.hit <= 0) return false;   // do not shoot merchants unprovoked
+        return v.group.position.distanceTo(p) < 800;
+      };
+      if (st.target && !(valid(st.target) && inArc(st.target))) {
+        const tg = st.target;
+        if (tg.kind === 'aircraft' && !tg.alive) gunnerReport(g, st, 'kill');
+        else if (tg.kind === 'aircraft' && (tg.state === 'leave' || tg.remove)) gunnerReport(g, st, 'escape');
+        else if (tg.kind !== 'aircraft' && !tg.alive) gunnerReport(g, st, 'sunk');
+        else gunnerReport(g, st, 'lost');
+        st.target = null; st.state = 'idle';
+      }
+      if (!st.target) {
+        for (const v of hostiles) if (valid(v) && inArc(v)) { st.target = v; st.state = 'sighted'; st.t = 0; gunnerReport(g, st, 'spot'); break; }
+      }
+      if (!st.target) continue;
+      const d = st.target.group.position.distanceTo(p);
+      const range = st.target.kind === 'aircraft' ? 700 : 650;
+      if (d < range && st.t > 0.5) {
+        if (st.state !== 'firing') { st.state = 'firing'; gunnerReport(g, st, 'fire'); }
+        if (gunTick) {
+          _v3.copy(st.target.group.position); if (st.target.kind !== 'aircraft') _v3.setY(1);
+          if (st.target.kind === 'aircraft' && st.target.heading != null) _v3.x += Math.sin(st.target.heading) * 8, _v3.z += Math.cos(st.target.heading) * 8;   // a little lead
+          _v3.sub(_v1).normalize();
+          weapons.fireTracer(_v1, _v3, 500, false, st.target.kind === 'aircraft' ? 0.05 : 0.03, g.node);
+          if (Math.random() < 0.3) audio.gun();
+        }
       }
     }
   }
@@ -868,6 +948,18 @@ function frame() {
     if (G.interior) G.interior.group.visible = G.view === 'cockpit';
     if (G.gunOverlay) G.gunOverlay.group.visible = G.view.startsWith('gun:');
     renderer.clearDepth(); renderer.render(cockpitScene, cockpitCam);
+  }
+  if (G.running && G.pip) {
+    updatePip();
+    if (G.pip) {
+      const fr = document.getElementById('gun-cam-frame').getBoundingClientRect();
+      renderer.getSize(_size);
+      const x = fr.left, y = _size.y - fr.bottom, w = fr.width, h = fr.height;
+      pipCam.aspect = w / h; pipCam.updateProjectionMatrix();
+      renderer.setScissorTest(true); renderer.setScissor(x, y, w, h); renderer.setViewport(x, y, w, h);
+      renderer.clear(); renderer.render(scene, pipCam);
+      renderer.setScissorTest(false); renderer.setViewport(0, 0, _size.x, _size.y);
+    }
   }
 }
 function loop() { requestAnimationFrame(loop); frame(); }
