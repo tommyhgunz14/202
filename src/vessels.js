@@ -133,7 +133,7 @@ export class Vessel {
     {
       const look = 400 + speed * 40;
       const ax = g.position.x + Math.sin(this.heading) * look, az = g.position.z + Math.cos(this.heading) * look;
-      if (terrainHeight(ax, az) > -14) {
+      if (terrainHeight(ax, az) > -9) {
         const lx = g.position.x + Math.sin(this.heading + 0.6) * look, lz = g.position.z + Math.cos(this.heading + 0.6) * look;
         const rx = g.position.x + Math.sin(this.heading - 0.6) * look, rz = g.position.z + Math.cos(this.heading - 0.6) * look;
         this.heading += (terrainHeight(lx, lz) < terrainHeight(rx, rz) ? 1 : -1) * 0.25 * dt;
@@ -142,7 +142,7 @@ export class Vessel {
     g.position.x += Math.sin(this.heading) * speed * dt;
     g.position.z += Math.cos(this.heading) * speed * dt;
     // never sit on the land: slide back to water
-    if (terrainHeight(g.position.x, g.position.z) > -8) { const w = findWater(g.position.x, g.position.z, -12); g.position.x = w.x; g.position.z = w.z; }
+    if (terrainHeight(g.position.x, g.position.z) > -5) { const w = findWater(g.position.x, g.position.z, -8); g.position.x = w.x; g.position.z = w.z; }
     g.rotation.y = this.heading;
     // submarine depth logic
     if (this.kind === 'submarine') {
@@ -278,7 +278,7 @@ export class Vessel {
 // Nearest open water (below -6 m) to a point, searched in widening rings. Keeps ships off beaches.
 // Ships keep to water deeper than 20 m on the game's shelving seabed, which puts them a couple
 // of miles off the beaches rather than hugging the shore.
-export function findWater(x, z, minDepth = -20) {
+export function findWater(x, z, minDepth = -12) {
   if (terrainHeight(x, z) < minDepth) return { x, z };
   for (let r = 150; r < 8000; r += 150) {
     for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {

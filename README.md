@@ -138,6 +138,16 @@ while she is shallow and moving, and a damaged boat vents a trail of bubbles. Th
 DATUM at her last known position with a dashed circle that grows at her submerged speed, and the
 ASV paints a faint periscope echo inside a quarter of the range scale.
 
+## The look of the Strait
+
+The world is meant to carry the game: a noise-based sea with a fine mesh under the camera,
+seabed-aware water that goes turquoise over the beaches and breaks in a surf line, gently
+shelving shores with sand, wet sand, meadow and dark rock where the land drops steeply, a finer
+terrain tier around the narrows, and tens of thousands of instanced stone pines, cork oaks,
+lentisk scrub, cypresses and palms placed by height, slope and distance from the towns. A warm
+vignette grade sits over the frame. On the water the hull is clipped at the local swell height,
+and the flying boat throws chine spray, wash sheets, a churned stern wash and a Kelvin V-wake.
+
 ## Instruments
 
 - **ASV Mk II** (Catalina, Sunderland): drawn as the real A-scope — range up the trace, echoes

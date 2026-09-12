@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { toWorld, H_SCALE, FT, MPH, KT } from './config.js';
-import { buildTerrain, terrainHeight } from './world/terrain.js';
+import { buildTerrain, terrainHeight, buildDepthTexture } from './world/terrain.js';
 import { buildSea, SEA, seaHeight } from './world/sea.js';
 import { buildSky, buildClouds } from './world/sky.js';
 import { loadPanorama, buildPanoramaSky } from './world/skybox.js';
@@ -12,6 +12,7 @@ import { Weapons } from './weapons.js';
 import { spawnVessel } from './vessels.js';
 import { foamStrip } from './world/foam.js';
 import { buildTown } from './world/buildings.js';
+import { buildVegetation } from './world/vegetation.js';
 import { Radar } from './radar.js';
 import { Hud } from './hud.js';
 import { Cockpit } from './cockpit.js';
@@ -30,7 +31,10 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.95;
+renderer.toneMappingExposure = 1.0;
+renderer.localClippingEnabled = true;
+// clips the aircraft below the local sea surface while it is on or near the water
+const waterClip = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1e6);
 
 const scene = new THREE.Scene();
 // cockpit interior drawn in its own pass over the world (see cockpitModel.js)
@@ -52,11 +56,18 @@ scene.add(hemi);
 let sky = null, sea = null, clouds = null;
 const world = new THREE.Group(); scene.add(world);
 const terrain = buildTerrain(); world.add(terrain);
+const depthTex = buildDepthTexture(384);
 const harbour = buildHarbour(); world.add(harbour);
 const town = buildTown(); world.add(town);
+const vegetation = buildVegetation(); world.add(vegetation);
 // foam left by the flying boat: a V of two wake streaks astern, a turbulent centre trail, and two
 // wash sheets thrown off the chines while she is up on the step
-const planeWake = { centre: foamStrip(1, 1, { repeatY: 6, edge: 0.4 }), left: foamStrip(1, 1, { repeatY: 8, edge: 0.7 }), right: foamStrip(1, 1, { repeatY: 8, edge: 0.7 }), washL: foamStrip(1, 1, { repeatY: 2, edge: 0.3 }), washR: foamStrip(1, 1, { repeatY: 2, edge: 0.3 }) };
+const planeWake = {
+  centre: foamStrip(1, 1, { repeatY: 5, edge: 0.4, taper: 0.45, tailPow: 0.7 }),
+  left: foamStrip(1, 1, { repeatY: 7, edge: 0.7, taper: 0.5 }), right: foamStrip(1, 1, { repeatY: 7, edge: 0.7, taper: 0.5 }),
+  washL: foamStrip(1, 1, { repeatY: 2, edge: 0.3, taper: 0.3, scroll: 0.9 }), washR: foamStrip(1, 1, { repeatY: 2, edge: 0.3, taper: 0.3, scroll: 0.9 }),
+  stern: foamStrip(1, 1, { repeatY: 1.5, repeatX: 1.5, edge: 0.2, taper: 0.7, headFade: 0.02, tailPow: 0.5, scroll: 1.2 }),
+};
 for (const k of Object.keys(planeWake)) { planeWake[k].visible = false; scene.add(planeWake[k]); }
 let wakeFade = 0, sprayAcc = 0, wasOnWater = true;
 
@@ -70,7 +81,7 @@ function applySky(name) {
   if (sky) scene.remove(sky);
   sky = buildSky(dir, p); scene.add(sky);
   if (sea) scene.remove(sea);
-  sea = buildSea(dir, p.fog, p.fogDensity); scene.add(sea);
+  sea = buildSea(dir, p.fog, p.fogDensity, depthTex); scene.add(sea);
   scene.fog = new THREE.FogExp2(p.fog, p.fogDensity);
   const gen = ++skyGen;
   (panoramas[name] ||= loadPanorama(`assets/sky/${name}.jpg`).catch(() => null)).then((tex) => {
@@ -176,6 +187,7 @@ async function startMission(mission, spec) {
   // aircraft
   const plane = await loadOrPlaceholder(spec.asset, 20, 30, 'aircraft');
   scene.add(plane); G.plane = plane;
+  plane.traverse((n) => { if (n.isMesh && n.material) { const ms = Array.isArray(n.material) ? n.material : [n.material]; for (const mt of ms) { mt.clippingPlanes = [waterClip]; mt.clipShadows = true; } } });
   G.props = findAllNamed(plane, 'prop');
   G.gunNodes = {}; G.gunGeom = {};
   plane.updateMatrixWorld(true);
@@ -428,6 +440,15 @@ function update(dt) {
       planeWake.centre.position.set(stern.x - Math.sin(yaw) * wakeLen * 0.5, seaHeight(stern.x, stern.z) + 0.2, stern.z - Math.cos(yaw) * wakeLen * 0.5);
       planeWake.centre.rotation.set(0, yaw, 0); planeWake.centre.scale.set(beam * (3.5 + k * 3), 1, wakeLen);
       planeWake.centre.material.uniforms.uOpacity.value = 0.75 * vis; planeWake.centre.material.uniforms.uTime.value = G.time * (0.5 + sp / 20);
+      // stern wash: the churned water thrown up behind the step, widest just astern
+      {
+        const st = planeWake.stern; st.visible = true;
+        const len = hullLen * (0.8 + k * 0.6), wid = beam * (2.2 + k * 3.5);
+        const head = p.clone().addScaledVector(fw0, -hullLen * 0.25);
+        st.position.set(head.x - Math.sin(yaw) * len * 0.5, seaHeight(head.x, head.z) + 0.3, head.z - Math.cos(yaw) * len * 0.5);
+        st.rotation.set(0, yaw, 0); st.scale.set(wid, 1, len);
+        st.material.uniforms.uOpacity.value = 1.0 * vis * (0.5 + 0.5 * k); st.material.uniforms.uTime.value = G.time * (0.8 + sp / 15);
+      }
       // divergent V: two streaks angled ~19 degrees off the track (Kelvin angle)
       for (const [key, sgn] of [['left', 1], ['right', -1]]) {
         const st = planeWake[key];
@@ -467,7 +488,7 @@ function update(dt) {
       }
     } else {
       wakeFade -= dt * 0.3;
-      for (const k of ['centre', 'left', 'right']) { const st = planeWake[k]; if (st.visible) { st.material.uniforms.uOpacity.value *= 0.97; if (wakeFade <= 0) st.visible = false; } }
+      for (const k of ['centre', 'left', 'right', 'stern']) { const st = planeWake[k]; if (st.visible) { st.material.uniforms.uOpacity.value *= 0.97; if (wakeFade <= 0) st.visible = false; } }
       planeWake.washL.visible = false; planeWake.washR.visible = false;
     }
   }
@@ -667,6 +688,8 @@ function update(dt) {
     st.guide = G.taxiedOut ? 'IN THE BAY \u2014 full throttle, hold the nose up to lift off' : 'TAXI OUT: north entrance brg ' + be.toFixed(0).padStart(3, '0') + '\u00b0 \u00b7 ' + de.toFixed(0) + ' m \u2014 keep under 15 mph between the moles';
   }
   updateMarshallers(p, f.onWater, G.time);
+  // hide the hull below the sea surface: clip at the local swell height while on or just above it
+  waterClip.constant = (f.onWater || p.y < 6) ? -(seaHeight(p.x, p.z) - 0.02) : 1e6;
   // gulls over the harbour when taxiing
   if (f.onWater && Math.hypot(p.x - JETTY.x, p.z - JETTY.z) < 900 && Math.random() < dt / 22) audio.gulls();
   hud.update(f, G.spec, weapons, st, G.objectives, contact, G.view);

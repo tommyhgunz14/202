@@ -62,22 +62,24 @@ export function planarUVs(geometry, matrixWorld = null) {
 
 // Terrain: two detail maps blended by the per-vertex `rock` attribute, sampled in world XZ, on
 // top of the vertex colours. Injected into MeshStandardMaterial so lighting and shadows stay.
-export function terrainDetail(material, scrubTex, rockTex, metres = 60) {
+export function terrainDetail(material, scrubTex, rockTex, metres = 60, sandTex = null) {
   material.onBeforeCompile = (shader) => {
     shader.uniforms.tScrub = { value: scrubTex };
     shader.uniforms.tRock = { value: rockTex };
+    shader.uniforms.tSand = { value: sandTex || scrubTex };
     shader.uniforms.uTile = { value: 1 / metres };
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nattribute float rock;\nvarying float vRock;\nvarying vec3 vWPos;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvRock = rock;\nvWPos = (modelMatrix * vec4(position, 1.0)).xyz;');
+      .replace('#include <common>', '#include <common>\nattribute float rock;\nattribute float sand;\nvarying float vRock;\nvarying float vSand;\nvarying vec3 vWPos;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvRock = rock;\nvSand = sand;\nvWPos = (modelMatrix * vec4(position, 1.0)).xyz;');
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform sampler2D tScrub;\nuniform sampler2D tRock;\nuniform float uTile;\nvarying float vRock;\nvarying vec3 vWPos;')
+      .replace('#include <common>', '#include <common>\nuniform sampler2D tScrub;\nuniform sampler2D tRock;\nuniform sampler2D tSand;\nuniform float uTile;\nvarying float vRock;\nvarying float vSand;\nvarying vec3 vWPos;')
       .replace('#include <color_fragment>', `#include <color_fragment>
         vec2 tuv = vWPos.xz * uTile;
         // two scales of each map, offset and mixed, so the repeat does not read as a grid
         vec3 dS = mix(texture2D(tScrub, tuv).rgb, texture2D(tScrub, tuv * 0.37 + 0.5).rgb, 0.5);
         vec3 dR = mix(texture2D(tRock, tuv * 1.7).rgb, texture2D(tRock, tuv * 0.61 + 0.25).rgb, 0.5);
-        vec3 detail = mix(dS, dR, clamp(vRock, 0.0, 1.0));
+        vec3 dSa = texture2D(tSand, tuv * 3.1).rgb;
+        vec3 detail = mix(mix(dS, dR, clamp(vRock, 0.0, 1.0)), dSa, clamp(vSand, 0.0, 1.0));
         // keep the painted tint, let the photo supply the grain
         diffuseColor.rgb = diffuseColor.rgb * mix(vec3(1.0), detail * 1.9, 0.85);`);
   };

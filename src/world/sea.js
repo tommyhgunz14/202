@@ -46,6 +46,9 @@ uniform vec3 uSky;
 uniform vec3 uFogColor;
 uniform float uFogDensity;
 uniform float uTime;
+uniform sampler2D uDepth;
+uniform float uWorldHalf;
+uniform vec3 uShallowCol;
 varying vec3 vWorld;
 varying float vWave;
 ${NOISE}
@@ -75,7 +78,21 @@ void main() {
   vec3 base = mix(uDeep, uShallow, clamp(vWave * 0.35 + 0.35, 0.0, 1.0));
   // subtle large-scale colour variation so the surface is not one flat tone
   base *= 0.9 + 0.2 * fbm(p.xz * 0.004 + t * 0.01);
-  vec3 col = mix(base, uSky, fres * 0.7);
+  // seabed depth from the height map: turquoise shallows, a surf line on the beaches, and the
+  // sand showing through where the water is only a metre or two deep
+  vec2 duv = vec2(p.x / (2.0 * uWorldHalf) + 0.5, p.z / (2.0 * uWorldHalf) + 0.5);
+  float bed = texture2D(uDepth, duv).r * 120.0 - 60.0;
+  float depth = -bed + vWave;
+  float shallow = 1.0 - smoothstep(1.0, 14.0, depth);
+  vec3 sandCol = vec3(0.78, 0.72, 0.55);
+  vec3 shal = mix(uShallowCol, sandCol, (1.0 - smoothstep(0.3, 3.5, depth)) * 0.7);
+  base = mix(base, shal, shallow * 0.85);
+  vec3 col = mix(base, uSky, fres * 0.7 * (1.0 - 0.5 * shallow));
+  // surf: broken white water where the swell runs into the last couple of metres of depth
+  float surfBand = (1.0 - smoothstep(-0.2, 2.6, depth)) * smoothstep(-1.2, 0.0, depth);
+  float surfN = fbm(p.xz * 0.35 + vec2(t * 0.25, -t * 0.18)) + 0.35 * sin(depth * 2.5 - t * 1.6);
+  float surf = surfBand * smoothstep(0.35, 0.75, surfN) * near;
+  col = mix(col, vec3(0.94, 0.96, 0.97), clamp(surf, 0.0, 1.0) * 0.85);
   // sun glitter: broad soft lobe plus a tight one, both modulated by ripple so it sparkles
   vec3 H = normalize(uSunDir + V);
   float nh = max(dot(N, H), 0.0);
@@ -93,7 +110,7 @@ void main() {
 
 // Two tiers share one material: a coarse far plane covering the whole world and a fine patch
 // (10 m vertex spacing) that follows the camera so the swell has real shape close in.
-export function buildSea(sunDir, fogColor, fogDensity) {
+export function buildSea(sunDir, fogColor, fogDensity, depthTex = null) {
   const geo = new THREE.PlaneGeometry(WORLD_HALF * 2.4, WORLD_HALF * 2.4, 160, 160);
   geo.rotateX(-Math.PI / 2);
   const mat = new THREE.ShaderMaterial({
@@ -106,6 +123,7 @@ export function buildSea(sunDir, fogColor, fogDensity) {
       uSky: { value: new THREE.Color(0x9fc0d8) },
       uFogColor: { value: new THREE.Color(fogColor) },
       uFogDensity: { value: fogDensity },
+      uDepth: { value: depthTex }, uWorldHalf: { value: WORLD_HALF }, uShallowCol: { value: new THREE.Color(0x2f9c95) },
     },
   });
   const group = new THREE.Group();

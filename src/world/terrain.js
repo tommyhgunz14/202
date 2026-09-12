@@ -55,7 +55,8 @@ function landDistance(x, z) {
 export function terrainHeight(x, z) {
   const d = landDistance(x, z);
   const rock = rockHeight(x, z);
-  if (d <= 0) return rock > 0 ? rock : -8 - Math.min(80, -d * 0.02);  // sea floor falls away
+  // seabed: shelves gently from the beach (about 1 in 70) and then falls away offshore
+  if (d <= 0) { const off = -d; return rock > 0 ? rock : -0.4 - off * 0.014 - Math.min(90, (off / 1500) * (off / 1500) * 25); }
   const coastRise = Math.min(1, d / (2500 * H_SCALE)) ** 0.9 * 60 * V_SCALE;
   let h = coastRise;
   for (const p of PEAKS_W) {
@@ -71,13 +72,21 @@ export function terrainHeight(x, z) {
 }
 
 const LIMESTONE = new THREE.Color(0xb9b09a), LIMESTONE_DK = new THREE.Color(0x8f877a), SCRUB = new THREE.Color(0x5f7040), SCRUB_DRY = new THREE.Color(0x8a8a58);
+const SAND = new THREE.Color(0xe2d4ad), SAND_WET = new THREE.Color(0xb9a884), SHORE_ROCK = new THREE.Color(0x6a635a), MEADOW = new THREE.Color(0x77884a);
 function shade(h, slope, x = 0, z = 0) {
-  // world y in metres; slope = 1 - normal.y (0 flat, 0.5 ≈ 60°). Steep ground is bare limestone,
-  // gentle ground is scrub, the highest ground is grey rock; a little noise breaks up the flats.
+  // world y in metres; slope = 1 - normal.y (0 flat, 0.5 ≈ 60°). Beaches where the land runs
+  // gently into the sea, dark rock where it drops steeply, scrub and dry grass on the slopes,
+  // greener meadow on the low flats, bare limestone on the steep and the high ground.
   const c = new THREE.Color();
   const n = 0.5 + 0.5 * Math.sin(x * 0.013 + z * 0.021) * Math.sin(x * 0.007 - z * 0.011);
-  if (h < 1.5) return c.set(0xd8c9a0);                                      // sand
-  if (h < 12) c.copy(SCRUB_DRY).lerp(SCRUB, Math.min(1, h / 12) * 0.8 + n * 0.2);
+  c.userData = 0; c.sand = 0;
+  if (h < 3.5) {
+    if (slope > 0.22) return c.copy(SHORE_ROCK).lerp(LIMESTONE_DK, n * 0.5);          // rocky shore
+    c.copy(h < 0.7 ? SAND_WET : SAND).lerp(SAND, Math.min(1, h / 3.5)); c.sand = 1 - Math.min(1, Math.max(0, (h - 2.2) / 1.3) * (slope > 0.12 ? 2 : 1));
+    if (h > 2.2) c.lerp(MEADOW, (h - 2.2) / 1.3 * 0.5);
+    return c;
+  }
+  if (h < 12) c.copy(slope < 0.08 ? MEADOW : SCRUB_DRY).lerp(SCRUB, Math.min(1, h / 12) * 0.8 + n * 0.2);
   else c.copy(SCRUB).lerp(SCRUB_DRY, n * 0.35);
   const rockByHeight = THREE.MathUtils.clamp((h - 90) / 120, 0, 1);
   const rockBySlope = THREE.MathUtils.clamp((slope - 0.18) / 0.22, 0, 1);
@@ -93,6 +102,7 @@ function buildGrid(x0, z0, size, n, heightFn, opts = {}) {
   const pos = geo.attributes.position;
   const col = new Float32Array(pos.count * 3);
   const rockA = new Float32Array(pos.count);
+  const sandA = new Float32Array(pos.count);
   const hs = new Float32Array(pos.count);
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i) + x0, z = pos.getZ(i) + z0;
@@ -109,12 +119,14 @@ function buildGrid(x0, z0, size, n, heightFn, opts = {}) {
     const c = shade(hs[i], slope, pos.getX(i), pos.getZ(i));
     col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
     rockA[i] = hs[i] < 1.5 ? 0 : (c.userData || 0);
+    sandA[i] = c.sand || 0;
   }
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   geo.setAttribute('rock', new THREE.BufferAttribute(rockA, 1));
+  geo.setAttribute('sand', new THREE.BufferAttribute(sandA, 1));
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 });
   // photographic detail: scrub and limestone maps blended by the rock attribute
-  Promise.all([loadTex('scrub_ground'), loadTex('limestone_rock')]).then(([s, r]) => { if (s && r) terrainDetail(mat, s, r, opts.tile || 90); });
+  Promise.all([loadTex('scrub_ground'), loadTex('limestone_rock'), loadTex('sand_beach')]).then(([s, r, sd]) => { if (s && r) terrainDetail(mat, s, r, opts.tile || 90, sd); });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.receiveShadow = true;
   return mesh;
@@ -123,17 +135,37 @@ function buildGrid(x0, z0, size, n, heightFn, opts = {}) {
 const GIB_CENTRE = toWorld(36.140, -5.350);
 const GIB_HALF = 900;   // world metres — covers the peninsula and the runway
 
+// A medium tier (25 m cells) covers the Strait's eastern narrows: the Bay, Tarifa, Ceuta and
+// Jebel Musa, where the player spends the sortie; the coarse tier fills the rest.
+export const MED = { x: 1400, z: 700, half: 6500 };
+const inGib = (x, z, m = 60) => Math.abs(x - GIB_CENTRE.x) < GIB_HALF - m && Math.abs(z - GIB_CENTRE.z) < GIB_HALF - m;
+const inMed = (x, z, m = 100) => Math.abs(x - MED.x) < MED.half - m && Math.abs(z - MED.z) < MED.half - m;
 export function buildTerrain() {
   const g = new THREE.Group();
-  // coarse terrain everywhere except the Gibraltar square
-  const coarse = buildGrid(0, 0, WORLD_HALF * 2, 320, terrainHeight, {
-    mask: (x, z) => !(Math.abs(x - GIB_CENTRE.x) < GIB_HALF - 60 && Math.abs(z - GIB_CENTRE.z) < GIB_HALF - 60),
-  });
+  const coarse = buildGrid(0, 0, WORLD_HALF * 2, 320, terrainHeight, { mask: (x, z) => !inMed(x, z) });
   g.add(coarse);
+  const medium = buildGrid(MED.x, MED.z, MED.half * 2, 520, terrainHeight, { mask: (x, z) => !inGib(x, z), tile: 60 });
+  medium.castShadow = true;
+  g.add(medium);
   const fine = buildGrid(GIB_CENTRE.x, GIB_CENTRE.z, GIB_HALF * 2, 180, terrainHeight, { tile: 45 });
   fine.castShadow = true;
   g.add(fine);
   return g;
+}
+
+// Seabed / land height over the whole world packed into a texture for the sea shader: R = height
+// mapped from -60..+60 m, so the water can colour the shallows and break on the beaches.
+export function buildDepthTexture(size = 384) {
+  const data = new Uint8Array(size * size * 4);
+  for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) {
+    const x = -WORLD_HALF + (i + 0.5) / size * WORLD_HALF * 2, z = -WORLD_HALF + (j + 0.5) / size * WORLD_HALF * 2;
+    const h = terrainHeight(x, z);
+    const v = Math.round(THREE.MathUtils.clamp((h + 60) / 120, 0, 1) * 255);
+    const k = (j * size + i) * 4; data[k] = v; data[k + 1] = v; data[k + 2] = v; data[k + 3] = 255;
+  }
+  const tex = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+  tex.magFilter = THREE.LinearFilter; tex.minFilter = THREE.LinearFilter; tex.needsUpdate = true;
+  return tex;
 }
 
 export const GIB = { centre: GIB_CENTRE, half: GIB_HALF };
