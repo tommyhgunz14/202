@@ -246,16 +246,28 @@ export default function (THREE) {
       return I_WHT;
     };
     add(loft(rings, nm, { capStart: true }));
-    // engine face: crankcase + 7 front-row cylinders
-    const face = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.58, 0.08, 24), BLK);
-    face.rotation.x = Math.PI / 2; face.position.set(ex, EY, 5.72); add(face);
+    // engine face inside the cowl: the front row of seven finned cylinders with pushrod tubes
+    // around the crankcase and reduction-gear nose, the ignition harness ring in front
+    const face = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.08, 24), BLK);
+    face.rotation.x = Math.PI / 2; face.position.set(ex, EY, 5.6); add(face);
     for (let i = 0; i < 7; i++) {
       const t = i / 7 * Math.PI * 2 + Math.PI / 2;
-      const cyl = box(0.2, 0.26, 0.22, DKG, ex + 0.38 * Math.cos(t), EY + 0.38 * Math.sin(t), 5.82);
-      cyl.rotation.z = t - Math.PI / 2;
+      const cg = new THREE.Group(); cg.position.set(ex, EY, 5.8); cg.rotation.z = t - Math.PI / 2; add(cg);
+      for (let f = 0; f < 5; f++) { const fin = new THREE.Mesh(new THREE.CylinderGeometry(0.095 - f * 0.004, 0.095 - f * 0.004, 0.02, 12), DKG); fin.position.y = 0.24 + f * 0.04; cg.add(fin); }
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.09, 0.2), BLK); head.position.y = 0.47; cg.add(head);
+      const rocker = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.1), BLK); rocker.position.set(0, 0.53, 0.03); cg.add(rocker);
+      for (const px of [-0.045, 0.045]) { const pr = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.24, 6), ALU); pr.position.set(px, 0.34, 0.12); cg.add(pr); }
     }
-    const cc = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.3, 16), DKG);
-    cc.rotation.x = Math.PI / 2; cc.position.set(ex, EY, 5.85); add(cc);
+    const ccProf = [[0.0, 0.42], [0.13, 0.4], [0.2, 0.32], [0.24, 0.15], [0.25, -0.05], [0.0, -0.05]].map((p) => new THREE.Vector2(p[0], p[1]));
+    const cc = new THREE.Mesh(new THREE.LatheGeometry(ccProf, 20), ALU); cc.rotation.x = Math.PI / 2; cc.position.set(ex, EY, 5.72); add(cc);
+    const harness = new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.015, 6, 28), BLK); harness.position.set(ex, EY, 5.95); add(harness);
+    // cowl flaps round the trailing edge of the cowling, carburettor intake on top of the nacelle
+    for (let i = 0; i < 14; i++) {
+      const t = i / 14 * Math.PI * 2;
+      const fl = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.02, 0.3), DKG);
+      fl.position.set(ex + 0.7 * Math.cos(t), EY + 0.7 * Math.sin(t), 4.45); fl.rotation.z = t + Math.PI / 2; fl.rotation.x = -0.12; add(fl);
+    }
+    const scoop = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 1.2), DKG); scoop.position.set(ex, EY + 0.68, 3.9); add(scoop);
     // exhaust stub, outboard side under the nacelle
     const exh = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8), BLK);
     exh.rotation.x = Math.PI / 2; exh.position.set(ex + Math.sign(ex) * 0.45, EY - 0.55, 4.2); add(exh);
@@ -263,6 +275,7 @@ export default function (THREE) {
     const prop = new THREE.Group(); prop.name = 'prop'; prop.position.set(ex, EY, 6.12);
     const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.14, 0.34, 12), ALU);
     hub.rotation.x = Math.PI / 2; prop.add(hub);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.17, 14, 10), ALU); dome.scale.set(1, 1, 0.9); dome.position.z = 0.17; prop.add(dome);   // Hamilton Standard dome
     const bladeShape = (r0, r1, tip) => {
       const s = new THREE.Shape();
       const w = (r) => 0.09 + 0.06 * Math.sin(Math.min(1, (r - 0.15) / 1.0) * Math.PI / 2) - (r > 1.45 ? (r - 1.45) * 0.12 : 0);

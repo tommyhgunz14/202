@@ -94,6 +94,14 @@ about six seconds of stills of the crew walking out along the jetty and boarding
 Kodachrome-style images generated with Atlas, `assets/intro/`, with a slow push-in and film
 grain). Any key, click or controller button skips to the menu.
 
+The sortie screen carries a cinematic panel on the right: the aircraft's recognition card, the
+crew walking out and boarding, and two of seven period photographs in the style of RAF official
+pictures (a London refuelling at the Gun Wharf, a briefing on the North Mole, a Swordfish on the
+slipway, a Sunderland at her moorings, a surfaced U-boat under attack, HMS *Wishart* at speed,
+aircrew on the jetty at dusk), chosen by mission and cross-fading with a slow push-in. All of
+them are Atlas generations, not archive prints: genuine Imperial War Museum photographs of the
+squadron exist but are IWM copyright and would need their own licence.
+
 ## Practice range
 
 The first entry in the operations book is a range four miles south-east of Europa Point: two
@@ -189,6 +197,7 @@ assets/             one Three.js module per aircraft / vessel (404 contract)
 docs/               STYLE-LOCK.md, ASSET-BRIEF.md, HISTORY.md (sources & accuracy)
 tools/geo-test.mjs  quick check of land/sea classification
 tools/atlas-review.mjs  sends captured frames to the exported Atlas art-review API
+tools/shoot.mjs     headless puppeteer screenshots of the running game driven by a scenario module
 ```
 
 While `node serve.mjs` is running, the page can save what it is drawing: `POST /_capture?name=x`

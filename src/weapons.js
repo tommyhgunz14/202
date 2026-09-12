@@ -9,9 +9,10 @@ export class Weapons {
     this.tracers = [];
     this.charges = [];
     this.effects = [];
-    this.tracerGeo = new THREE.CylinderGeometry(0.06, 0.06, 2.4, 5); this.tracerGeo.rotateX(Math.PI / 2);
-    this.tracerMat = new THREE.MeshBasicMaterial({ color: 0xffd27a });
-    this.tracerMatEnemy = new THREE.MeshBasicMaterial({ color: 0xff6a4a });
+    // fat bright streaks, drawn additive and unfogged so they read against sea and sky
+    this.tracerGeo = new THREE.CylinderGeometry(0.26, 0.14, 9.0, 6); this.tracerGeo.rotateX(Math.PI / 2);
+    this.tracerMat = new THREE.MeshBasicMaterial({ color: 0xffc040, fog: false });   // solid orange-yellow: additive washed out against a bright sky
+    this.tracerMatEnemy = new THREE.MeshBasicMaterial({ color: 0xff5a3a, fog: false });
     this.dcGeo = new THREE.CylinderGeometry(0.2, 0.2, 1.2, 10); this.dcGeo.rotateX(Math.PI / 2);
     this.dcMat = new THREE.MeshStandardMaterial({ color: 0x3b3f3a, roughness: 0.6 });
     this.splashMat = new THREE.MeshBasicMaterial({ color: 0xf2f6f8, transparent: true, opacity: 0.9, depthWrite: false });
@@ -33,6 +34,10 @@ export class Weapons {
     d.x += (Math.random() - 0.5) * spread; d.y += (Math.random() - 0.5) * spread; d.z += (Math.random() - 0.5) * spread;
     d.normalize();
     m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), d);
+    // a constant-pixel-size glow rides on every round so the stream stays visible out to its
+    // full range from any camera, which is what makes aiming by tracer possible
+    if (!this.tracerGlow) { this.tracerGlow = new THREE.SpriteMaterial({ map: this.smokeTex, color: 0xffd070, transparent: true, opacity: 0.95, sizeAttenuation: false, depthWrite: false, fog: false }); this.tracerGlowEnemy = this.tracerGlow.clone(); this.tracerGlowEnemy.color.set(0xff6a4a); }
+    const glow = new THREE.Sprite(enemy ? this.tracerGlowEnemy : this.tracerGlow); glow.scale.set(0.024, 0.024, 1); glow.position.z = -1.5; m.add(glow);
     this.scene.add(m);
     this.tracers.push({ mesh: m, vel: d.multiplyScalar(speed), life: 1.6, enemy, owner });
   }

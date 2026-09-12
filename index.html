@@ -37,6 +37,11 @@
   .mission .mtitle { font-weight: 600; font-size: 16px; }
   .mission .msub { color: #bfb9a5; font-size: 12.5px; }
   .ac-ref { display: block; width: 100%; max-height: 240px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(176,141,62,0.35); margin-bottom: 8px; }
+  /* cinematic panel on the sortie screen: five slides, each shown 5 s, cross-fading with a push-in */
+  .cine { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 4px; border: 1px solid rgba(176,141,62,0.35); margin-bottom: 12px; background: #000; }
+  .cine .cslide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; filter: sepia(0.2) saturate(0.9) contrast(1.05); animation: cine 25s linear infinite; }
+  .cine i { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.45) 100%); }
+  @keyframes cine { 0% { opacity: 0; transform: scale(1); } 4% { opacity: 1; } 20% { opacity: 1; transform: scale(1.08); } 24% { opacity: 0; transform: scale(1.09); } 100% { opacity: 0; transform: scale(1); } }
   .ac-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
   .ac-detail { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
   .spec { border-collapse: collapse; font-size: 13px; width: 100%; }
@@ -114,10 +119,10 @@
   #intro { position: fixed; inset: 0; z-index: 50; background: #000; color: #f1e8d2; overflow: hidden; transition: background 1.6s ease, opacity 1.4s ease; }
   #intro.clear { background: rgba(0, 0, 0, 0.38); }
   #intro.out { opacity: 0; pointer-events: none; }
-  #intro .card { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 1.5s ease; text-align: center; padding: 0 12vw; }
-  #intro .card.on { opacity: 1; }
-  #intro .true { font-family: Georgia, "Times New Roman", serif; font-size: clamp(26px, 4vw, 54px); letter-spacing: 0.35em; text-transform: uppercase; font-weight: normal; margin: 0; }
-  #intro .story { font-family: Georgia, "Times New Roman", serif; font-size: clamp(16px, 1.55vw, 24px); line-height: 1.75; max-width: 780px; margin: 0; }
+  #intro .icard { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 1.5s ease; text-align: center; padding: 0 12vw; }
+  #intro .icard.on { opacity: 1; }
+  #intro .true { font-family: Georgia, "Times New Roman", serif; font-size: clamp(34px, 6vw, 84px); letter-spacing: 0.35em; text-transform: uppercase; font-weight: normal; margin: 0; }
+  #intro .story { font-family: Georgia, "Times New Roman", serif; font-size: clamp(19px, 2.1vw, 34px); line-height: 1.7; max-width: 1100px; margin: 0; }
   #intro .title h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(38px, 7vw, 96px); letter-spacing: 0.12em; font-weight: normal; margin: 0; text-shadow: 0 2px 40px rgba(0, 0, 0, 0.85); transform: scale(0.96); transition: transform 6s ease-out; }
   #intro .title.on h1 { transform: scale(1.04); }
   #intro .title .sub { letter-spacing: 0.45em; text-transform: uppercase; font-size: 13px; color: #d8b56a; margin-top: 20px; }

@@ -148,9 +148,11 @@ export default function (THREE) {
   add(new THREE.CylinderGeometry(0.2, 0.3, 0.2, 14), alu, 0, EY, EZ + 0.4, Math.PI / 2);      // reduction gear
   for (let i = 0; i < 9; i++) {
     const cg = new THREE.Group(); cg.position.set(0, EY, EZ); cg.rotation.z = i * Math.PI * 2 / 9; root.add(cg);
-    add(new THREE.BoxGeometry(0.16, 0.34, 0.24), blk, 0, 0.49, 0, 0, 0, 0, cg);
-    add(new THREE.BoxGeometry(0.2, 0.06, 0.28), blk, 0, 0.68, 0, 0, 0, 0, cg);
-    add(new THREE.BoxGeometry(0.06, 0.1, 0.08), alu, 0, 0.74, 0.14, 0, 0, 0, cg);
+    for (let f = 0; f < 6; f++) add(new THREE.CylinderGeometry(0.1 - f * 0.004, 0.1 - f * 0.004, 0.022, 12), blk, 0, 0.36 + f * 0.05, 0, 0, 0, 0, cg);   // finned barrel
+    add(new THREE.BoxGeometry(0.17, 0.1, 0.24), blk, 0, 0.66, 0, 0, 0, 0, cg);      // head
+    add(new THREE.BoxGeometry(0.1, 0.07, 0.12), blk, 0, 0.74, 0.03, 0, 0, 0, cg);   // rocker box
+    add(new THREE.CylinderGeometry(0.012, 0.012, 0.3, 6), alu, -0.05, 0.5, 0.14, 0, 0, 0, cg);   // pushrod tubes
+    add(new THREE.CylinderGeometry(0.012, 0.012, 0.3, 6), alu, 0.05, 0.5, 0.14, 0, 0, 0, cg);
   }
   add(new THREE.TorusGeometry(0.6, 0.06, 8, 28), blk, 0, EY, EZ + 0.38);                         // exhaust collector ring
   strut(V(-0.62, 2.35, 5.4), V(-0.58, 2.2, 3.2), 0.05, blk, 8);                                  // starboard exhaust pipe

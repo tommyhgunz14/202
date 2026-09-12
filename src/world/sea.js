@@ -100,10 +100,11 @@ void main() {
   vec3 col = mix(base, uSky, fres * 0.7 * (1.0 - 0.5 * shallow));
   // surf: broken white water where the swell runs into the last couple of metres of depth
   float surfBand = (1.0 - smoothstep(-0.2, 2.6, depth)) * smoothstep(-1.2, 0.0, depth);
-  // the breakers creep rather than race: slow base motion, slowed again as the camera climbs
-  float ts = t * 0.35 * hiSlow;
+  // the breakers barely move: a slow creep at sea level that freezes into a static frothed
+  // edge once the camera is above about 100 ft, and it stays visible at distance
+  float ts = t * 0.12 * (1.0 - clamp(cameraPosition.y / 30.0, 0.0, 1.0));
   float surfN = fbm(p.xz * 0.35 + vec2(ts * 0.25, -ts * 0.18)) + 0.35 * sin(depth * 2.5 - ts * 1.6);
-  float surf = surfBand * smoothstep(0.35, 0.75, surfN) * near;
+  float surf = surfBand * smoothstep(0.35, 0.75, surfN) * exp(-dist * 0.0007);
   col = mix(col, vec3(0.94, 0.96, 0.97), clamp(surf, 0.0, 1.0) * 0.85);
   // sun glitter: broad soft lobe plus a tight one, both modulated by ripple so it sparkles
   vec3 H = normalize(uSunDir + V);

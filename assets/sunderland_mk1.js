@@ -223,11 +223,18 @@ export default function (THREE) {
   };
   const engineFace = (x, y, z) => {        // z = front lip of the cowling
     add(new THREE.CylinderGeometry(0.62, 0.62, 0.45, 18), M.blk, { p: [x, y, z - 0.35], r: [Math.PI / 2, 0, 0] });
+    // nine finned cylinders with heads and pushrod tubes round the crankcase nose
     for (let k = 0; k < 9; k++) {
       const a = k * 2 * Math.PI / 9;
-      add(new THREE.BoxGeometry(0.2, 0.26, 0.3), M.blkm, { p: [x + Math.cos(a) * 0.43, y + Math.sin(a) * 0.43, z - 0.24], r: [0, 0, a + Math.PI / 2] });
+      const cg = new THREE.Group(); cg.position.set(x, y, z - 0.2); cg.rotation.z = a - Math.PI / 2; g.add(cg);
+      for (let f = 0; f < 5; f++) add(new THREE.CylinderGeometry(0.095 - f * 0.004, 0.095 - f * 0.004, 0.02, 12), M.blkm, { p: [0, 0.27 + f * 0.04, 0], parent: cg });
+      add(new THREE.BoxGeometry(0.16, 0.09, 0.22), M.blk, { p: [0, 0.5, 0], parent: cg });
+      add(new THREE.BoxGeometry(0.1, 0.06, 0.1), M.blk, { p: [0, 0.56, 0.03], parent: cg });
+      for (const px of [-0.045, 0.045]) add(new THREE.CylinderGeometry(0.011, 0.011, 0.24, 6), M.alu, { p: [px, 0.37, 0.12], parent: cg });
     }
     add(new THREE.CylinderGeometry(0.24, 0.26, 0.2, 14), M.alu, { p: [x, y, z - 0.08], r: [Math.PI / 2, 0, 0] });
+    add(new THREE.SphereGeometry(0.2, 14, 10), M.alu, { p: [x, y, z + 0.02], s: [1, 1, 0.5] });   // reduction-gear nose
+    add(new THREE.TorusGeometry(0.33, 0.015, 6, 28), M.blk, { p: [x, y, z + 0.06] });            // ignition harness
     // exhaust pipe running aft under the nacelle
     add(new THREE.CylinderGeometry(0.07, 0.07, 1.3, 8), M.blk, { p: [x + 0.25, y - 0.62, z - 1.1], r: [Math.PI / 2, 0, 0] });
   };

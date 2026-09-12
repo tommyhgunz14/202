@@ -14,6 +14,7 @@ export default function (THREE) {
   const mRed = mat(RED), mBlue = mat(BLUE), mYel = mat(YEL), mWht = mat(WHT), mCode = mat(MSG), mBlk = mat(BLK);
   const mGlass = mat(BLK, { roughness: 0.15, metalness: 0.3, transparent: true, opacity: 0.45, name: 'glass' });
   const mStrut = mA, mWire = mA;
+  const mWood = mat(0x7a4b26, { roughness: 0.6 });
 
   // ---- helpers ----
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -191,25 +192,32 @@ export default function (THREE) {
   const EX = 3.3, NY = (Y_LOW + Y_UP) / 2, ZF = ZLE0 + 1.3;
   const engine = (x) => {
     const e = new THREE.Group(); e.position.set(x, NY, 0); g.add(e);
-    // long-chord Townend ring
-    const prof = [[0.63, -0.32], [0.72, -0.24], [0.75, 0.02], [0.71, 0.3], [0.63, 0.3], [0.63, -0.32]].map((p) => new THREE.Vector2(p[0], p[1]));
-    const ring = new THREE.Mesh(new THREE.LatheGeometry(prof, 28), mA);
+    // short-chord Townend ring with an aerofoil section, the cylinder heads showing inside it
+    const prof = [[0.70, -0.2], [0.74, -0.27], [0.82, -0.2], [0.86, 0.02], [0.82, 0.22], [0.74, 0.28], [0.70, 0.22], [0.70, -0.2]].map((p) => new THREE.Vector2(p[0], p[1]));
+    const ring = new THREE.Mesh(new THREE.LatheGeometry(prof, 32), mA);
     ring.rotation.x = Math.PI / 2; ring.position.z = ZF; e.add(ring);
-    // engine: crankcase + 9 cylinders
-    const cc = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.3, 0.45, 16), mAlu);
-    cc.rotation.x = Math.PI / 2; cc.position.z = ZF + 0.05; e.add(cc);
+    // Pegasus: crankcase with the reduction-gear nose, nine finned cylinders with heads, rocker
+    // boxes and pushrod tubes, the ignition harness ring in front, the exhaust collector behind
+    const ccProf = [[0.0, 0.62], [0.16, 0.6], [0.24, 0.5], [0.3, 0.3], [0.32, 0.05], [0.3, -0.25], [0.0, -0.25]].map((p) => new THREE.Vector2(p[0], p[1]));
+    const cc = new THREE.Mesh(new THREE.LatheGeometry(ccProf, 24), mAlu); cc.rotation.x = Math.PI / 2; cc.position.z = ZF; e.add(cc);
     for (let k = 0; k < 9; k++) {
       const a = k * Math.PI * 2 / 9 + Math.PI / 2;
-      const cyl = box(0.15, 0.3, 0.24, mBlk, 0.42 * Math.cos(a), 0.42 * Math.sin(a), ZF - 0.05, e);
-      cyl.rotation.z = a - Math.PI / 2;
+      const cg = new THREE.Group(); cg.rotation.z = a - Math.PI / 2; cg.position.z = ZF - 0.02; e.add(cg);   // local +y is radial
+      for (let f = 0; f < 6; f++) { const fin = new THREE.Mesh(new THREE.CylinderGeometry(0.1 - f * 0.004, 0.1 - f * 0.004, 0.022, 12), mBlk); fin.position.y = 0.3 + f * 0.045; cg.add(fin); }
+      box(0.17, 0.1, 0.22, mBlk, 0, 0.58, 0, cg);      // head
+      box(0.11, 0.07, 0.12, mBlk, 0, 0.65, 0.03, cg);  // rocker box
+      rod(V(-0.05, 0.3, 0.13), V(-0.05, 0.56, 0.12), 0.012, mAlu, 6, cg); rod(V(0.05, 0.3, 0.13), V(0.05, 0.56, 0.12), 0.012, mAlu, 6, cg);   // pushrod tubes
+      rod(V(0, 0.5, -0.12), V(0, 0.5, -0.34), 0.028, mBlk, 6, cg);   // exhaust stub into the collector
     }
-    // nacelle body and tail cone (hull-side colour)
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.54, 2.1, 20), mSky);
-    body.rotation.x = Math.PI / 2; body.position.z = ZF - 0.3 - 1.05; e.add(body);
-    const cone = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.06, 1.9, 20), mSky);
-    cone.rotation.x = -Math.PI / 2; cone.position.z = ZF - 2.4 - 0.95; e.add(cone);
-    // exhaust pipe
-    rod(V(0.42, -0.28, ZF - 0.25), V(0.42, -0.28, ZF - 1.9), 0.05, mBlk, 8, e);
+    const harness = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.018, 6, 32), mBlk); harness.position.z = ZF + 0.2; e.add(harness);
+    const collector = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.06, 8, 32), mBlk); collector.position.z = ZF - 0.36; e.add(collector);
+    // nacelle: a lathed body tapering to the tail cone, carburettor intake on top, oil cooler below
+    const nacProf = [[0.0, -0.3], [0.5, -0.3], [0.56, -0.9], [0.55, -1.8], [0.44, -2.7], [0.24, -3.6], [0.05, -4.3], [0.0, -4.3]].map((p) => new THREE.Vector2(p[0], p[1]));
+    const body = new THREE.Mesh(new THREE.LatheGeometry(nacProf, 24), mSky); body.rotation.x = Math.PI / 2; body.position.z = ZF; e.add(body);
+    box(0.22, 0.16, 0.9, mA, 0, 0.6, ZF - 1.1, e);      // carburettor air intake
+    box(0.3, 0.12, 0.5, mBlk, 0, -0.58, ZF - 1.2, e);   // oil cooler
+    // exhaust pipe from the collector, aft under the nacelle
+    rod(V(0.42, -0.36, ZF - 0.36), V(0.42, -0.36, ZF - 1.9), 0.05, mBlk, 8, e);
     // propeller: 4 blades, XY plane, hub along +Z
     const prop = new THREE.Group(); prop.name = 'prop'; prop.position.z = ZF + 0.5; e.add(prop);
     const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.26, 12), mBlk);
@@ -218,8 +226,9 @@ export default function (THREE) {
     spin.rotation.x = Math.PI / 2; spin.position.z = 0.28; prop.add(spin);
     for (let k = 0; k < 4; k++) {
       const bl = new THREE.Group(); bl.rotation.z = k * Math.PI / 2; prop.add(bl);
-      const b1 = box(0.21, 1.55, 0.06, mBlk, 0, 0.9, 0, bl); b1.rotation.y = 0.45;
+      const b1 = box(0.21, 1.55, 0.06, mWood, 0, 0.9, 0, bl); b1.rotation.y = 0.45;   // laminated wood
       const b2 = box(0.19, 0.2, 0.06, mYel, 0, 1.75, 0, bl); b2.rotation.y = 0.45;
+      const le = box(0.02, 1.5, 0.062, mAlu, -0.1, 0.9, 0, bl); le.rotation.y = 0.45;   // brass leading edge
     }
     // mounting struts to lower and upper wings
     for (const sx of [1, -1]) {
@@ -314,14 +323,15 @@ export default function (THREE) {
   for (const s of [1, -1]) rod(V(0, CD + CH + 1.1, 4.5), V(s * FINX, TY + 1.85, -7.3), 0.008, mBlk, 4);
 
   // ================= GUN POSITIONS (Scarff rings, Lewis guns) =================
-  const gunPost = (name, z, aft) => {
+  const gunPost = (name, z, aft, low = false) => {
     const y = deckY(z, 0);
     const grp = new THREE.Group(); grp.position.set(0, y, z); if (aft) grp.rotation.y = Math.PI; g.add(grp);
     box(0.84, 0.03, 0.84, mBlk, 0, 0.0, 0, grp);                               // hatch opening
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.035, 8, 28), mAlu);
     ring.rotation.x = Math.PI / 2; ring.position.y = 0.09; grp.add(ring);
-    rod(V(0, 0.09, 0.4), V(0, 0.5, 0.12), 0.025, mAlu, 6, grp);                  // gun pillar
-    const gun = new THREE.Group(); gun.position.set(0, 0.52, 0.1); gun.rotation.x = -0.28; grp.add(gun);
+    rod(V(0, 0.09, 0.4), V(0, low ? 0.26 : 0.5, 0.12), 0.025, mAlu, 6, grp);      // gun pillar
+    // the bow gun rides low and level so it sits below the pilots' eye line
+    const gun = new THREE.Group(); gun.position.set(0, low ? 0.28 : 0.52, 0.1); gun.rotation.x = low ? 0 : -0.28; grp.add(gun);
     const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.9, 8), mBlk);
     barrel.rotation.x = Math.PI / 2; barrel.position.z = 0.45; gun.add(barrel);
     const jacket = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8), mBlk);
@@ -331,7 +341,7 @@ export default function (THREE) {
     drum.position.set(0, 0.11, 0.02); gun.add(drum);
     const muzzle = new THREE.Object3D(); muzzle.name = name; muzzle.position.set(0, 0, 0.9); gun.add(muzzle);
   };
-  gunPost('gun_nose', 7.35, false);
+  gunPost('gun_nose', 7.35, false, true);
   gunPost('gun_dorsal', -2.9, false);
   gunPost('gun_tail', -8.15, true);
 

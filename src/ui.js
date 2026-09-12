@@ -1,6 +1,9 @@
 import { AIRCRAFT, SCORE_LABELS, availableOn } from './data/aircraft.js';
 import { MISSIONS, PILOT } from './data/missions.js';
 
+// period photographs (Atlas, RAF official style) shown at the start of a sortie
+const PHOTOS = ['photo_london_gunwharf.jpg', 'photo_briefing.jpg', 'photo_swordfish_slip.jpg', 'photo_sunderland_moor.jpg', 'photo_uboat_air.jpg', 'photo_destroyer.jpg', 'photo_crew_dusk.jpg'];
+
 // Menu flow: title → briefing (pilot) → mission list → aircraft select → fly → debrief.
 export class UI {
   constructor(root, input) {
@@ -27,6 +30,16 @@ export class UI {
     else if (action === 'aircraft') { this.aircraftIdx = +data.idx; }
     else if (action === 'fly') { this.hide(); this.onStart && this.onStart(MISSIONS[this.missionIdx], this.currentAircraft()); return; }
     this.render();
+  }
+
+  // the right-hand panel at the start of a sortie: the aircraft's recognition card, the crew
+  // walking out and boarding, and a couple of period photographs, cross-fading with a slow push
+  cinePanel(a) {
+    const ref = 'assets/refs/' + a.asset.split('/').pop().replace('.js', '') + '.jpg';
+    const pick = PHOTOS.slice();
+    const i0 = this.missionIdx % pick.length, i1 = (this.missionIdx * 3 + 1) % pick.length;
+    const shots = [ref, 'assets/intro/intro_walk.jpg', 'assets/intro/' + pick[i0], 'assets/intro/intro_board.jpg', 'assets/intro/' + pick[i1 === i0 ? (i1 + 1) % pick.length : i1]];
+    return '<div class="cine">' + shots.map((s, i) => `<div class="cslide" style="background-image:url(${s});animation-delay:${i * 5}s"></div>`).join('') + '<i></i></div>';
   }
 
   currentAircraft() {
@@ -124,6 +137,7 @@ export class UI {
             </table>
           </div>
           <div class="ac-scores">
+            ${this.cinePanel(a)}
             ${Object.keys(a.scores).map((k) => `<div class="score"><span>${SCORE_LABELS[k]}</span><i><b style="width:${a.scores[k] * 10}%"></b></i><em>${a.scores[k]}</em></div>`).join('')}
             <div class="score total"><span>Overall</span><i><b style="width:${total / 80 * 100}%"></b></i><em>${total}/80</em></div>
           </div>

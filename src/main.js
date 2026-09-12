@@ -560,10 +560,11 @@ function update(dt) {
     // elevation: flight-stick sense by default (push forward = barrel down); I toggles
     G.aim.pitch = THREE.MathUtils.clamp(G.aim.pitch + (G.gunInvert === false ? -1 : 1) * ctl.pitch * 1.1 * dt, lim.pitch[0], lim.pitch[1]);
     if (ctl.fire && G.ammo > 0 && G.fireTimer <= 0 && !f.crashed) {
-      G.fireTimer = 60 / gd.rpm * 2; G.ammo = Math.max(0, G.ammo - 2); G.range.rounds += 2;
+      // every round is drawn, and drawn slow enough to read as a stream from the breech
+      G.fireTimer = 60 / gd.rpm * 1.5; G.ammo = Math.max(0, G.ammo - 1); G.range.rounds += 1;
       G.gunNodes[gd.node].getWorldPosition(_v1);
       const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(gunQuat(gd.arc, gd.node));
-      weapons.fireTracer(_v1, dir, 500, false, 0.015);
+      weapons.fireTracer(_v1, dir, 330, false, 0.02);
       audio.gun(/Browning/.test(gd.name) ? 'browning' : 'vickers');
     }
   } else if (ctl.fire && G.ammo > 0 && G.fireTimer <= 0 && !f.crashed) {
@@ -724,7 +725,8 @@ function update(dt) {
     const gd = G.spec.guns.find((g) => g.node === G.view.slice(4));
     G.gunNodes[gd.node].getWorldPosition(camPos);
     camera.quaternion.copy(gunQuat(gd.arc, gd.node));
-    camera.position.copy(camPos).addScaledVector(new THREE.Vector3(0, 0, 1).applyQuaternion(camera.quaternion), 1.3).addScaledVector(f.up(_v2), 0.45);
+    // eye well above and behind the breech so the stream of tracer is seen rising to the sight
+    camera.position.copy(camPos).addScaledVector(new THREE.Vector3(0, 0, 1).applyQuaternion(camera.quaternion), 1.1).addScaledVector(f.up(_v2), 0.8);
     if (camera.near !== 1.6) { camera.near = 1.6; camera.updateProjectionMatrix(); }
   } else if (G.view === 'bombsight') {
     (G.gunNodes.gun_nose || G.bayNode || G.plane).getWorldPosition(camPos);

@@ -14,10 +14,10 @@ export function runIntro(root, input, { onDone, onTitle } = {}) {
   const el = document.createElement('div');
   el.id = 'intro';
   el.innerHTML = `
-    <div class="card" id="intro-true"><p class="true">A True Story..</p></div>
-    <div class="card" id="intro-story"><p class="story">${STORY.replace(/\n/g, ' ')}</p></div>
-    <div class="card title" id="intro-title"><h1>Guardians of the Rock</h1><p class="sub">No. 202 Squadron &middot; Gibraltar</p></div>
-    <div class="card scenes" id="intro-scenes">${STILLS.map((n) => `<div class="still" style="background-image:url(assets/intro/${n}.jpg)"></div>`).join('')}</div>
+    <div class="icard" id="intro-true"><p class="true">A True Story..</p></div>
+    <div class="icard" id="intro-story"><p class="story">${STORY.replace(/\n/g, ' ')}</p></div>
+    <div class="icard title" id="intro-title"><h1>Guardians of the Rock</h1><p class="sub">No. 202 Squadron &middot; Gibraltar</p></div>
+    <div class="icard scenes" id="intro-scenes">${STILLS.map((n) => `<div class="still" style="background-image:url(assets/intro/${n}.jpg)"></div>`).join('')}</div>
     <div class="bars"><i></i><i></i></div>
     <div class="grain"></div>
     <div class="skip">press any key to skip</div>`;
@@ -44,7 +44,7 @@ export function runIntro(root, input, { onDone, onTitle } = {}) {
   (async () => {
     await wait(900);
     show('intro-true', true); await wait(3200); show('intro-true', false); await wait(1400);
-    show('intro-story', true); await wait(11000); show('intro-story', false); await wait(1400);
+    show('intro-story', true); await wait(16000); show('intro-story', false); await wait(1400);
     onTitle && onTitle();                       // let the harbour show through behind the title
     el.classList.add('clear');
     show('intro-title', true); await wait(4200); show('intro-title', false); await wait(1000);

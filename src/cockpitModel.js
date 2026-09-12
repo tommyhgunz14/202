@@ -44,7 +44,7 @@ export function buildCockpitInterior(spec, panelCanvas) {
     g.add(box(1.9, 0.04, 0.4, M.dark, 0.12, -0.12, -1.12));   // glare shield, low
     // windscreen: one wide clear pane, only a thin sill; the frame posts sit at the far edges
     g.add(box(2.6, 0.04, 0.05, M.frame, 0.12, -0.09, -1.25));
-    for (const s of [-1, 1]) g.add(box(0.03, 1.2, 0.03, M.frame, 0.12 + s * 1.34, 0.4, -1.05, -0.3));
+    // no windscreen posts: the side frames sat inside the field of view and read as bars
     const pane = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 1.3), M.glass); pane.position.set(0.12, 0.45, -1.15); pane.rotation.x = -0.3; g.add(pane);
     // low side walls only, well below the eye line; the roof is above the field of view
     g.add(box(2.8, 0.06, 1.4, M.interior, 0.12, 1.25, -0.4));
@@ -52,8 +52,9 @@ export function buildCockpitInterior(spec, panelCanvas) {
     g.add(box(2.6, 0.4, 0.08, M.interior, 0.12, -0.9, 0.45));   // seat back header behind
     // pilot's yoke and column (moves with the controls); co-pilot's yoke fixed
     const yoke = new THREE.Group();
-    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.035, 0.5, 10), M.frame); col.position.set(0, -0.68, -0.58); col.rotation.x = 0.25; yoke.add(col);
-    const wheel = new THREE.Group(); wheel.position.set(0, -0.44, -0.62);
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.035, 0.5, 10), M.frame); col.position.set(0, -0.86, -0.58); col.rotation.x = 0.25; yoke.add(col);
+    // the wheel sits low, its top rim just above the panel edge, so the view ahead stays clear
+    const wheel = new THREE.Group(); wheel.position.set(0, -0.62, -0.62);
     wheel.add(new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.02, 10, 32, Math.PI * 1.3).rotateZ(Math.PI * 0.85), M.bakelite));
     wheel.add(box(0.36, 0.035, 0.035, M.bakelite, 0, -0.02, 0));
     wheel.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.05, 12).rotateX(Math.PI / 2), M.brass));
@@ -147,7 +148,7 @@ export function buildGunnerOverlay(spec, gunDef) {
   for (const s of [-1, 1]) { const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.12, 8), M.bakelite); grip.position.set(s * 0.09, -0.3, -0.2); grip.rotation.x = 0.3; gun.add(grip); }
   if (turret) {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.03, 8, 40), M.frame); ring.rotation.x = Math.PI / 2; ring.position.set(0, -0.5, -0.3); g.add(ring);
-    for (const a of [-0.9, 0, 0.9]) { const fr = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.9, 0.03), M.frame); fr.position.set(Math.sin(a) * 0.6, 0.0, -0.3 - Math.cos(a) * 0.6); fr.rotation.y = -a; g.add(fr); }
+    // no vertical turret frames: they crossed the sight line
     const cap = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.025, 8, 40), M.frame); cap.rotation.x = Math.PI / 2; cap.position.set(0, 0.45, -0.3); g.add(cap);
   } else {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.04, 8, 40), M.frame); ring.rotation.x = Math.PI / 2; ring.position.set(0, -0.45, 0.05); g.add(ring);
@@ -160,7 +161,8 @@ export function buildGunnerOverlay(spec, gunDef) {
   const bead = new THREE.Mesh(new THREE.SphereGeometry(0.005, 6, 6), M.brass); bead.position.set(0, -0.1, -1.35); gun.add(bead);
   const beadPost = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.11, 0.004), M.frame); beadPost.position.set(0, -0.16, -1.35); gun.add(beadPost);
   const hemi = new THREE.HemisphereLight(0xdfe8f0, 0x2a2a26, 0.9); const sun = new THREE.DirectionalLight(0xfff2dc, 1.2); g.add(hemi, sun);
-  g.position.set(0, 0.0, -0.05);
+  // the gun rides low in the view so the barrel and mount stay out of the middle of the screen
+  g.position.set(0, -0.06, -0.05);
   return {
     group: g,
     update(st) {
