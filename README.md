@@ -114,6 +114,17 @@ a low shelf under the cellos and basses and a limiter, which puts about 4 dB mor
 theme, sparser and quieter through its opening, sits beside it as `assets/sfx/music_title_alt.mp3`;
 swap the two filenames to use that one instead.
 
+## Photograph archive
+
+The title screen and the Sources & accuracy screen both open a **Photograph archive**: a grid of
+plates of the squadron's ground, each with a caption and a credit line. Photographs of the period
+and reconstructions made for this game are kept in separate sections and every reconstruction is
+labelled as one, so nothing on the screen is taken for something it is not.
+
+To add a plate, put the file in `assets/archive/` and add an entry to `src/data/archive.js`. A
+plate whose file is missing still lists and says so, so an incomplete folder never breaks the
+screen. Record the provenance and rights of anything you add in its entry.
+
 One sortie opens with a promotion instead: Squadron Leader T. Q. Horner becomes Wing
 Commander. His real promotion date is not documented in any source available to the project,
 so it is staged at a documented *squadron* milestone — the Sunderlands coming on charge before

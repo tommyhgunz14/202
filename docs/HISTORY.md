@@ -81,6 +81,17 @@ documents, and the debrief is written as an Operations Record Book entry in his 
   The individual dial faces are generic RAF rather than the exact instruments of any one mark,
   and the London and Sunderland share the Catalina's arrangement.
 
+## Photograph archive
+
+The archive screen separates real photographs from the images generated for this game, and labels
+every generated plate as a reconstruction. Nothing generated is presented as a contemporary
+photograph anywhere in the game.
+
+Photographs supplied to the project are listed in `src/data/archive.js` with whatever is known of
+their provenance. Where rights are not established the entry says so rather than implying a
+licence. Wartime British official photographs are frequently held by the Imperial War Museum under
+their own terms; none are bundled in this repository.
+
 ## Generated media (Atlas)
 
 Skies, surface textures and sound clips were generated with the Atlas platform from written

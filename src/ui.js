@@ -1,5 +1,6 @@
 import { AIRCRAFT, SCORE_LABELS, availableOn } from './data/aircraft.js';
 import { MISSIONS, PILOT } from './data/missions.js';
+import { PLATES } from './data/archive.js';
 
 // period photographs (Atlas, RAF official style) shown at the start of a sortie
 const PHOTOS = ['photo_london_gunwharf.jpg', 'photo_briefing.jpg', 'photo_swordfish_slip.jpg', 'photo_sunderland_moor.jpg', 'photo_uboat_air.jpg', 'photo_destroyer.jpg', 'photo_crew_dusk.jpg'];
@@ -28,6 +29,9 @@ export class UI {
     else if (action === 'missions') this.screen = 'missions';
     else if (action === 'controls') this.screen = 'controls';
     else if (action === 'history') this.screen = 'history';
+    else if (action === 'archive') { this.screen = 'archive'; this.plateIdx = -1; }
+    else if (action === 'plate') this.plateIdx = +data.idx;
+    else if (action === 'plateclose') this.plateIdx = -1;
     else if (action === 'mission') { this.missionIdx = +data.idx; this.aircraftIdx = 0; this.screen = 'aircraft'; }
     else if (action === 'aircraft') { this.aircraftIdx = +data.idx; }
     else if (action === 'fly') { this.hide(); this.onStart && this.onStart(MISSIONS[this.missionIdx], this.currentAircraft()); return; }
@@ -76,6 +80,7 @@ export class UI {
       if (m.accept) this.act('fly');
       if (m.back) this.act('missions');
     } else if (this.screen === 'debrief' && (m.accept || m.back)) this.act('missions');
+    else if (this.screen === 'archive' && m.back) { if (this.plateIdx >= 0) this.act('plateclose'); else this.act('title'); }
     else if ((this.screen === 'controls' || this.screen === 'history') && (m.accept || m.back)) this.act('title');
   }
 
@@ -95,6 +100,7 @@ export class UI {
           <button class="primary" data-action="pilot">Begin · Sqn Ldr T. Q. Horner</button>
           <button data-action="controls">Controls (USB controller supported)</button>
           <button data-action="history">Sources &amp; accuracy</button>
+          <button data-action="archive">Photograph archive</button>
         </div>
         <p class="hint">Enter / A to select · Esc / B to go back · plug in a controller at any time</p>
       </div>`;
@@ -196,7 +202,38 @@ export class UI {
         <p class="small">No continuous list of commanding officers for No. 202 Squadron at Gibraltar appears in the public references used here. Where a name and date are not documented, none is asserted.</p>
         <p>Geography follows the chart of the Strait: the Rock (426 m), the harbour's North, Detached and South Moles, Europa Point light, Algeciras Bay, Tarifa, Ceuta and Jebel Musa. Horizontal distances are compressed four to one so a patrol fits a sitting; aircraft and ships are modelled at true size. Liveries: Temperate Sea Scheme (Extra Dark Sea Grey / Dark Slate Grey) with Sky or Sky Grey undersides for 1939–41, the 1942 Coastal Command white sides and undersides for the Catalina and Sunderland; codes TQ (1939–43) and AX (1941–43); Type A1 fuselage roundels and Type B on the wings. Serials K9683, K6931, AH538, AH553, AH544, Z2147 are recorded squadron aircraft; K8422 and W3985 are representative.</p>
         <p>Depth charges are the 250 lb Mk VIII (Torpex from mid-1942) with the shallow 25 ft setting that Coastal Command adopted for surfaced boats. The ASV Mk II display is drawn as the real A-scope: range up the trace, echoes to port or starboard. See <code>docs/HISTORY.md</code> in the project for the full list.</p>
-        ${nav('title')}</div>`;
+        <div class="menu"><button data-action="archive">Photograph archive</button>${nav('title')}</div></div>`;
+    } else if (s === 'archive') {
+      const have = PLATES;
+      const plate = this.plateIdx >= 0 ? have[this.plateIdx] : null;
+      if (plate) {
+        html = `<div class="card wide">
+          <h2>${plate.title}</h2>
+          <p class="sub">${plate.date}${plate.kind === 'archive' ? '' : ' · reconstruction, not a photograph'}</p>
+          <img class="plate-big" src="${plate.file}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <p class="missing" style="display:none">This plate is not in <code>assets/archive/</code> yet.</p>
+          <p class="brief">${plate.caption}</p>
+          <p class="small">${plate.credit}</p>
+          <div class="menu"><button class="primary" data-action="plateclose">Back to the archive</button></div>
+        </div>`;
+      } else {
+        const card = (p, i) => `<button class="plate" data-action="plate" data-idx="${i}">
+            <span class="pimg" style="background-image:url(${p.file})"></span>
+            <b>${p.title}</b><em>${p.date}</em>
+          </button>`;
+        const real = have.map((p, i) => [p, i]).filter(([p]) => p.kind === 'archive');
+        const recon = have.map((p, i) => [p, i]).filter(([p]) => p.kind !== 'archive');
+        html = `<div class="card wide">
+          <h2>Photograph archive</h2>
+          <p class="brief">Pictures of the squadron's ground: the Rock, the harbour, the aircraft and the men.
+            Photographs of the period are kept apart from the reconstructions made for this game, so that
+            nothing here is taken for something it is not.</p>
+          ${real.length ? `<h3>Photographs</h3><div class="plates">${real.map(([p, i]) => card(p, i)).join('')}</div>` : ''}
+          ${recon.length ? `<h3>Reconstructions</h3><div class="plates">${recon.map(([p, i]) => card(p, i)).join('')}</div>` : ''}
+          <p class="small">To add a plate: put the file in <code>assets/archive/</code> and add an entry to
+            <code>src/data/archive.js</code>.</p>
+          ${nav('title')}</div>`;
+      }
     } else if (s === 'debrief') {
       const r = this.result;
       html = `<div class="card wide"><h2>Debrief · ${r.mission.date} · ${r.mission.title}</h2>
