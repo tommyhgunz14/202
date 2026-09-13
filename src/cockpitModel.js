@@ -48,6 +48,22 @@ export function buildCockpitInterior(spec, panelCanvas) {
     const pane = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 1.3), M.glass); pane.position.set(0.12, 0.45, -1.15); pane.rotation.x = -0.3; g.add(pane);
     // low side walls only, well below the eye line; the roof is above the field of view
     g.add(box(2.8, 0.06, 1.4, M.interior, 0.12, 1.25, -0.4));
+    // overhead quadrant between the pilots: sits above the windscreen with only the lever
+    // knobs hanging into the top of the view, as it does on the real flight deck
+    g.add(box(0.5, 0.12, 0.28, M.dark, 0.12, 1.06, -0.7));
+    g.add(box(0.54, 0.035, 0.32, M.frame, 0.12, 0.99, -0.7));
+    for (let i = 0; i < 6; i++) {
+      const lv = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.15, 6), M.frame);
+      lv.position.set(0.12 + (i - 2.5) * 0.062, 0.92, -0.69); lv.rotation.x = 0.26 + (i % 2) * 0.1; g.add(lv);
+      const kn = new THREE.Mesh(new THREE.SphereGeometry(0.019, 8, 6), i < 2 ? M.bakelite : i < 4 ? M.brass : M.dark);
+      kn.position.set(0.12 + (i - 2.5) * 0.062, 0.86, -0.67); g.add(kn);
+    }
+    // pedestal between the seats with the trim wheels
+    g.add(box(0.3, 0.42, 0.5, M.dark, 0.12, -0.78, -0.35));
+    for (const zz of [-0.5, -0.28]) {
+      const tw = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.012, 8, 20), M.frame);
+      tw.rotation.y = Math.PI / 2; tw.position.set(0.12, -0.6, zz); g.add(tw);
+    }
     for (const s of [-1, 1]) g.add(box(0.06, 0.9, 1.4, M.interior, 0.12 + s * 1.38, -0.55, -0.2));
     g.add(box(2.6, 0.4, 0.08, M.interior, 0.12, -0.9, 0.45));   // seat back header behind
     // pilot's yoke and column (moves with the controls); co-pilot's yoke fixed

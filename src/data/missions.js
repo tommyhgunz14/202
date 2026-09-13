@@ -259,8 +259,8 @@ export const MISSIONS = [
 ];
 
 export const SKIES = {
-  dawn: { sun: [-0.35, 0.10, 0.85], zenith: 0x2d4a78, horizon: 0xe8a06a, sunTint: 0xffb070, fog: 0xd9b090, fogDensity: 0.000075, ambient: 0.45, sunI: 1.6, sunColor: 0xffc890 },
-  morning: { sun: [-0.55, 0.45, 0.6], zenith: 0x2f6fb5, horizon: 0xcfe0ea, sunTint: 0xfff0d0, fog: 0xc9d9e2, fogDensity: 0.00006, ambient: 0.55, sunI: 2.4, sunColor: 0xfff2dc },
-  afternoon: { sun: [0.6, 0.55, -0.3], zenith: 0x2a66ad, horizon: 0xd6e2e8, sunTint: 0xfff4e0, fog: 0xcbdbe4, fogDensity: 0.00006, ambient: 0.55, sunI: 2.5, sunColor: 0xfff4e4 },
-  dusk: { sun: [0.85, 0.08, 0.3], zenith: 0x1e2f55, horizon: 0xe0824a, sunTint: 0xff9a5a, fog: 0xc79a80, fogDensity: 0.00008, ambient: 0.35, sunI: 1.4, sunColor: 0xffb080 },
+  dawn: { sun: [0.82, 0.12, 0.56], zenith: 0x2d4a78, horizon: 0xe8a06a, sunTint: 0xffb070, fog: 0xd9b090, fogDensity: 0.000075, ambient: 0.45, sunI: 1.6, sunColor: 0xffc890 },
+  morning: { sun: [0.62, 0.48, 0.62], zenith: 0x2f6fb5, horizon: 0xcfe0ea, sunTint: 0xfff0d0, fog: 0xc9d9e2, fogDensity: 0.00006, ambient: 0.55, sunI: 2.4, sunColor: 0xfff2dc },
+  afternoon: { sun: [-0.58, 0.52, 0.63], zenith: 0x2a66ad, horizon: 0xd6e2e8, sunTint: 0xfff4e0, fog: 0xcbdbe4, fogDensity: 0.00006, ambient: 0.55, sunI: 2.5, sunColor: 0xfff4e4 },
+  dusk: { sun: [-0.84, 0.10, 0.53], zenith: 0x1e2f55, horizon: 0xe0824a, sunTint: 0xff9a5a, fog: 0xc79a80, fogDensity: 0.00008, ambient: 0.35, sunI: 1.4, sunColor: 0xffb080 },
 };

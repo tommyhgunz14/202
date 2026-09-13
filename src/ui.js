@@ -3,6 +3,8 @@ import { MISSIONS, PILOT } from './data/missions.js';
 
 // period photographs (Atlas, RAF official style) shown at the start of a sortie
 const PHOTOS = ['photo_london_gunwharf.jpg', 'photo_briefing.jpg', 'photo_swordfish_slip.jpg', 'photo_sunderland_moor.jpg', 'photo_uboat_air.jpg', 'photo_destroyer.jpg', 'photo_crew_dusk.jpg'];
+// a period photograph of each type, for the right-hand panel of the sortie screen
+const AIRCRAFT_PHOTO = { london: 'ac_saro_london.jpg', catalina: 'ac_catalina.jpg', sunderland: 'ac_sunderland.jpg', swordfish: 'ac_swordfish.jpg' };
 
 // Menu flow: title → briefing (pilot) → mission list → aircraft select → fly → debrief.
 export class UI {
@@ -35,10 +37,11 @@ export class UI {
   // the right-hand panel at the start of a sortie: the aircraft's recognition card, the crew
   // walking out and boarding, and a couple of period photographs, cross-fading with a slow push
   cinePanel(a) {
-    const ref = 'assets/refs/' + a.asset.split('/').pop().replace('.js', '') + '.jpg';
+    // a photograph of this very type, not the recognition card that already sits on the left
+    const card = AIRCRAFT_PHOTO[a.id] ? 'assets/intro/' + AIRCRAFT_PHOTO[a.id] : 'assets/refs/' + a.asset.split('/').pop().replace('.js', '') + '.jpg';
     const pick = PHOTOS.slice();
     const i0 = this.missionIdx % pick.length, i1 = (this.missionIdx * 3 + 1) % pick.length;
-    const shots = [ref, 'assets/intro/intro_walk.jpg', 'assets/intro/' + pick[i0], 'assets/intro/intro_board.jpg', 'assets/intro/' + pick[i1 === i0 ? (i1 + 1) % pick.length : i1]];
+    const shots = [card, 'assets/intro/intro_walk.jpg', 'assets/intro/' + pick[i0], 'assets/intro/intro_board.jpg', 'assets/intro/' + pick[i1 === i0 ? (i1 + 1) % pick.length : i1]];
     return '<div class="cine">' + shots.map((s, i) => `<div class="cslide" style="background-image:url(${s});animation-delay:${i * 5}s"></div>`).join('') + '<i></i></div>';
   }
 
@@ -184,6 +187,13 @@ export class UI {
     } else if (s === 'history') {
       html = `<div class="card wide"><h2>Sources &amp; accuracy</h2>
         <p>The squadron timeline, aircraft, serials and sinkings are taken from the No. 202 Squadron record at the Wartime Memories Project, the History of War and RAFweb squadron histories, uboat.net, and Andrew Thomas's article "Guardians from the Rock" (Britain at War / Key Military), which supplied the details of the squadron's arrival on 9–10 September 1939 under Wg Cdr E. A. Blake, its headquarters on the North Mole, the moorings at the Gun Wharf, the first patrol by London K9683 on 11 September, and Flt Lt Norman Eagleton's interception of a German freighter on 26 December 1939. The remainder of that article is behind a paywall; the pilot's own experiences beyond what is public are represented by the sorties themselves rather than invented detail.</p>
+        <h3>Command of the squadron</h3>
+        <table class="spec">
+          <tr><td>Sep 1939</td><td>Wg Cdr E. A. Blake brings the squadron to Gibraltar and forms it there with six Saro London Mk II (documented)</td></tr>
+          <tr><td>1939&ndash;1944</td><td>The squadron is at Gibraltar throughout, moving to the Azores in September 1944 (documented)</td></tr>
+          <tr><td>Undated</td><td>Sqn Ldr, later Wg Cdr, T. Q. Horner &mdash; the player. His dates of command and of promotion are not established by any source consulted here, and the game does not invent them: the promotion is staged at a documented squadron milestone, not a documented personal one</td></tr>
+        </table>
+        <p class="small">No continuous list of commanding officers for No. 202 Squadron at Gibraltar appears in the public references used here. Where a name and date are not documented, none is asserted.</p>
         <p>Geography follows the chart of the Strait: the Rock (426 m), the harbour's North, Detached and South Moles, Europa Point light, Algeciras Bay, Tarifa, Ceuta and Jebel Musa. Horizontal distances are compressed four to one so a patrol fits a sitting; aircraft and ships are modelled at true size. Liveries: Temperate Sea Scheme (Extra Dark Sea Grey / Dark Slate Grey) with Sky or Sky Grey undersides for 1939–41, the 1942 Coastal Command white sides and undersides for the Catalina and Sunderland; codes TQ (1939–43) and AX (1941–43); Type A1 fuselage roundels and Type B on the wings. Serials K9683, K6931, AH538, AH553, AH544, Z2147 are recorded squadron aircraft; K8422 and W3985 are representative.</p>
         <p>Depth charges are the 250 lb Mk VIII (Torpex from mid-1942) with the shallow 25 ft setting that Coastal Command adopted for surfaced boats. The ASV Mk II display is drawn as the real A-scope: range up the trace, echoes to port or starboard. See <code>docs/HISTORY.md</code> in the project for the full list.</p>
         ${nav('title')}</div>`;

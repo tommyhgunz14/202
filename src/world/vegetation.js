@@ -32,6 +32,16 @@ function oakGeo() {
   const canopy = new THREE.SphereGeometry(0.46, 7, 5).scale(1.15, 0.8, 1).translate(0, 0.52, 0);
   return { trunk, canopy };
 }
+function oliveGeo() {
+  const trunk = new THREE.CylinderGeometry(0.09, 0.14, 0.28, 6).translate(0, 0.14, 0);
+  const canopy = new THREE.SphereGeometry(0.52, 7, 5).scale(1.25, 0.62, 1.15).translate(0, 0.46, 0);
+  return { trunk, canopy };
+}
+function citrusGeo() {
+  const trunk = new THREE.CylinderGeometry(0.05, 0.07, 0.26, 5).translate(0, 0.13, 0);
+  const canopy = new THREE.SphereGeometry(0.38, 7, 6).translate(0, 0.62, 0);
+  return { trunk, canopy };
+}
 function bushGeo() { return { canopy: new THREE.SphereGeometry(0.5, 5, 3).scale(1.2, 0.6, 1).translate(0, 0.3, 0) }; }
 function cypressGeo() {
   const trunk = new THREE.CylinderGeometry(0.03, 0.05, 0.15, 5).translate(0, 0.07, 0);
@@ -58,8 +68,9 @@ function mergeSimple(geos) {
 
 const KINDS = {
   pine: { geo: pineGeo, trunk: 0x5a4632, canopy: [0x44633a, 0x4f7042, 0x5a7a4a], h: [9, 16], count: 7000, grove: [60, 220], rule: (h, s, tn) => h > 25 && h < 330 && s < 0.5 && tn > 250 ? 0.9 : 0 },
-  oak: { geo: oakGeo, trunk: 0x5e4a36, canopy: [0x6f7f4c, 0x7d8c58, 0x687a4a], h: [6, 10], count: 5000, grove: [80, 300], rule: (h, s, tn) => h > 4 && h < 140 && s < 0.35 && tn > 300 ? 0.8 : 0 },
-  bush: { geo: bushGeo, trunk: null, canopy: [0x8a925a, 0x989a64, 0x7c8a54, 0xa39c6a], h: [1.5, 3.2], count: 18000, grove: [40, 160], rule: (h, s, tn) => h > 2.5 && h < 380 && s < 0.6 && tn > 150 ? 1 : 0 },
+  olive: { geo: oliveGeo, trunk: 0x6b5c4a, canopy: [0x8d9479, 0x9aa086, 0x7e876c, 0xa6a992], h: [4.5, 7], count: 7000, grove: [90, 320], rule: (h, s, tn) => h > 3 && h < 160 && s < 0.4 && tn > 200 ? 0.9 : 0 },
+  citrus: { geo: citrusGeo, trunk: 0x5a4a38, canopy: [0x2f4a22, 0x37552a, 0x2a4420], h: [3.2, 4.4], count: 4200, orchard: true, rule: (h, s, tn) => h > 3 && h < 60 && s < 0.12 && tn < 1800 && tn > 150 ? 1 : 0 },
+  bush: { geo: bushGeo, trunk: null, canopy: [0x9a9464, 0xa89e72, 0x8a8558, 0xb3a87c], h: [1.5, 3.2], count: 18000, grove: [40, 160], rule: (h, s, tn) => h > 2.5 && h < 380 && s < 0.6 && tn > 150 ? 1 : 0 },
   cypress: { geo: cypressGeo, trunk: 0x4a3a2a, canopy: [0x2e4a2e, 0x3a5a36], h: [8, 14], count: 500, rule: (h, s, tn) => h > 2 && h < 120 && s < 0.3 && tn < 900 && tn > 120 ? 0.9 : 0 },
   rockScrub: { geo: bushGeo, trunk: null, canopy: [0x4f6a3c, 0x5a7444, 0x66804a, 0x587048], h: [2, 4.5], count: 9000, region: 'gib', grove: [30, 90], rule: (h, s, tn, x, z) => rockWest(x, z) && h > 14 && h < 205 && s < 3.0 ? 1 : 0 },
   rockPine: { geo: pineGeo, trunk: 0x5a4632, canopy: [0x3f5c36, 0x4a6a3e, 0x557846], h: [7, 12], count: 1200, region: 'gib', grove: [40, 120], rule: (h, s, tn, x, z) => rockWest(x, z) && h > 18 && h < 195 && s < 2.4 ? 0.9 : 0 },
@@ -85,11 +96,33 @@ export function buildVegetation() {
         if (h > 1.5 && K.rule(h, slopeAt(x, z), nearTown(x, z), x, z) > 0) groves.push({ x, z, r: K.grove[0] + rnd() * (K.grove[1] - K.grove[0]) });
       }
     }
+    // orchard blocks: flat irrigated ground near the towns, each a rectangle of rows at its
+    // own angle, so the citrus reads as planted rather than scattered
+    const orchards = [];
+    if (K.orchard) {
+      let ot = 0;
+      while (orchards.length < 26 && ot < 4000) {
+        ot++;
+        const R = regions[0];
+        const x = R.x + (rnd() * 2 - 1) * R.half, z = R.z + (rnd() * 2 - 1) * R.half;
+        const h = terrainHeight(x, z);
+        if (h > 3 && h < 60 && slopeAt(x, z) < 0.09 && nearTown(x, z) < 1800) {
+          orchards.push({ x, z, a: rnd() * Math.PI, rows: 8 + Math.floor(rnd() * 10), cols: 8 + Math.floor(rnd() * 10) });
+        }
+      }
+    }
     let tries = 0;
     while (placements.length < K.count && tries < K.count * 8) {
       tries++;
       let x, z;
-      if (groves.length && rnd() < 0.8) {
+      if (K.orchard && orchards.length) {
+        // a regular grid of rows and trees inside the block, turned to the block's own angle
+        const o = orchards[Math.floor(rnd() * orchards.length)];
+        const u = (Math.floor(rnd() * o.rows) - o.rows / 2) * 7.5;
+        const v = (Math.floor(rnd() * o.cols) - o.cols / 2) * 6.0;
+        x = o.x + u * Math.cos(o.a) - v * Math.sin(o.a) + (rnd() - 0.5) * 0.7;
+        z = o.z + u * Math.sin(o.a) + v * Math.cos(o.a) + (rnd() - 0.5) * 0.7;
+      } else if (groves.length && rnd() < 0.8) {
         const gv = groves[Math.floor(rnd() * groves.length)];
         const a = rnd() * Math.PI * 2, r = gv.r * Math.sqrt(rnd());
         x = gv.x + Math.cos(a) * r; z = gv.z + Math.sin(a) * r;

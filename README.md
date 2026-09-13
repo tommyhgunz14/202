@@ -94,20 +94,43 @@ about six seconds of stills of the crew walking out along the jetty and boarding
 Kodachrome-style images generated with Atlas, `assets/intro/`, with a slow push-in and film
 grain). Any key, click or controller button skips to the menu.
 
-After "A True Story.." and the situation card, the title sits over three of the archive
-photographs dissolving into one another, then the three crew stills follow. Only Escape,
-Enter, Space, a controller button or the skip label end the intro, so a click to focus the
-window does not lose it.
+After "A True Story" and the situation card, the title and subtitle come up and hold over the
+whole run of pictures: three archive photographs and then the three crew stills, each
+dissolving into the next behind the same lettering, with the squadron's years at Gibraltar
+under the title. The prints start as monochrome and come up into colour as the sequence runs,
+so the last of them is in full colour by the time the menu appears. Only Escape, Enter, Space,
+a controller button or the skip label end the intro, so a click to focus the window does not
+lose it. The opening is scored with the Atlas-composed orchestral title cue
+(`assets/sfx/music_title.mp3`), which starts as soon as the browser lets audio play.
+
+One sortie opens with a promotion instead: Squadron Leader T. Q. Horner becomes Wing
+Commander. His real promotion date is not documented in any source available to the project,
+so it is staged at a documented *squadron* milestone — the Sunderlands coming on charge before
+Operation Harpoon in June 1942 — and the Sources & accuracy screen says so rather than
+asserting a date.
+
+Aircraft turn a flash of sunlight as they bank: the wing surfaces and the cockpit glazing each
+light only when the sun's reflection in them happens to point at the camera, so the glints come
+and go through a turn rather than burning all the time.
 
 Every sortie opens in the world: the crew walk out along the pontoon at New Camp, cross the
-gangplank and climb into the moored aircraft one by one while the camera dollies along the
-pontoon, and only then are the engines started (about twelve seconds; Escape, Enter, Space or
-a controller button skips). The figures, and the marshallers and groundcrew on the pontoon,
-are built to an Atlas reference sheet of 1941 Coastal Command aircrew: Irvin jackets, Mae
-Wests, fleece-topped flying boots, parachute bags, side caps, overalls and bats, jointed at
-hips, knees, shoulders and elbows with a walk cycle (`src/world/crew.js`). Inside the moles the
-water is sheltered, so the swell no longer washes over the pontoon; the windsock and the
-yellow flag are cloth in a light wind.
+gangplank and climb in through the hull hatch of the moored aircraft, which is swung open for
+them and pulled shut behind the last man, and only then are the engines started (about fifteen
+seconds; Escape, Enter, Space or a controller button skips). The camera swings on an arc from
+ahead of the walking crew out to a wide three-quarter view of the aircraft, always east of the
+pontoon's edge — the hull, wing and floats all lie west of it, so the shot never enters the
+aircraft however big her span.
+
+The figures, and the marshallers and groundcrew on the pontoon, are built to Atlas reference
+photographs of 1941 Coastal Command aircrew: Irvin jackets with sheepskin collar and cuffs,
+Mae Wests, navy trousers bagging over fleece-topped flying boots, haversacks carried low in
+one hand, side caps, overalls and bats, jointed at hips, knees, shoulders and elbows with a
+walk cycle that leans into the stride and holds the carrying arm still (`src/world/crew.js`).
+
+Inside the moles the water is sheltered, so the swell no longer washes over the pontoon, and
+the swell shoals as it runs into shallow water, so the shoreline no longer heaves: what is left
+on the sand is a narrow line of froth that barely creeps at sea level and is static from the
+air. The windsock and the yellow flag are cloth in a light wind.
 
 The sortie screen carries a cinematic panel on the right: the aircraft's recognition card, the
 crew walking out and boarding, and two of seven period photographs in the style of RAF official

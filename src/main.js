@@ -22,6 +22,7 @@ import { buildCockpitInterior, buildGunnerOverlay } from './cockpitModel.js';
 import { spawnBandit } from './bandits.js';
 import { runIntro } from './intro.js';
 import { startWalkout } from './walkout.js';
+import { showPromotion } from './promotion.js';
 import { MISSIONS, SKIES, PILOT } from './data/missions.js';
 import { AIRCRAFT } from './data/aircraft.js';
 
@@ -50,6 +51,7 @@ sun.shadow.mapSize.set(2048, 2048);
 sun.shadow.camera.near = 10; sun.shadow.camera.far = 3000;
 sun.shadow.camera.left = -400; sun.shadow.camera.right = 400; sun.shadow.camera.top = 400; sun.shadow.camera.bottom = -400;
 sun.shadow.bias = -0.0005;
+sun.shadow.normalBias = 2.0;
 const sunTarget = new THREE.Object3D();
 scene.add(sun, sunTarget); sun.target = sunTarget;
 const hemi = new THREE.HemisphereLight(0xbfd6ea, 0x3d5a3a, 0.55);
@@ -72,6 +74,47 @@ const planeWake = {
 };
 for (const k of Object.keys(planeWake)) { planeWake[k].visible = false; scene.add(planeWake[k]); }
 let wakeFade = 0, sprayAcc = 0, wasOnWater = true;
+const glintTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d').createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.25, 'rgba(255,248,224,0.55)'); g.addColorStop(1, 'rgba(255,240,200,0)');
+  const x = c.getContext('2d'); x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+})();
+const glints = [];   // {sprite, local} - local is a point on the airframe in aircraft space
+function buildGlints(plane) {
+  for (const g of glints) scene.remove(g.sprite);
+  glints.length = 0;
+  const span = plane.userData.span || 30, len = plane.userData.length || 20;
+  const pts = [[span * 0.28, 1.4, len * 0.02], [-span * 0.28, 1.4, len * 0.02], [0, 1.9, len * 0.3]];
+  for (const p of pts) {
+    const mat = new THREE.SpriteMaterial({ map: glintTex, color: 0xfff6e0, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: true, fog: false });
+    const s = new THREE.Sprite(mat); s.scale.setScalar(6); s.visible = false; scene.add(s);
+    glints.push({ sprite: s, local: new THREE.Vector3(p[0], p[1], p[2]) });
+  }
+}
+const _gp = new THREE.Vector3(), _gn = new THREE.Vector3(), _gl = new THREE.Vector3(), _gv = new THREE.Vector3(), _gr = new THREE.Vector3();
+function updateGlints(f) {
+  if (!glints.length || !f) return;
+  // the surface faces the way the aircraft's own up vector points, so the flash swings with bank
+  _gn.set(0, 1, 0).applyQuaternion(f.obj.quaternion).normalize();
+  _gl.copy(sun.position).sub(sun.target.position).normalize();          // toward the sun
+  const facing = _gn.dot(_gl);
+  for (const g of glints) {
+    const s = g.sprite;
+    if (facing <= 0.02 || f.crashed) { s.visible = false; continue; }
+    _gp.copy(g.local).applyQuaternion(f.obj.quaternion).add(f.obj.position);
+    _gv.copy(camera.position).sub(_gp).normalize();
+    // mirror the sun in the surface and see how near the reflection comes to the eye
+    _gr.copy(_gn).multiplyScalar(2 * facing).sub(_gl).normalize();
+    const align = _gr.dot(_gv);
+    const k = align <= 0.82 ? 0 : Math.pow((align - 0.82) / 0.18, 1.7);
+    if (k <= 0.01) { s.visible = false; continue; }
+    s.visible = true; s.position.copy(_gp);
+    s.material.opacity = Math.min(1, k * 1.15);
+    s.scale.setScalar(5 + 13 * k);
+  }
+}
 
 // Panoramas generated with Atlas live in assets/sky/<name>.jpg; when one exists it replaces the
 // shader sky and tints fog and sea to match. Missing files fall back silently.
@@ -153,6 +196,8 @@ function clearMission() {
   G.vessels = [];
   if (G.plane) scene.remove(G.plane);
   G.plane = null; G.flight = null;
+  for (const g of glints) scene.remove(g.sprite);
+  glints.length = 0;
   for (const b of G.bandits) scene.remove(b.group);
   G.bandits = []; G.pendingBandits = []; G.gunners = {}; pipClose();
   if (G.cine) { G.cine.dispose(); G.cine = null; document.body.classList.remove('cine'); }
@@ -210,6 +255,7 @@ async function startMission(mission, spec) {
     G.gunGeom[g.node] = { side: Math.sign(lp.x || 1), baseYaw: Math.atan2(-dir.x, -dir.z), dir };
   }
   G.cockpitNode = findNamed(plane, 'cockpit'); G.bayNode = findNamed(plane, 'bomb_bay');
+  buildGlints(plane);
   G.flight = new Flight(spec, plane);
   // start alongside the seaplane jetty, bow toward the north entrance
   const toEnt = Math.atan2(ENTRANCE.x - JETTY.x, ENTRANCE.z - JETTY.z);
@@ -248,8 +294,10 @@ async function startMission(mission, spec) {
   audio.music.setMood('patrol');
   document.body.classList.add('flying');
   // the crew walk out along the pontoon and board before the engines are started
+  // the promotion is staged at the Harpoon sortie of June 1942 (see docs/HISTORY.md)
+  if (mission.id === 'harpoon' && !G.promoShown) { G.promoShown = true; await showPromotion(document.body, input); }
   const BEAMS = { catalina: 3.1, london: 3.2, sunderland: 3.4, swordfish: 2.2 };
-  G.cine = startWalkout(scene, plane, JETTY, harbour.userData.pontoon, { crew: spec.crew, beam: BEAMS[spec.id] || 3 });
+  G.cine = startWalkout(scene, plane, JETTY, harbour.userData.pontoon, { crew: spec.crew, beam: BEAMS[spec.id] || 3, span: plane.userData.span || 30, length: plane.userData.length || 20, heading: toEnt });
   document.body.classList.add('cine');
   if (titlePlane) titlePlane.visible = false;
   G.running = true;
@@ -793,6 +841,7 @@ function update(dt) {
     st.guide = G.taxiedOut ? 'IN THE BAY \u2014 full throttle, hold the nose up to lift off' : 'TAXI OUT: north entrance brg ' + be.toFixed(0).padStart(3, '0') + '\u00b0 \u00b7 ' + de.toFixed(0) + ' m \u2014 keep under 15 mph between the moles';
   }
   updateMarshallers(p, f.onWater, G.time);
+  updateGlints(f);
   updateFlags(G.time);
   // hide the hull below the sea surface: clip at the local swell height while on or just above it
   waterClip.constant = (f.onWater || p.y < 6) ? -(seaHeight(p.x, p.z) - 0.02) : 1e6;

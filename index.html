@@ -123,11 +123,11 @@
   #intro .icard.on { opacity: 1; }
   #intro .true { font-family: Georgia, "Times New Roman", serif; font-size: clamp(34px, 6vw, 84px); letter-spacing: 0.35em; text-transform: uppercase; font-weight: normal; margin: 0; }
   #intro .story { font-family: Georgia, "Times New Roman", serif; font-size: clamp(19px, 2.1vw, 34px); line-height: 1.7; max-width: 1100px; margin: 0; }
-  #intro .title .photos .ph { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transform: scale(1); transition: opacity 1.4s ease, transform 4.2s linear; filter: grayscale(1) sepia(0.35) contrast(1.05) brightness(0.5); }
+  #intro .title .photos .ph { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transform: scale(1); transition: opacity 1.4s ease, transform 4.2s linear, filter 3.4s linear; filter: grayscale(1) sepia(0.3) contrast(1.12) brightness(0.52); }
   #intro .title .photos .ph.on { opacity: 1; transform: scale(1.07); }
   #intro .title .tt { position: relative; }
   #intro .title h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(38px, 7vw, 96px); letter-spacing: 0.12em; font-weight: normal; margin: 0; text-shadow: 0 2px 40px rgba(0, 0, 0, 0.85); transform: scale(0.96); transition: transform 6s ease-out; }
-  #intro .title.on h1 { transform: scale(1.04); transition-duration: 11s; }
+  #intro .title.on h1 { transform: scale(1.05); transition-duration: 24s; }
   #intro .title .sub { letter-spacing: 0.45em; text-transform: uppercase; font-size: 13px; color: #d8b56a; margin-top: 20px; }
   #intro .scenes { padding: 0; }
   #intro .still { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transform: scale(1); transition: opacity 1s ease, transform 7s linear; filter: sepia(0.22) saturate(0.88) contrast(1.05); }
@@ -137,6 +137,20 @@
   #intro .grain { position: absolute; inset: -20%; pointer-events: none; opacity: 0.13; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); animation: grain 0.5s steps(4) infinite; }
   @keyframes grain { 0% { transform: translate(0, 0); } 25% { transform: translate(-3%, 2%); } 50% { transform: translate(2%, -3%); } 75% { transform: translate(-1%, -2%); } 100% { transform: translate(3%, 1%); } }
   #intro .skip { position: absolute; right: 26px; bottom: 11vh; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; opacity: 0.55; cursor: pointer; padding: 6px 10px; border: 1px solid rgba(241,232,210,0.35); border-radius: 3px; }
+  /* promotion card: a photograph coming up out of the dark with the citation beside it */
+  #promo { position: fixed; inset: 0; z-index: 55; background: #000; color: #f1e8d2; opacity: 0; transition: opacity 1s ease; display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; gap: 0; overflow: hidden; }
+  #promo.on { opacity: 1; }
+  #promo.out { opacity: 0; pointer-events: none; }
+  #promo .ph { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transform: scale(1.02); filter: grayscale(0.75) sepia(0.25) contrast(1.1) brightness(0.42); transition: opacity 2.2s ease, transform 9s linear, filter 5s linear; }
+  #promo.lit .ph { opacity: 1; transform: scale(1.09); filter: grayscale(0.12) sepia(0.08) contrast(1.06) brightness(0.5); }
+  #promo .txt { grid-column: 2; position: relative; padding: 0 8vw 0 2vw; text-shadow: 0 2px 18px rgba(0,0,0,0.9); }
+  #promo h2 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(28px, 3.6vw, 56px); letter-spacing: 0.18em; text-transform: uppercase; font-weight: normal; margin: 0; }
+  #promo .where { color: #d8b56a; letter-spacing: 0.35em; text-transform: uppercase; font-size: 12px; margin: 10px 0 22px; }
+  #promo .body { font-family: Georgia, "Times New Roman", serif; font-size: clamp(15px, 1.35vw, 21px); line-height: 1.75; margin: 0; max-width: 34em; }
+  #promo .bars i { position: absolute; left: 0; right: 0; height: 9vh; background: #000; }
+  #promo .bars i:first-child { top: 0; } #promo .bars i:last-child { bottom: 0; }
+  #promo .skip { position: absolute; right: 26px; bottom: 11vh; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; opacity: 0.55; cursor: pointer; padding: 6px 10px; border: 1px solid rgba(241,232,210,0.35); border-radius: 3px; }
+  @media (max-width: 900px) { #promo { grid-template-columns: 1fr; } #promo .txt { grid-column: 1; padding: 0 8vw; } }
   /* mission-start cinematic: letterbox bars, no instruments until the crew are aboard */
   body.cine::before, body.cine::after { content: ""; position: fixed; left: 0; right: 0; height: 9vh; background: #000; z-index: 30; pointer-events: none; }
   body.cine::before { top: 0; } body.cine::after { bottom: 0; }

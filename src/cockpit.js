@@ -36,12 +36,26 @@ export class Cockpit {
     const W = c.width, H = c.height;
     if (W < 60 || H < 40) return;
     ctx.clearRect(0, 0, W, H);
-    // panel
-    ctx.fillStyle = '#1b1c1e'; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#26282b'; ctx.fillRect(0, 0, W, 6);
-    const r = Math.min(H * 0.36, W / 12);
-    const row1 = H * 0.32, row2 = H * 0.74;
-    const cols = [W * 0.22, W * 0.34, W * 0.46];
+    // panel: dark green-grey metal with a lighter sill along the top and a line of rivets
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#23262a'); bg.addColorStop(0.45, '#181a1c'); bg.addColorStop(1, '#121315');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#2d3134'; ctx.fillRect(0, 0, W, 7);
+    ctx.fillStyle = '#3a3f43';
+    for (let x = 10; x < W; x += 26) ctx.fillRect(x, 11, 2, 2);
+    const r = Math.min(H * 0.30, W / 16);
+    const row1 = H * 0.33, row2 = H * 0.72;
+    const cx = W * 0.40;
+    const cols = [cx - r * 2.3, cx, cx + r * 2.3];
+    // the six are mounted together on their own sub-panel, as on the real aircraft
+    {
+      const x0 = cols[0] - r * 1.55, y0 = row1 - r * 1.5;
+      const w = r * 7.7, h = (row2 - row1) + r * 3;
+      ctx.fillStyle = '#2b2e32'; ctx.fillRect(x0, y0, w, h);
+      ctx.strokeStyle = '#4c5055'; ctx.lineWidth = 2; ctx.strokeRect(x0, y0, w, h);
+      ctx.fillStyle = '#5a5f64';
+      for (const px of [x0 + 6, x0 + w - 8]) for (const py of [y0 + 6, y0 + h - 8]) ctx.fillRect(px, py, 3, 3);
+    }
     const mph = flight.speed * MPH, alt = Math.max(0, flight.altitude) * FT;
     // ASI
     this.gauge(ctx, cols[0], row1, r, 'M.P.H.');
@@ -94,17 +108,30 @@ export class Cockpit {
     ctx.fillStyle = '#e8e2c8'; ctx.beginPath(); ctx.arc(cols[2] + Math.sin(flight.bank) * r * 0.35 * (flight.onWater ? 0 : 1) * 0.3, row2 + r * 0.45, 4, 0, Math.PI * 2); ctx.fill();
     // engines: boost & rpm per engine
     const ecount = Math.min(4, spec.engines.startsWith('4') ? 4 : spec.engines.startsWith('2') ? 2 : 1);
+    const eg = r * 0.5, ex0 = cx + r * 4.6;
+    {
+      const pad = eg * 1.5, top = row1 - eg * 2.0;
+      const h = ecount * eg * 2.7 + eg * 0.6;
+      ctx.fillStyle = '#212427'; ctx.fillRect(ex0 - pad, top, eg * 5.4, h);
+      ctx.strokeStyle = '#41464b'; ctx.lineWidth = 1.5; ctx.strokeRect(ex0 - pad, top, eg * 5.4, h);
+    }
     for (let i = 0; i < ecount; i++) {
-      const x = W * 0.60 + i * r * 1.3, y = row1;
-      this.gauge(ctx, x, y, r * 0.55, `RPM ${i + 1}`);
-      this.needle(ctx, x, y, r * 0.55, -Math.PI * 0.8 + Math.PI * 1.6 * flight.rpm * flight.engineHealth, 2);
-      const y2 = row2;
-      this.gauge(ctx, x, y2, r * 0.55, 'BOOST');
-      this.needle(ctx, x, y2, r * 0.55, -Math.PI * 0.8 + Math.PI * 1.6 * state.throttle, 2);
+      const y = row1 - eg * 0.8 + i * eg * 2.7;
+      this.gauge(ctx, ex0, y, eg, `RPM ${i + 1}`);
+      this.needle(ctx, ex0, y, eg, -Math.PI * 0.8 + Math.PI * 1.6 * flight.rpm * flight.engineHealth, 2);
+      this.gauge(ctx, ex0 + eg * 2.4, y, eg, 'BOOST');
+      this.needle(ctx, ex0 + eg * 2.4, y, eg, -Math.PI * 0.8 + Math.PI * 1.6 * state.throttle, 2);
+    }
+    // fuel and oil on the captain's side, left of the six
+    for (let i = 0; i < 2; i++) {
+      const gx = cols[0] - r * 2.7, gy = row1 + i * r * 1.5;
+      const v = i ? 0.5 + 0.45 * flight.engineHealth : Math.max(0.04, flight.fuel);
+      this.gauge(ctx, gx, gy, eg * 0.92, i ? 'OIL' : 'FUEL');
+      this.needle(ctx, gx, gy, eg * 0.92, -Math.PI * 0.7 + Math.PI * 1.4 * v, 2);
     }
     // stores & fuel
     ctx.textAlign = 'left'; ctx.font = `${Math.max(10, r * 0.2)}px monospace`;
-    const sx = W * 0.83;
+    const sx = W * 0.865;
     ctx.fillStyle = '#c9c6b5';
     ctx.fillText(`${spec.stores.label.toUpperCase()}`, sx, row1 - r * 0.6);
     for (let i = 0; i < spec.stores.count; i++) {

@@ -69,17 +69,24 @@ export function terrainDetail(material, scrubTex, rockTex, metres = 60, sandTex 
     shader.uniforms.tSand = { value: sandTex || scrubTex };
     shader.uniforms.uTile = { value: 1 / metres };
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nattribute float rock;\nattribute float sand;\nvarying float vRock;\nvarying float vSand;\nvarying vec3 vWPos;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvRock = rock;\nvSand = sand;\nvWPos = (modelMatrix * vec4(position, 1.0)).xyz;');
+      .replace('#include <common>', '#include <common>\nattribute float rock;\nattribute float sand;\nvarying float vRock;\nvarying float vSand;\nvarying vec3 vWPos;\nvarying vec3 vWNrm;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvRock = rock;\nvSand = sand;\nvWPos = (modelMatrix * vec4(position, 1.0)).xyz;\nvWNrm = normalize(mat3(modelMatrix) * normal);');
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nuniform sampler2D tScrub;\nuniform sampler2D tRock;\nuniform sampler2D tSand;\nuniform float uTile;\nvarying float vRock;\nvarying float vSand;\nvarying vec3 vWPos;')
+      .replace('#include <common>', '#include <common>\nuniform sampler2D tScrub;\nuniform sampler2D tRock;\nuniform sampler2D tSand;\nuniform float uTile;\nvarying float vRock;\nvarying float vSand;\nvarying vec3 vWPos;\nvarying vec3 vWNrm;')
       .replace('#include <color_fragment>', `#include <color_fragment>
         vec2 tuv = vWPos.xz * uTile;
         mat2 rot = mat2(0.83, 0.56, -0.56, 0.83);
         vec2 ruv = rot * tuv;
+        // triplanar weights: on flat ground the map is laid from above, on a cliff face it is
+        // laid from the side, so a near-vertical face is not smeared into vertical stripes
+        vec3 bw = pow(abs(vWNrm), vec3(4.0));
+        bw /= max(1e-4, bw.x + bw.y + bw.z);
         // two scales of each map, the second turned, so the repeat does not read as a grid
         vec3 dS = mix(texture2D(tScrub, tuv).rgb, texture2D(tScrub, ruv * 0.37 + 0.5).rgb, 0.5);
-        vec3 dR = mix(texture2D(tRock, tuv * 1.7).rgb, texture2D(tRock, ruv * 0.61 + 0.25).rgb, 0.5);
+        dS = bw.y * dS + (1.0 - bw.y) * mix(texture2D(tScrub, vWPos.zy * uTile).rgb, texture2D(tScrub, vWPos.xy * uTile).rgb, bw.z / max(1e-4, bw.x + bw.z));
+        vec3 dR = bw.y * mix(texture2D(tRock, tuv * 1.7).rgb, texture2D(tRock, ruv * 0.61 + 0.25).rgb, 0.5)
+                + bw.x * mix(texture2D(tRock, vWPos.zy * uTile * 1.7).rgb, texture2D(tRock, vWPos.zy * uTile * 0.61 + 0.25).rgb, 0.5)
+                + bw.z * mix(texture2D(tRock, vWPos.xy * uTile * 1.7).rgb, texture2D(tRock, vWPos.xy * uTile * 0.61 + 0.25).rgb, 0.5);
         // slow brightness variation across hundreds of metres hides the tile period entirely
         vec2 mp = vWPos.xz * 0.0022; vec2 mi = floor(mp), mf = fract(mp); mf = mf * mf * (3.0 - 2.0 * mf);
         float mh00 = fract(sin(dot(mi, vec2(127.1, 311.7))) * 43758.5453), mh10 = fract(sin(dot(mi + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5453);
@@ -88,8 +95,10 @@ export function terrainDetail(material, scrubTex, rockTex, metres = 60, sandTex 
         dS *= 0.82 + 0.36 * macro; dR *= 0.85 + 0.3 * macro;
         vec3 dSa = texture2D(tSand, tuv * 3.1).rgb;
         vec3 detail = mix(mix(dS, dR, clamp(vRock, 0.0, 1.0)), dSa, clamp(vSand, 0.0, 1.0));
-        // keep the painted tint, let the photo supply the grain
-        diffuseColor.rgb = diffuseColor.rgb * mix(vec3(1.0), detail * 1.9, 0.85);`);
+        // keep the painted tint, let the photo supply the grain; the lift raises the darkest
+        // samples so a cliff face cannot crush to black, without flattening the variation
+        detail = detail * 1.56 + 0.22;
+        diffuseColor.rgb = diffuseColor.rgb * mix(vec3(1.0), detail, 0.85);`);
   };
   material.needsUpdate = true;
 }

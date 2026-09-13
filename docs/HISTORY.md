@@ -68,15 +68,40 @@ documents, and the debrief is written as an Operations Record Book entry in his 
 - **Seaplane jetty**: the flying-boat base moved from the harbour moorings to RAF New Camp, on
   reclaimed land north of the North Mole, in 1942; the jetty and pontoon are a representative
   timber structure, not a survey of the real one.
-- **Cockpit**: the enclosed flight decks follow the general Catalina/Sunderland arrangement
-  (side-by-side seats, yokes, central throttle pedestal with the levers on the captain's left);
-  the basic-six panel is generic RAF rather than the exact panel of any one type.
+- **Cockpit**: the enclosed flight decks follow the Catalina arrangement as far as the reference
+  allows — side-by-side seats, the big wheels on bent columns, an overhead throttle quadrant on
+  the roof between the pilots, a pedestal with trim wheels between the seats, and a low wide dark
+  panel carrying the blind-flying six together on their own sub-panel in the centre, engine
+  instruments blocked in two columns to the right and pressure gauges on the captain's left.
+  The individual dial faces are generic RAF rather than the exact instruments of any one mark,
+  and the London and Sunderland share the Catalina's arrangement.
 
 ## Generated media (Atlas)
 
 Skies, surface textures and sound clips were generated with the Atlas platform from written
 briefs (see README). They are photographic in style but not photographs of Gibraltar; the crew
 voice lines are synthetic speech in a period RAF manner and the wording is the game's own.
+
+## Command of the squadron
+
+Only one appointment is documented by the sources consulted: **Wg Cdr E. A. Blake**, who brought
+the squadron to Gibraltar and had it established there by 10 September 1939 with six Saro London
+Mk II. No continuous list of commanding officers for the Gibraltar years appears in the public
+references used here.
+
+**T. Q. Horner's** own dates are not documented either. He is known to have served as Squadron
+Leader and later as Wing Commander, but the date of his promotion is not given in any source
+available here, and the paywalled part of the Key Military article could not be consulted. The
+game therefore stages the promotion at a documented *squadron* milestone rather than asserting a
+personal date, and says so on the Sources & accuracy screen.
+
+## Light
+
+The sun runs east to west across the day, as it does at 36° N: low in the east-south-east at
+dawn, higher and still easterly through the morning, southerly at midday, and setting
+west-south-west at dusk. It matters at Gibraltar, where the sheer east face of the Rock takes
+the morning sun and the town on the western slope gets the afternoon light. An earlier build had
+the arc reversed, so the east face stood in shadow at every hour and rendered as a black wall.
 
 ## References
 

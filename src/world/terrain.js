@@ -44,7 +44,7 @@ function rockHeight(x, z) {
   const halfW = (t < 0.72 ? 240 : 300) * H_SCALE * (t < 0 ? 0.6 : 1);   // world metres
   let f;
   if (s >= 0) f = Math.max(0, 1 - (s / (halfW * 1.9)) ** 1.6);            // west: gentle
-  else f = Math.max(0, 1 - (-s / (halfW * 0.8)) ** 2.5);                  // east: sheer
+  else f = Math.max(0, 1 - (-s / (halfW * 1.35)) ** 1.9);                 // east: sheer, but a cliff not a wall
   return crest * V_SCALE * f;
 }
 
@@ -79,9 +79,9 @@ export function terrainHeight(x, z) {
   return Math.max(h, rock);
 }
 
-const LIMESTONE = new THREE.Color(0xb9b09a), LIMESTONE_DK = new THREE.Color(0x8f877a), SCRUB = new THREE.Color(0x5f7040), SCRUB_DRY = new THREE.Color(0x8a8a58);
-const SAND = new THREE.Color(0xe2d4ad), SAND_WET = new THREE.Color(0xb9a884), SHORE_ROCK = new THREE.Color(0x6a635a), MEADOW = new THREE.Color(0x77884a);
-const FIELDS = [new THREE.Color(0xc4b070), new THREE.Color(0x7f8c58), new THREE.Color(0x86984c), new THREE.Color(0x9b7f5c), new THREE.Color(0xb3a866), new THREE.Color(0x6f7f4a)];
+const LIMESTONE = new THREE.Color(0xb9b09a), LIMESTONE_DK = new THREE.Color(0x8f877a), SCRUB = new THREE.Color(0x6e7248), SCRUB_DRY = new THREE.Color(0xa2946a);
+const SAND = new THREE.Color(0xe6d5a6), SAND_WET = new THREE.Color(0xbfa884), SHORE_ROCK = new THREE.Color(0x6a635a), MEADOW = new THREE.Color(0x8c8a5a);
+const FIELDS = [new THREE.Color(0xc9b478), new THREE.Color(0x9c8f66), new THREE.Color(0x8e9377), new THREE.Color(0xa87f54), new THREE.Color(0xbcaf7e), new THREE.Color(0x6f7a4c), new THREE.Color(0xb08a5e)];
 const fhash = (i, j) => { const s = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return s - Math.floor(s); };
 // which field a point lies in: cells of ~150 m on a grid turned 31 degrees, jittered by a hash
 function fieldAt(x, z) {
@@ -115,7 +115,10 @@ function shade(h, slope, x = 0, z = 0) {
   const rockBySlope = THREE.MathUtils.clamp((slope - 0.18) / 0.22, 0, 1);
   let rock = Math.max(rockByHeight, rockBySlope);
   if (rock > 0 && rockWestFace(x, z)) { rock *= 0.25 + 0.2 * n; c.copy(SCRUB).lerp(new THREE.Color(0x4d6238), 0.5 + 0.3 * n); }
-  c.lerp(slope > 0.35 ? LIMESTONE_DK : LIMESTONE, rock * (0.75 + 0.25 * n));
+  const face = LIMESTONE.clone().lerp(LIMESTONE_DK, THREE.MathUtils.clamp((slope - 0.22) / 0.3, 0, 1) * 0.45);
+  c.lerp(face, Math.min(1, rock * (0.72 + 0.28 * n)));
+  // at full rock the lerp saturates and the colour goes flat, so put the grain back by hand
+  if (rock > 0.55) c.offsetHSL(0, 0, (n - 0.5) * 0.07 * (rock - 0.55) / 0.45);
   // bedding planes in the limestone
   if (rock > 0.3) c.lerp(LIMESTONE_DK, rock * 0.18 * (0.5 + 0.5 * Math.sin(h * 0.42 + n * 2.0)));
   c.userData = rock;
@@ -173,7 +176,7 @@ export function buildTerrain() {
   const medium = buildGrid(MED.x, MED.z, MED.half * 2, 520, terrainHeight, { mask: (x, z) => !inGib(x, z), tile: 60 });
   medium.castShadow = true;
   g.add(medium);
-  const fine = buildGrid(GIB_CENTRE.x, GIB_CENTRE.z, GIB_HALF * 2, 180, terrainHeight, { tile: 45 });
+  const fine = buildGrid(GIB_CENTRE.x, GIB_CENTRE.z, GIB_HALF * 2, 300, terrainHeight, { tile: 45 });
   fine.castShadow = true;
   g.add(fine);
   return g;

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { WORLD_HALF } from '../config.js';
+import { terrainHeight } from './terrain.js';
 
 // Sea surface. Vertex: seven directional waves of different lengths, headings and phases summed
 // (no two share a direction, so the swell never reads as a grid). Fragment: the analytic slope of
@@ -28,6 +29,8 @@ const VERT_WAVES = WAVES.filter((w) => w[2] >= 60);
 const VERT_SRC = /* glsl */`
 uniform float uTime;
 uniform vec3 uShelter;   // harbour centre x, z and radius: the moles keep the swell out
+uniform sampler2D uDepth;
+uniform float uWorldHalf;
 varying vec3 vWorld;
 varying float vWave;
 void main() {
@@ -36,6 +39,9 @@ void main() {
   float h = 0.0;
   ${VERT_WAVES.map(([dx, dz, L, A, s], i) => `{ float k = 6.2832 / ${L.toFixed(1)}; float w = sqrt(9.81 * k) * ${s.toFixed(2)}; h += ${A.toFixed(3)} * sin(k * (${dx.toFixed(3)} * p.x + ${dz.toFixed(3)} * p.z) - w * t + ${(i * 1.7).toFixed(2)}); }`).join('\n  ')}
   h *= mix(0.06, 1.0, smoothstep(uShelter.z, uShelter.z * 1.7, length(p.xz - uShelter.xy)));
+  vec2 duv = vec2(p.x / (2.0 * uWorldHalf) + 0.5, p.z / (2.0 * uWorldHalf) + 0.5);
+  float bed = texture2D(uDepth, duv).r * 120.0 - 60.0;
+  h *= smoothstep(0.5, 11.0, -bed);   // the swell dies away as the water shallows
   wp.y += h;
   vWave = h;
   vWorld = wp.xyz;
@@ -105,13 +111,13 @@ void main() {
   base = mix(base, shal, shallow * 0.85);
   vec3 col = mix(base, uSky, fres * 0.7 * (1.0 - 0.5 * shallow));
   // surf: broken white water where the swell runs into the last couple of metres of depth
-  float surfBand = (1.0 - smoothstep(-0.2, 2.6, depth)) * smoothstep(-1.2, 0.0, depth);
+  float surfBand = (1.0 - smoothstep(-0.15, 1.5, depth)) * smoothstep(-0.8, 0.05, depth);
   // the breakers barely move: a slow creep at sea level that freezes into a static frothed
   // edge once the camera is above about 100 ft, and it stays visible at distance
-  float ts = t * 0.12 * (1.0 - clamp(cameraPosition.y / 30.0, 0.0, 1.0));
-  float surfN = fbm(p.xz * 0.35 + vec2(ts * 0.25, -ts * 0.18)) + 0.35 * sin(depth * 2.5 - ts * 1.6);
-  float surf = surfBand * smoothstep(0.35, 0.75, surfN) * exp(-dist * 0.0007);
-  col = mix(col, vec3(0.94, 0.96, 0.97), clamp(surf, 0.0, 1.0) * 0.85);
+  float ts = t * 0.045 * (1.0 - clamp(cameraPosition.y / 18.0, 0.0, 1.0));
+  float surfN = fbm(p.xz * 0.35 + vec2(ts * 0.25, -ts * 0.18)) + 0.08 * sin(depth * 2.5 - ts * 1.6);
+  float surf = surfBand * smoothstep(0.44, 0.70, surfN) * exp(-dist * 0.0007);
+  col = mix(col, vec3(0.94, 0.96, 0.97), clamp(surf, 0.0, 1.0) * 0.8);
   // sun glitter: broad soft lobe plus a tight one, both modulated by ripple so it sparkles
   vec3 H = normalize(uSunDir + V);
   float nh = max(dot(N, H), 0.0);
@@ -168,9 +174,10 @@ export function buildSea(sunDir, fogColor, fogDensity, depthTex = null) {
 export const SEA = { t: 0, shelter: { x: 1e9, z: 1e9, r: 1 } };
 // same shelter factor as the vertex shader, so floating objects agree with the drawn surface
 function shelterAt(x, z) { const d = Math.hypot(x - SEA.shelter.x, z - SEA.shelter.z), r = SEA.shelter.r; const k = Math.min(1, Math.max(0, (d - r) / (r * 0.7))); return 0.06 + 0.94 * k * k * (3 - 2 * k); }
+function shoalAt(x, z) { const d = -terrainHeight(x, z); const k = Math.min(1, Math.max(0, (d - 0.5) / 10.5)); return k * k * (3 - 2 * k); }
 // Height of the swell at a world point (matches the vertex shader) for floating objects.
 export function seaHeight(x, z, t = SEA.t) {
   let h = 0;
   VERT_WAVES.forEach(([dx, dz, L, A, s], i) => { const k = Math.PI * 2 / L, w = Math.sqrt(9.81 * k) * s; h += A * Math.sin(k * (dx * x + dz * z) - w * t + i * 1.7); });
-  return h * shelterAt(x, z);
+  return h * shelterAt(x, z) * shoalAt(x, z);
 }
