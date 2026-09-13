@@ -3,10 +3,12 @@
 ## The pilot
 
 Squadron Leader / Wing Commander **T. Q. Horner** is the player's grandfather and the game's
-point of view. The public references consulted (below) do not name him, and the Key Military
-article that carries his account is paywalled beyond its opening paragraphs, so the game does not
-invent personal detail: he is placed in the captain's seat for sorties that the squadron record
-documents, and the debrief is written as an Operations Record Book entry in his name.
+point of view. The full text of Andrew Thomas's article was supplied to the project and does name
+him: he took command at the end of July 1940 as a squadron leader and is a wing commander by 28
+January 1941, when two Vichy Hawk 75s bounced him off Casablanca in London K5909 and he brought
+her home with bullet holes in her. Beyond the squadron record no personal detail is invented: he
+is placed in the captain's seat for sorties that are documented, and the debrief is written as an
+Operations Record Book entry in his name.
 
 ## Squadron facts used (documented)
 
@@ -14,12 +16,13 @@ documents, and the debrief is written as an Operations Record Book entry in his 
 |---|---|
 | Ordered to Gibraltar on the outbreak of war; established by 10 Sep 1939 under Wg Cdr E. A. Blake with six Saro London Mk II; HQ on the North Mole; aircraft moored in the harbour and at the Gun Wharf; first patrol by London **K9683** on 11 Sep 1939 after a report of a German ship; main task locating German shipping bound for neutral Spain | Andrew Thomas, "Guardians from the Rock", *Britain at War* / Key Military (open part of the article) |
 | 26 Dec 1939: Flt Lt Norman Eagleton's crew in **K6931** sighted a German freighter and ordered her to stop; HMS *Wishart* summoned; ship ran aground on the Spanish coast near Chipiona | same article; HMS *Wishart* histories |
-| Timeline: 25 Aug 1939 war footing · 9 Sep move to Gibraltar · 11 Sep first patrols · 18 Oct 1940 Italian submarine sunk · 27 Oct 1940 Swordfish allocated · 24 Apr 1941 Catalinas allocated · 8 Jun 1941 U-boat attacked · 4 Jun 1942 Sunderlands arrive · 13–17 Jun 1942 Operation Harpoon · 7–8 Nov 1942 Operation Torch · 20 Nov 1942 Sgt A. F. Fletcher lost · 13 Feb 1943 U-boats attacked · Sep 1944 relocation | Wartime Memories Project, No. 202 Squadron page (entry headings) |
+| Timeline: 25 Aug 1939 war footing · 9 Sep move to Gibraltar · 11 Sep first patrols · 18 Oct 1940 Italian submarine sunk · 27 Oct 1940 Swordfish allocated · 24 Apr 1941 Catalinas allocated · 8 Jun 1941 U-boat attacked · 4 Jun 1942 Sunderlands arrive · 13–17 Jun 1942 Operation Harpoon · 7–8 Nov 1942 Operation Torch · 20 Nov 1942 Sgt A. F. Fletcher lost · 14 Feb 1943 U-boats attacked · Sep 1944 relocation | Wartime Memories Project, No. 202 Squadron page (entry headings) |
 | Aircraft: London I/II Sep 1937–Jun 1941; Swordfish I (floatplane, ex No. 3 AACU) Sep 1940–Jun 1941; Catalina Ib Apr 1941–Jan 1945; Sunderland I/II/III Dec 1941–Sep 1942; codes **TQ** (Sep 1939–Aug 1943) and **AX** (May 1941–Aug 1943) | History of War, RAFweb squadron histories |
 | 18 Oct 1940: London of Percy Hatfield sighted bubbles and oil off Alborán; with Norman Eagleton's London bombed the spot; HMS *Firedrake* and *Wrestler* forced the *Durbo* up; she was scuttled and her papers led to the *Lafolè* two days later | Italian submarine *Durbo* histories |
 | 8 Jun 1941: Catalina **AH538 "C"** (Flt Lt R. W. Whittome) strafed and bombed the *Velella*; 9 Jun Catalina **AH553 "J"** (Flt Lt E. M. Pain) attacked the *Brin*, which replied with machine-gun fire | Italian submarine histories |
 | 2 May 1942: U-74 sunk east of Cartagena by HMS *Wishart*, *Wrestler* and a 202 Sqn Catalina (Flt Lt R. Y. Powell) | uboat.net |
-| 13 Feb 1943: U-620 sunk NW of Lisbon by Catalina **Z2147 "J"** (Flt Lt H. R. Sheardown RCAF) on convoy escort; Z2147 credited with nine attacks while with the squadron | uboat.net; IWM photograph captions |
+| 14 Feb 1943: off Cape St Vincent, Catalina **FP223/J** (Flt Lt Harry Sheardown RCAF) damaged **U-381** shortly before midnight, then sank **U-620** less than an hour later, illuminating her with the landing lights on the run in | Andrew Thomas, "Guardians from the Rock"; uboat.net |
+| Catalina **Z2147/AX-L** made nine attacks on U-boats with the squadron and lifted the crew of a Fulmar shot down by Vichy fighters on 18 May 1942 | same article; IWM photograph captions |
 | Catalina **AH544 "AX-H"** photographed leaving Gibraltar on patrol | IWM |
 | RAF New Camp (slipway and hangar on reclaimed land by Montagu Bastion) and North Front runway extended into the Bay, 1942 | RAF Gibraltar histories |
 | Italian human-torpedo and frogman attacks from the *Olterra* at Algeciras (Jul and Dec 1942) — background only | Decima MAS histories |
@@ -29,11 +32,13 @@ documents, and the debrief is written as an Operations Record Book entry in his 
 - **Distances**: horizontal geography is compressed 4:1 (`H_SCALE`) and heights 2:1 so a patrol
   fits a sitting. Actions fought 65 miles off Alborán or north-west of Lisbon are staged at the
   edges of the Strait; the briefings say so.
-- **Serials**: K9683, K6931, AH538, AH553, AH544, Z2147 are recorded squadron aircraft.
-  **K8422** (Swordfish) and **W3985** (Sunderland) are representative: W3985 belongs to a Mk II
-  batch, and the squadron's Sunderland serials were not confirmed.
-- **Codes**: the Catalina carries AX-L (Z2147's letter is not confirmed as L; the IWM image shows
-  Z2147 as AX-L in one caption and "J" in the U-620 account). Londons and the Sunderland carry TQ.
+- **Serials**: K9683, K6931, K5909, K5913, AH537, AH538, AH553, AH544, AJ162, Z2147, FP223,
+  W8407 and W4029 are recorded squadron aircraft. **K8422** (Swordfish) and **W3985**
+  (Sunderland) are representative: W3985 belongs to a Mk II batch, and the squadron's Sunderland
+  serials were not confirmed. The Swordfish that found W8407 was **K8354/TQ-D**.
+- **Codes**: the Catalina carries AX-L, which is Z2147's own marking. The U-620 sortie was flown
+  by FP223 coded J, a different aircraft; the game flies the AX-L model for it and the briefing
+  names the right serial. Londons and the Sunderland carry TQ.
 - **Liveries**: Temperate Sea Scheme (Extra Dark Sea Grey / Dark Slate Grey) with Sky Grey
   undersides for the 1939–40 London and Sky for the Swordfish; the 1942 Coastal Command scheme
   (white sides and undersides) for the Catalina and Sunderland. Type A1 fuselage roundels, Type B
@@ -60,6 +65,43 @@ documents, and the debrief is written as an Operations Record Book entry in his 
   practice. Italian boats reply with machine-gun fire when caught up, as the *Brin* did.
 - **Uniform**: the pilot is not modelled as a figure; the cockpit view uses the RAF "basic six"
   panel layout with period units (mph, feet).
+
+## Sorties added from the full article
+
+The following are taken from the same article and were not in the earlier build, which had only
+the part of it that is readable without a subscription:
+
+- **2 Jul 1940, reconnaissance of the French fleet** — Flt Lt Norman Eagleton's crew flew a
+  detailed reconnaissance of the French squadron in Algeria the day before the Royal Navy
+  bombarded it. The article calls it one of the squadron's less pleasant tasks.
+- **28 Jan 1941, bounced off Casablanca** — Wg Cdr Horner in London K5909, attacked by a pair of
+  Vichy Hawk 75s, escaping with a few bullet holes.
+- **8 Jun 1941, the ditching of W8407** — Catalina W8407 came down in the Strait inbound from
+  Britain; Swordfish K8354/TQ-D found the wreck and directed rescuers, who saved seven of the
+  nine aboard. It was B Flight's last action, its Swordfish being withdrawn the next day.
+- **7 Jun 1942, the Veniero** — F/O Corrie in Sunderland W4029/AX-M attacked from thirty feet
+  astern, the charges failed to release, and he went round again through heavy fire. The first
+  submarine 202 Squadron sank unaided.
+
+Oran, Casablanca and Algiers lie far outside the modelled square, so those three actions are
+staged at the edges of the Strait in the same way as the Alboran and Lisbon sorties, and each
+briefing says so. The French warships at Oran are represented by the game's one French destroyer
+model rather than the battleships that were actually there.
+
+Corrections the full text forced on existing content:
+
+- The **U-620** sortie was dated 13 February 1943 and credited to Catalina Z2147. The article
+  gives **14 February** and **FP223/J**, off Cape St Vincent, and records that the same crew
+  damaged **U-381** less than an hour before sinking U-620.
+- The German freighter of 26 December 1939 is **Gluckberg** in the article; the game had
+  Glücksburg.
+- The **Durbo** attack was made by **K5913** (Hatfield) and **K5909** (Eagleton).
+- The **U-74** attack was flown by **AJ162/AX-C**, seven 250 lb charges at 1412hrs, 55 miles east
+  of Cartagena; the article notes a second boat, **U-375**, was close by and some attacks may have
+  been directed at her.
+
+The article is subscription content. Its facts are used and cited; none of its text is reproduced
+in this repository.
 
 ## Additions in the second pass
 
@@ -106,16 +148,25 @@ voice lines are synthetic speech in a period RAF manner and the wording is the g
 
 ## Command of the squadron
 
-Only one appointment is documented by the sources consulted: **Wg Cdr E. A. Blake**, who brought
-the squadron to Gibraltar and had it established there by 10 September 1939 with six Saro London
-Mk II. No continuous list of commanding officers for the Gibraltar years appears in the public
-references used here.
+The full text of Andrew Thomas, "Guardians from the Rock" (*Britain at War* / Key Military) was
+supplied to the project and gives the succession:
 
-**T. Q. Horner's** own dates are not documented either. He is known to have served as Squadron
-Leader and later as Wing Commander, but the date of his promotion is not given in any source
-available here, and the paywalled part of the Key Military article could not be consulted. The
-game therefore stages the promotion at a documented *squadron* milestone rather than asserting a
-personal date, and says so on the Sources & accuracy screen.
+| From | Commanding officer |
+|---|---|
+| Sep 1939 | Wg Cdr E. A. Blake, who brought the squadron to Gibraltar |
+| 3 Mar 1940 | Wg Cdr Alfred Rogers, still in post when Italy entered the war on 10 Jun |
+| end Jul 1940 | **Sqn Ldr T. Horner** |
+| Feb 1942 | Wg Cdr Albert Case |
+| by Jan 1944 | Wg Cdr G. Harger |
+
+On 28 January 1941 the article calls him "the now Wing Commander Horner", flying London K5909 off
+Casablanca when two Vichy Hawk 75s bounced him. So his promotion falls between the end of July
+1940 and 28 January 1941. The exact day is not recorded, and the game does not invent one: the
+promotion card runs at the front of the Casablanca sortie and the Sources & accuracy screen
+explains the bracket.
+
+An earlier build asserted that none of this was documented and staged the promotion at Operation
+Harpoon in June 1942. That was wrong, and is corrected.
 
 ## Light
 

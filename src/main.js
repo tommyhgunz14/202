@@ -303,8 +303,9 @@ async function startMission(mission, spec) {
   audio.music.setMood('patrol');
   document.body.classList.add('flying');
   // the crew walk out along the pontoon and board before the engines are started
-  // the promotion is staged at the Harpoon sortie of June 1942 (see docs/HISTORY.md)
-  if (mission.id === 'harpoon' && !G.promoShown) { G.promoShown = true; await showPromotion(document.body, input); }
+  // the promotion runs before the Casablanca sortie of 28 January 1941, by which date the
+  // squadron record calls him Wing Commander (see docs/HISTORY.md)
+  if (mission.id === 'casablanca' && !G.promoShown) { G.promoShown = true; await showPromotion(document.body, input); }
   const BEAMS = { catalina: 3.1, london: 3.2, sunderland: 3.4, swordfish: 2.2 };
   G.cine = startWalkout(scene, plane, JETTY, harbour.userData.pontoon, { crew: spec.crew, beam: BEAMS[spec.id] || 3, span: plane.userData.span || 30, length: plane.userData.length || 20, heading: toEnt });
   document.body.classList.add('cine');

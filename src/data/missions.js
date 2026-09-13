@@ -219,8 +219,8 @@ export const MISSIONS = [
     rules: { neutrals: true },
   },
   {
-    id: 'u620', date: '1943-02-13', title: 'Z2147 and U-620',
-    subtitle: 'Catalina Z2147 "J" · Flt Lt H. R. Sheardown RCAF',
+    id: 'u620', date: '1943-02-14', title: 'Two in One Night',
+    subtitle: 'Catalina FP223/J · Flt Lt Harry Sheardown RCAF, off Cape St Vincent',
     brief: 'Escorting a convoy in the western approaches, Catalina Z2147 caught U-620 on the surface and sank her with depth charges: the squadron\'s second confirmed kill and the ninth attack credited to this aircraft. The action was fought north-west of Lisbon; here it is staged at the western edge of the Strait at dusk. Find her on the ASV before the light goes, come in low along her track, and straddle her with a stick of four set to 25 feet.',
     aircraft: ['catalina'], sky: 'dusk', clouds: 30,
     spawn: { ...BASE, heading: 205 },
@@ -236,6 +236,95 @@ export const MISSIONS = [
       { id: 'find', kind: 'identify', target: 'U-620', text: 'Find U-620 with the ASV' },
       { id: 'sink', kind: 'sink', target: 'U-620', text: 'Sink U-620' },
       { id: 'protect', kind: 'protect', tag: 'convoy', seconds: 300, text: 'Convoy unharmed for 5 minutes' },
+      { id: 'home', kind: 'return', text: 'Return to Gibraltar' },
+    ],
+    rules: { neutrals: true },
+  },
+  {
+    id: 'oran-recce', date: '1940-07-02', title: 'The French Fleet at Oran',
+    subtitle: 'London \u00b7 Flt Lt Norman Eagleton\u2019s crew, the day before the guns',
+    brief: 'France has signed an armistice and her fleet is the question nobody wants to answer. Force H is at Gibraltar and the Admiralty must know exactly what lies at anchor along the North African coast before it decides what to do about it. Eagleton\u2019s crew are to fly a detailed reconnaissance of the French squadron: find the heavy ships, identify them, count them, and shadow long enough to get a full report away by W/T. You are not at war with these ships. Do not attack, and do not give them a reason to open fire on you. The bombardment follows the next day, and this is the least pleasant task the squadron has been given. The anchorage is far down the Algerian coast, well outside the ground this game models; it is staged here at the eastern edge of the Strait.',
+    aircraft: ['london', 'swordfish'], sky: 'morning', clouds: 20,
+    spawn: { ...BASE, heading: 120 },
+    area: { lat: 36.06, lon: -5.18, radius: 3200 },
+    entities: [
+      { type: 'vichy', name: 'Contre-torpilleur (Oran)', lat: 36.055, lon: -5.16, heading: 300, speed: 3, waypoints: [[36.07, -5.24]] },
+      { type: 'vichy', name: 'Contre-torpilleur (Mers-el-K\u00e9bir)', lat: 36.075, lon: -5.19, heading: 300, speed: 2, waypoints: [[36.09, -5.26]] },
+      { type: 'merchant', name: 'French oiler', lat: 36.04, lon: -5.21, heading: 280, speed: 5, waypoints: [[36.06, -5.32]] },
+      { type: 'coaster', name: 'Spanish coaster', lat: 36.10, lon: -5.28, heading: 200, speed: 8, waypoints: [[36.02, -5.34]] },
+    ],
+    objectives: [
+      { id: 'takeoff', kind: 'takeoff', text: 'Take off' },
+      { id: 'ids', kind: 'identify_count', count: 2, text: 'Identify the French warships at anchor' },
+      { id: 'report', kind: 'report', target: 'Contre-torpilleur (Oran)', text: 'Pass the reconnaissance report to Gibraltar' },
+      { id: 'shadow', kind: 'shadow', target: 'Contre-torpilleur (Oran)', seconds: 120, text: 'Hold contact for two minutes while the report is made up' },
+      { id: 'home', kind: 'return', text: 'Return to Gibraltar' },
+    ],
+    rules: { neutrals: true, noAttack: ['Contre-torpilleur (Oran)', 'Contre-torpilleur (Mers-el-K\u00e9bir)', 'French oiler'] },
+  },
+  {
+    id: 'casablanca', date: '1941-01-28', title: 'Bounced off Casablanca',
+    subtitle: 'London K5909 \u00b7 Wing Commander T. Q. Horner',
+    brief: 'The patrols down the African coast have been drawing Vichy fighters for months. One London has already been shadowed by four of them, and in September K9682 went missing with two of her crew killed and the rest interned in Morocco. This morning the commanding officer takes K5909 down the coast himself. Find the German merchantman working south, identify her and get the report away. Two Hawk 75s of the Vichy fighter group will find you before you are done. A Saro London cannot run from a fighter and cannot out-turn one for long: put the gunners on them, keep the aircraft between the sun and the attacker where you can, and get home. Horner brought K5909 back with a few bullet holes in her. Casablanca is far outside the ground this game models; the interception is staged at the western edge of the Strait.',
+    aircraft: ['london', 'swordfish'], sky: 'morning', clouds: 35,
+    spawn: { ...BASE, heading: 250 },
+    area: { lat: 35.94, lon: -5.78, radius: 3200 },
+    entities: [
+      { type: 'freighter', name: 'German merchantman', lat: 35.93, lon: -5.80, heading: 200, speed: 9, waypoints: [[35.88, -5.88]] },
+      { type: 'coaster', name: 'Spanish coaster', lat: 35.99, lon: -5.70, heading: 240, speed: 7, waypoints: [[35.93, -5.86]] },
+      { type: 'fishing', name: 'Fishing boat', lat: 35.96, lon: -5.66, heading: 90, speed: 4, waypoints: [[35.96, -5.58], [35.96, -5.72]], behaviour: 'loop' },
+      { type: 'bandit', name: 'Vichy Curtiss H-75', delay: 150, chance: 1, from: 190 },
+      { type: 'bandit', name: 'Vichy Curtiss H-75', delay: 200, chance: 1, from: 165 },
+    ],
+    objectives: [
+      { id: 'takeoff', kind: 'takeoff', text: 'Take off' },
+      { id: 'find', kind: 'identify', target: 'German merchantman', text: 'Identify the German merchantman' },
+      { id: 'report', kind: 'report', target: 'German merchantman', text: 'Get the sighting report away' },
+      { id: 'home', kind: 'return', text: 'Bring K5909 home to Gibraltar' },
+    ],
+    rules: { neutrals: true },
+  },
+  {
+    id: 'w8407', date: '1941-06-08', title: 'Ditched in the Strait',
+    subtitle: 'Swordfish K8354/TQ-D \u00b7 B Flight\u2019s last action',
+    brief: 'Catalina W8407, flying out from Britain to join the squadron, has come down in the Strait with nine men aboard. B Flight\u2019s Swordfish floatplanes are being withdrawn tomorrow, and this is the last thing they will be asked to do. Find the wreck, get its position away by W/T so the rescue launches can be sent to it, and stay over it until they are on their way. Seven of the nine were taken off alive. The Swordfish is slow and carries little: this is a search, not a fight.',
+    aircraft: ['swordfish', 'london'], sky: 'morning', clouds: 25,
+    spawn: { ...BASE, heading: 230 },
+    area: { lat: 35.97, lon: -5.58, radius: 3000 },
+    entities: [
+      { type: 'raft', name: 'Catalina W8407', lat: 35.968, lon: -5.585, heading: 0, speed: 0 },
+      { type: 'wishart', name: 'HMS Wishart', lat: 36.06, lon: -5.44, heading: 230, speed: 8, role: 'responder', waypoints: [[35.98, -5.56]] },
+      { type: 'fishing', name: 'Fishing boat', lat: 35.99, lon: -5.62, heading: 120, speed: 4, waypoints: [[35.95, -5.52], [35.99, -5.64]], behaviour: 'loop' },
+      { type: 'coaster', name: 'Spanish coaster', lat: 36.02, lon: -5.66, heading: 210, speed: 8, waypoints: [[35.94, -5.74]] },
+    ],
+    objectives: [
+      { id: 'takeoff', kind: 'takeoff', text: 'Take off' },
+      { id: 'find', kind: 'reach', target: 'Catalina W8407', radius: 600, text: 'Search the Strait and find the ditched Catalina' },
+      { id: 'id', kind: 'identify', target: 'Catalina W8407', text: 'Close and identify the wreck' },
+      { id: 'report', kind: 'report', target: 'Catalina W8407', text: 'Send the position so the launches can be dispatched' },
+      { id: 'shadow', kind: 'shadow', target: 'Catalina W8407', seconds: 150, text: 'Stay over the wreck until help is on its way' },
+      { id: 'home', kind: 'return', text: 'Return to Gibraltar' },
+    ],
+    rules: { neutrals: true, noAttack: ['Catalina W8407'] },
+  },
+  {
+    id: 'veniero', date: '1942-06-07', title: 'The Veniero',
+    subtitle: 'Sunderland W4029/AX-M \u00b7 Flying Officer Corrie\u2019s crew',
+    brief: 'A radar contact north-east of Algiers, and a submarine on the surface at the end of it. Corrie came in from thirty feet astern with his gunners firing, and the charges failed to release; he went round again through heavy return fire and put four on her. As she went under, four more went into the swirl. The Veniero was the first submarine 202 Squadron sank without help from anyone. She will fight back: an Italian boat caught on the surface answers with her gun. Come in low along her length, and if the first run fails, go round. The action was fought far to the east; it is staged here at the eastern edge of the Strait.',
+    aircraft: ['sunderland', 'catalina'], sky: 'afternoon', clouds: 20,
+    spawn: { ...BASE, heading: 110 },
+    area: { lat: 36.12, lon: -5.20, radius: 3200 },
+    entities: [
+      { type: 'itsub', name: 'Veniero', lat: 36.13, lon: -5.18, heading: 80, speed: 9, surfaced: true, resurfaceAfter: 150, alarm: [16, 26], diveRate: 0.4, lookout: 0.7, waypoints: [[36.16, -5.06]] },
+      { type: 'coaster', name: 'Spanish coaster', lat: 36.06, lon: -5.26, heading: 60, speed: 8, waypoints: [[36.14, -5.08]] },
+      { type: 'merchant', name: 'Allied merchantman', lat: 36.04, lon: -5.34, heading: 80, speed: 9, waypoints: [[36.12, -5.14]] },
+    ],
+    objectives: [
+      { id: 'takeoff', kind: 'takeoff', text: 'Take off' },
+      { id: 'find', kind: 'identify', target: 'Veniero', text: 'Find and identify the submarine' },
+      { id: 'attack', kind: 'attack', target: 'Veniero', amount: 0.2, text: 'Attack along her length' },
+      { id: 'sink', kind: 'sink', target: 'Veniero', text: 'Sink the Veniero' },
+      { id: 'report', kind: 'report', target: 'Veniero', text: 'Report the attack' },
       { id: 'home', kind: 'return', text: 'Return to Gibraltar' },
     ],
     rules: { neutrals: true },
@@ -257,6 +346,13 @@ export const MISSIONS = [
     rules: { neutrals: true },
   },
 ];
+
+// The record book reads in date order: the practice range first, the historical sorties by the
+// date they were flown, the free patrol last.
+MISSIONS.sort((a, b) => {
+  const rank = (m) => (m.id === 'range' ? 0 : m.id === 'free' ? 2 : 1);
+  return rank(a) - rank(b) || a.date.localeCompare(b.date);
+});
 
 export const SKIES = {
   dawn: { sun: [0.82, 0.12, 0.56], zenith: 0x2d4a78, horizon: 0xe8a06a, sunTint: 0xffb070, fog: 0xd9b090, fogDensity: 0.000075, ambient: 0.45, sunI: 1.6, sunColor: 0xffc890 },

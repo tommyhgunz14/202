@@ -20,8 +20,9 @@ with a vendored `three.module.js`.)
 
 ## Play
 
-- **Title → Begin** gives the pilot's page, then the **Operations Record Book**: nine sorties on
-  real dates from the squadron's Gibraltar record, plus a free patrol.
+- **Title → Begin** gives the pilot's page, then the **Operations Record Book**: thirteen sorties
+  on real dates from the squadron's Gibraltar record, in the order they were flown, plus a
+  practice range and a free patrol.
 - **Choose your aircraft** from those the squadron had on that date. Each type shows its
   performance and eight scores (speed, endurance, climb, agility, payload, defence, detection,
   toughness) which also drive the flight model:

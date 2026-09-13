@@ -1,15 +1,16 @@
-// A short cinematic card before one sortie: Sqn Ldr T. Q. Horner is promoted Wing Commander.
-// The date of his promotion is not documented in any source available to the project, so it is
-// staged at a documented squadron milestone - the Sunderlands arriving in June 1942, on the eve
-// of Operation Harpoon - and the Sources & accuracy screen says as much.
+// A short cinematic card before the Casablanca sortie: Sqn Ldr T. Q. Horner is promoted Wing
+// Commander. He took command at the end of July 1940 and the squadron record calls him Wing
+// Commander by 28 January 1941, so the card sits at the front of that sortie. The exact date of
+// the promotion within that bracket is not recorded, and Sources & accuracy says so.
 
 const CARD = {
   photo: 'assets/intro/promo_horner.jpg',
   title: 'Promotion',
-  place: 'Gibraltar &middot; June 1942',
-  body: 'Squadron Leader T. Q. Horner is promoted Wing Commander. The squadron has taken its '
-      + 'Sunderlands on charge, and within the week its aircraft will be covering the Harpoon '
-      + 'convoy through to Malta. The second ring goes on his cuff on the quay at New Camp.',
+  place: 'Gibraltar &middot; winter 1940&ndash;41',
+  body: 'Squadron Leader T. Q. Horner took command of No. 202 Squadron at the end of July 1940. '
+      + 'By the last week of January 1941 the squadron record calls him Wing Commander. The third '
+      + 'ring goes on his cuff on the quay, and within days he is away down the African coast in '
+      + 'a Saro London with two Vichy fighters closing on him.',
 };
 
 // shown once per mission start; resolves when it is over or the player skips it
