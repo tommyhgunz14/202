@@ -107,6 +107,11 @@ browser will not let a page make a sound until it has been touched, so the cue i
 the intro opens and asked for again on the first key or click; if the page was opened cold it
 comes in at that first touch rather than at the very first frame.
 
+The cue is a slow string theme: violins carry the melody over violas and cellos, with harp
+and soft woodwind beneath it and no brass or percussion anywhere. A second take of the same
+theme, sparser and quieter through its opening, sits beside it as `assets/sfx/music_title_alt.mp3`;
+swap the two filenames to use that one instead.
+
 One sortie opens with a promotion instead: Squadron Leader T. Q. Horner becomes Wing
 Commander. His real promotion date is not documented in any source available to the project,
 so it is staged at a documented *squadron* milestone — the Sunderlands coming on charge before
