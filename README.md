@@ -64,11 +64,13 @@ and trail wakes.
 
 ## Sound
 
-Everything is synthesised in the browser (no audio files): a layered radial-engine model with
+The engine and weather are synthesised in the browser: a layered radial-engine model with
 prop-beat and exhaust roar that comes forward when the throttle moves and settles into the
-background, wind rising with airspeed, water wash on the hull while taxiing, and a generative
-string-pad music bed that shifts mood from menu to patrol, to tension on an enemy contact, to a
-pulse under combat. See `src/audio.js` and docs/SOUND.md for ideas on going further.
+background, wind rising with airspeed, and water wash on the hull while taxiing. Over that sit
+recorded clips and music generated with Atlas (`assets/sfx/`) - guns, detonations, splashes,
+crew and gunner intercom lines, and one music cue per mood that crossfades from menu to patrol,
+to tension on a contact, to combat. A generative string pad stands in for any cue whose file is
+missing. See `src/audio.js` and docs/SOUND.md for ideas on going further.
 
 ## Gun positions and bandits
 
@@ -88,11 +90,9 @@ that position's automatic fire.
 
 ## Launch intro
 
-Each fresh load opens with a short cinematic: "A True Story..", a paragraph on the 1941
-situation and the squadron under Wing Commander T. Q. Horner, the title over the harbour, and
-about six seconds of stills of the crew walking out along the jetty and boarding (three
-Kodachrome-style images generated with Atlas, `assets/intro/`, with a slow push-in and film
-grain). Any key, click or controller button skips to the menu.
+Each fresh load opens with a short cinematic before the menu: black, then "A True Story", then a
+paragraph on Gibraltar in 1941, the submarines working the Strait, and the squadron under Wing
+Commander T. Q. Horner.
 
 After "A True Story" and the situation card, the title and subtitle come up and hold over the
 whole run of pictures: three archive photographs and then the three crew stills, each
