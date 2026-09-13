@@ -250,7 +250,6 @@ export const MISSIONS = [
     entities: [
       { type: 'vichy', name: 'Contre-torpilleur (Oran)', lat: 36.055, lon: -5.16, heading: 300, speed: 3, waypoints: [[36.07, -5.24]] },
       { type: 'vichy', name: 'Contre-torpilleur (Mers-el-K\u00e9bir)', lat: 36.075, lon: -5.19, heading: 300, speed: 2, waypoints: [[36.09, -5.26]] },
-      { type: 'merchant', name: 'French oiler', lat: 36.04, lon: -5.21, heading: 280, speed: 5, waypoints: [[36.06, -5.32]] },
       { type: 'coaster', name: 'Spanish coaster', lat: 36.10, lon: -5.28, heading: 200, speed: 8, waypoints: [[36.02, -5.34]] },
     ],
     objectives: [
@@ -260,7 +259,7 @@ export const MISSIONS = [
       { id: 'shadow', kind: 'shadow', target: 'Contre-torpilleur (Oran)', seconds: 120, text: 'Hold contact for two minutes while the report is made up' },
       { id: 'home', kind: 'return', text: 'Return to Gibraltar' },
     ],
-    rules: { neutrals: true, noAttack: ['Contre-torpilleur (Oran)', 'Contre-torpilleur (Mers-el-K\u00e9bir)', 'French oiler'] },
+    rules: { neutrals: true, noAttack: ['Contre-torpilleur (Oran)', 'Contre-torpilleur (Mers-el-K\u00e9bir)'] },
   },
   {
     id: 'casablanca', date: '1941-01-28', title: 'Bounced off Casablanca',
