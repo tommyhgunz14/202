@@ -23,6 +23,9 @@ export function rockFrame(x, z) {
   return { t: (px * ux + pz * uz) / L, s: px * -uz + pz * ux };
 }
 export function rockWestFace(x, z) { const { t, s } = rockFrame(x, z); return t > -0.01 && t < 0.78 && s > -6 && s < 140; }
+// The southern end of the peninsula - Windmill Hill and the Europa flats - is a limestone
+// platform running out to a low cliff. No beach, no pasture, no scrub worth speaking of.
+export function onEuropaFlats(x, z) { const { t, s } = rockFrame(x, z); return t > 0.72 && t < 1.45 && Math.abs(s) < 240; }
 function rockHeight(x, z) {
   // parametric position along the ridge
   const dx = ROCK.s.x - ROCK.n.x, dz = ROCK.s.z - ROCK.n.z, L = Math.hypot(dx, dz);
@@ -101,11 +104,15 @@ function shade(h, slope, x = 0, z = 0) {
   const n = 0.5 + 0.5 * Math.sin(x * 0.013 + z * 0.021) * Math.sin(x * 0.007 - z * 0.011);
   c.userData = 0; c.sand = 0;
   if (h < 3.5) {
+    // the point runs out to rock at the water, not to sand
+    if (onEuropaFlats(x, z)) { c.copy(SHORE_ROCK).lerp(LIMESTONE, 0.3 + 0.35 * n); c.sand = 0; c.userData = 0.7; return c; }
     if (slope > 0.22) return c.copy(SHORE_ROCK).lerp(LIMESTONE_DK, n * 0.5);          // rocky shore
     c.copy(h < 0.7 ? SAND_WET : SAND).lerp(SAND, Math.min(1, h / 3.5)); c.sand = 1 - Math.min(1, Math.max(0, (h - 2.2) / 1.3) * (slope > 0.12 ? 2 : 1));
     if (h > 2.2) c.lerp(MEADOW, (h - 2.2) / 1.3 * 0.5);
     return c;
   }
+  // the platform itself is bare limestone with a little dry scrub in the hollows
+  if (onEuropaFlats(x, z) && h < 90) { c.copy(LIMESTONE).lerp(LIMESTONE_DK, 0.2 + 0.3 * n); c.sand = 0; c.userData = 0.8; return c; }
   if (h < 12) c.copy(slope < 0.08 ? MEADOW : SCRUB_DRY).lerp(SCRUB, Math.min(1, h / 12) * 0.8 + n * 0.2);
   else c.copy(SCRUB).lerp(SCRUB_DRY, n * 0.35);
   // farmed patchwork on the gentle low ground

@@ -73,6 +73,12 @@ documents, and the debrief is written as an Operations Record Book entry in his 
 - **Seaplane jetty**: the flying-boat base moved from the harbour moorings to RAF New Camp, on
   reclaimed land north of the North Mole, in 1942; the jetty and pontoon are a representative
   timber structure, not a survey of the real one.
+- **Europa Point**: rebuilt against a wartime aerial photograph of the southern tip supplied to
+  the project. The platform is limestone running out to a low cliff, so the beach and the scrub
+  the first pass put there are gone, and it carries terraced barrack blocks in parallel rows
+  stepping inland from the point, with a walled seaward edge. The rows are representative of what
+  the photograph shows rather than a survey: individual buildings, their uses and the road layout
+  are not reproduced.
 - **Cockpit**: the enclosed flight decks follow the Catalina arrangement as far as the reference
   allows — side-by-side seats, the big wheels on bent columns, an overhead throttle quadrant on
   the roof between the pilots, a pedestal with trim wheels between the seats, and a low wide dark

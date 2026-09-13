@@ -107,12 +107,15 @@ browser will not let a page make a sound until it has been touched, so the cue i
 the intro opens and asked for again on the first key or click; if the page was opened cold it
 comes in at that first touch rather than at the very first frame.
 
-The cue is a slow string theme: violins carry the melody over violas and cellos, with harp
-and soft woodwind beneath it and no brass or percussion anywhere. It is mastered for weight with
-a low shelf under the cellos and basses and a limiter, which puts about 4 dB more energy below
-120 Hz than the unmastered take without clipping. A second take of the same
-theme, sparser and quieter through its opening, sits beside it as `assets/sfx/music_title_alt.mp3`;
-swap the two filenames to use that one instead.
+The cue is an original main title written in the general idiom of British war-film scoring:
+a broad hymn-like theme in the major, rising phrases, resolute rather than mournful. Violins
+carry the melody over violas and cellos, with harp and soft woodwind beneath, and there is no
+brass and no percussion anywhere in it. It is mastered for weight: the opening eleven seconds
+are lifted and given a low shelf, tapering back by sixteen seconds, so the theme is stated
+firmly instead of creeping in.
+
+An earlier cue, slower and elegiac in character, sits beside it as
+`assets/sfx/music_title_alt.mp3`. Swap the two filenames to use that one instead.
 
 ## Photograph archive
 

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { terrainHeight, MED, GIB, rockWestFace } from './terrain.js';
+import { terrainHeight, MED, GIB, rockWestFace, onEuropaFlats } from './terrain.js';
 import { PLACES } from '../data/geo.js';
 import { toWorld } from '../config.js';
 
@@ -70,7 +70,7 @@ const KINDS = {
   pine: { geo: pineGeo, trunk: 0x5a4632, canopy: [0x44633a, 0x4f7042, 0x5a7a4a], h: [9, 16], count: 7000, grove: [60, 220], rule: (h, s, tn) => h > 25 && h < 330 && s < 0.5 && tn > 250 ? 0.9 : 0 },
   olive: { geo: oliveGeo, trunk: 0x6b5c4a, canopy: [0x8d9479, 0x9aa086, 0x7e876c, 0xa6a992], h: [4.5, 7], count: 7000, grove: [90, 320], rule: (h, s, tn) => h > 3 && h < 160 && s < 0.4 && tn > 200 ? 0.9 : 0 },
   citrus: { geo: citrusGeo, trunk: 0x5a4a38, canopy: [0x2f4a22, 0x37552a, 0x2a4420], h: [3.2, 4.4], count: 4200, orchard: true, rule: (h, s, tn) => h > 3 && h < 60 && s < 0.12 && tn < 1800 && tn > 150 ? 1 : 0 },
-  bush: { geo: bushGeo, trunk: null, canopy: [0x9a9464, 0xa89e72, 0x8a8558, 0xb3a87c], h: [1.5, 3.2], count: 18000, grove: [40, 160], rule: (h, s, tn) => h > 2.5 && h < 380 && s < 0.6 && tn > 150 ? 1 : 0 },
+  bush: { geo: bushGeo, trunk: null, canopy: [0x9a9464, 0xa89e72, 0x8a8558, 0xb3a87c], h: [1.5, 3.2], count: 18000, grove: [40, 160], rule: (h, s, tn, x, z) => h > 2.5 && h < 380 && s < 0.6 && tn > 150 && !onEuropaFlats(x, z) ? 1 : 0 },
   cypress: { geo: cypressGeo, trunk: 0x4a3a2a, canopy: [0x2e4a2e, 0x3a5a36], h: [8, 14], count: 500, rule: (h, s, tn) => h > 2 && h < 120 && s < 0.3 && tn < 900 && tn > 120 ? 0.9 : 0 },
   rockScrub: { geo: bushGeo, trunk: null, canopy: [0x4f6a3c, 0x5a7444, 0x66804a, 0x587048], h: [2, 4.5], count: 9000, region: 'gib', grove: [30, 90], rule: (h, s, tn, x, z) => rockWest(x, z) && h > 14 && h < 205 && s < 3.0 ? 1 : 0 },
   rockPine: { geo: pineGeo, trunk: 0x5a4632, canopy: [0x3f5c36, 0x4a6a3e, 0x557846], h: [7, 12], count: 1200, region: 'gib', grove: [40, 120], rule: (h, s, tn, x, z) => rockWest(x, z) && h > 18 && h < 195 && s < 2.4 ? 0.9 : 0 },

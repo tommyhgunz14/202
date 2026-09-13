@@ -296,6 +296,40 @@ function town(b) {
   for (let i = 0; i < 3; i++) shed(b, gw.x + 10, gw.z - 40 + i * 32, 18, 26, 8, Math.PI / 2, 'stone');
 }
 
+// Europa Point and Windmill Hill. The photographs show the southern platform covered: long
+// two-storey barrack blocks in parallel terraces stepping inland from the point, a walled
+// enclosure at the seaward edge and a few heavier works among them. Laid on the axis running
+// inland from the point so the rows follow the ground rather than the compass.
+function europaPoint(b) {
+  const c = toWorld(36.1088, -5.3406);          // the point itself
+  const up = toWorld(36.1180, -5.3455);         // inland, toward Windmill Hill
+  const ax = Math.atan2(up.x - c.x, up.z - c.z);
+  const sin = Math.sin(ax), cos = Math.cos(ax);
+  const at = (inland, across) => ({ x: c.x + sin * inland + cos * across, z: c.z + cos * inland - sin * across });
+  // terraced rows of barrack blocks
+  for (let row = 0; row < 8; row++) {
+    const inland = 34 + row * 42;
+    for (let k = -3; k <= 3; k++) {
+      const p = at(inland, k * 40 + (row % 2) * 15);
+      const th = terrainHeight(p.x, p.z);
+      if (th < 1.2 || th > 80) continue;
+      const long = 24 + rnd() * 16, wide = 8.5 + rnd() * 3;
+      house(b, p.x, p.z, long, wide, 2, ax + Math.PI / 2, rnd() < 0.65 ? 'cream' : 'white', { flat: rnd() < 0.4, shutters: true });
+    }
+  }
+  // a couple of heavier blocks and stores among them
+  for (const [inl, acr, w, d, fl] of [[92, -104, 34, 14, 2], [150, 96, 30, 13, 2], [216, -60, 28, 12, 1]]) {
+    const p = at(inl, acr); const th = terrainHeight(p.x, p.z);
+    if (th > 1) house(b, p.x, p.z, w, d, fl, ax + Math.PI / 2, 'stone', { flat: true });
+  }
+  // low boundary wall along the seaward edge of the platform
+  for (let k = -5; k <= 5; k++) {
+    const p = at(14, k * 26);
+    const th = terrainHeight(p.x, p.z);
+    if (th > 0.8) b.box(24, 1.5, 0.8, 'stone', p.x, th + 0.75, p.z, ax + Math.PI / 2);
+  }
+}
+
 function spanishTown(b, lat, lon, count, spread, withTower = false) {
   const c = toWorld(lat, lon);
   for (let i = 0; i < count; i++) {
@@ -314,6 +348,7 @@ function spanishTown(b, lat, lon, count, spread, withTower = false) {
 export function buildTown() {
   const b = new Builder();
   town(b);
+  europaPoint(b);
   moorishCastle(b);
   rockHotel(b);
   catchments(b);
