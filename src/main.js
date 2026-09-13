@@ -187,8 +187,17 @@ window.G = G;
 window.DBG = { scene, camera, input, weapons, audio, endMission: () => endMission(), get renderer() { return renderer; }, get sea() { return sea; }, terrainHeight, THREE };
 
 input.onPad = (id) => { if (id) hud.log(`Controller connected: ${id.slice(0, 40)}`, 'ok'); };
-document.body.addEventListener('pointerdown', () => { audio.init(); audio.resume(); if (!G.running) audio.music.setMood('menu'); }, { once: false });
-document.body.addEventListener('keydown', () => { audio.init(); audio.resume(); if (!G.running) audio.music.setMood('menu'); });
+// The title cue. useTracks is called as well as setMood because setMood returns early once the
+// mood is already 'menu', which would leave the generative pad playing if the clips had not
+// finished decoding the first time round.
+function startMenuMusic() {
+  audio.init(); audio.resume();
+  if (G.running) return;
+  audio.music.setMood('menu');
+  if (audio.music.useTracks) audio.music.useTracks('menu');
+}
+document.body.addEventListener('pointerdown', startMenuMusic, { once: false });
+document.body.addEventListener('keydown', startMenuMusic);
 
 // ---------- mission setup ----------
 function clearMission() {
@@ -305,7 +314,7 @@ async function startMission(mission, spec) {
 ui.onStart = startMission;
 // launch intro: shown once per page load, before the title menu (skippable)
 ui.hide();
-runIntro(document.body, input, { onDone: () => { ui.show(); if (audio.ctx) audio.music.setMood('menu'); } });
+runIntro(document.body, input, { onMusic: startMenuMusic, onDone: () => { ui.show(); if (audio.ctx) audio.music.setMood('menu'); } });
 
 // crew aboard: engines started, HUD shown, briefing on the log (also reached by skipping)
 function finishWalkout() {

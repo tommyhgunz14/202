@@ -14,7 +14,7 @@ Wing Commander Thomas Q. Horner callsign 'Jackie' these dedicated airmen were ta
 enemy subs before they were able to reach the Atlantic and unleash their reign of terror on the critical
 Allied supply convoys.`;
 
-export function runIntro(root, input, { onDone, onTitle } = {}) {
+export function runIntro(root, input, { onDone, onTitle, onMusic } = {}) {
   const el = document.createElement('div');
   el.id = 'intro';
   el.innerHTML = `
@@ -45,6 +45,16 @@ export function runIntro(root, input, { onDone, onTitle } = {}) {
   setTimeout(() => { window.addEventListener('keydown', skip); window.addEventListener('pointerdown', skip); }, 800);
   // controller: poll the menu buttons
   const poll = setInterval(() => { if (done) return clearInterval(poll); const m = input.menuPoll(); if (m.accept || m.back) finish(); }, 120);
+
+  // the cue runs from the first card through to the menu: asked for at once, and asked for
+  // again on the first touch of the page in case the browser held it back until then
+  if (onMusic) {
+    onMusic();
+    const kick = () => onMusic();
+    window.addEventListener('pointerdown', kick);
+    window.addEventListener('keydown', kick);
+    cancel.push(() => { window.removeEventListener('pointerdown', kick); window.removeEventListener('keydown', kick); });
+  }
 
   (async () => {
     await wait(900);

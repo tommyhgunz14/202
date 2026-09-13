@@ -12,7 +12,7 @@ const require = createRequire(dir.replace(/\/?$/, '/') + 'package.json');
 const puppeteer = require('puppeteer');
 const [, , url, scenarioPath] = process.argv;
 mkdirSync('captures', { recursive: true });
-const browser = await puppeteer.launch({ headless: true, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox', '--window-size=1280,800'], protocolTimeout: 300000 });
+const browser = await puppeteer.launch({ headless: true, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox', '--autoplay-policy=no-user-gesture-required', '--window-size=1280,800'], protocolTimeout: 300000 });
 const page = await browser.newPage();
 await page.setViewport({ width: +(process.env.SHOT_W || 1280), height: +(process.env.SHOT_H || 800), deviceScaleFactor: 1 });
 page.on('pageerror', (e) => console.log('PAGE ERROR', e.message));

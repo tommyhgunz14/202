@@ -30,7 +30,8 @@ export class Audio {
     this.noiseBuf = this.makeNoise();
     this.buildAmbience();
     this.music.init();
-    this.samples.load();
+    // when the clips finish decoding, let the recorded cue take over from the generative pad
+    this.samples.load().then(() => { if (this.music && this.music.mood && this.music.mood !== 'off') this.music.useTracks(this.music.mood); });
   }
   resume() { if (this.ctx && this.ctx.state !== 'running') this.ctx.resume(); }
   makeNoise() {

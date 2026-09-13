@@ -101,7 +101,11 @@ under the title. The prints start as monochrome and come up into colour as the s
 so the last of them is in full colour by the time the menu appears. Only Escape, Enter, Space,
 a controller button or the skip label end the intro, so a click to focus the window does not
 lose it. The opening is scored with the Atlas-composed orchestral title cue
-(`assets/sfx/music_title.mp3`), which starts as soon as the browser lets audio play.
+(`assets/sfx/music_title.mp3`). It starts on the first card and plays unbroken through the
+situation text, the title and the photographs into the menu, where the same cue carries on. A
+browser will not let a page make a sound until it has been touched, so the cue is asked for as
+the intro opens and asked for again on the first key or click; if the page was opened cold it
+comes in at that first touch rather than at the very first frame.
 
 One sortie opens with a promotion instead: Squadron Leader T. Q. Horner becomes Wing
 Commander. His real promotion date is not documented in any source available to the project,
