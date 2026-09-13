@@ -84,5 +84,14 @@ export function foamStrip(width, length, opts = {}) {
   });
   const m = new THREE.Mesh(geo, mat);
   m.renderOrder = 2; m.frustumCulled = false;
+  // Advance the scroll by the elapsed time at the given rate. Never set uTime from the clock
+  // multiplied by a rate: when the rate changes the product jumps and the foam visibly slips.
+  m.userData.phase = 0; m.userData.lastT = null;
+  m.advance = (now, rate) => {
+    const last = m.userData.lastT;
+    m.userData.lastT = now;
+    if (last != null) m.userData.phase += Math.max(0, Math.min(0.25, now - last)) * rate;
+    m.material.uniforms.uTime.value = m.userData.phase;
+  };
   return m;
 }

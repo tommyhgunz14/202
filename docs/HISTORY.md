@@ -48,6 +48,11 @@ documents, and the debrief is written as an Operations Record Book entry in his 
 - **Weapons**: 250 lb anti-submarine bombs for the London and Swordfish; 250 lb Mk VIII depth
   charges (Torpex filling from mid-1942) with the 25 ft shallow setting that Coastal Command
   adopted for boats caught on the surface. Lethal radius is generous for play.
+- **Load carried**: the Catalina's eight charges are the 2,000 lb she is credited with. The other
+  three carry more than the figures usually quoted for them — ten for the London and twelve for
+  the Sunderland against the 2,000 lb (eight charges) normally given, and four for the Swordfish
+  floatplane against the one or two she would really have lifted off the water. That is a play
+  allowance so a sortie is not over after two attacks, not a claim about the aircraft.
 - **ASV Mk II**: range scales and the A-scope presentation follow the set; detection ranges are
   scaled with the geography. Sea clutter hides a small target inside a mile, as it did.
 - **Submarine behaviour**: lookouts spot a low aircraft later than a high one; a few seconds'

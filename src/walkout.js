@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { buildFigure, animateFigure } from './world/crew.js';
+import { buildFigure, animateFigure, climbFigure } from './world/crew.js';
 
 // Mission-start cinematic in the world: the crew come out of the hut on the pontoon, walk its
 // length to the gangplank and climb in through the hull hatch of the moored aircraft, which is
@@ -63,7 +63,20 @@ export function startWalkout(scene, plane, jetty, pontoon, spec) {
         const d = Math.max(0, t - c.delay) * speed;
         const L = c.len, end = L[L.length - 1];
         if (d >= end) { c.done = true; c.f.visible = false; continue; }   // through the hatch
-        if (d > end - 1.2) aboard++;   // ducking into the opening
+        const CLIMB = 2.2;                              // the last stretch is the climb in
+        if (d > end - CLIMB) {
+          aboard++;
+          const u = (d - (end - CLIMB)) / CLIMB;
+          const e = u * u * (3 - 2 * u);
+          // he squares up to the hull, steps up the 0.75 m on to the sill and goes in through the
+          // opening: the travel is what sells it, the pose alone did not
+          c.f.position.set(hullX + 0.34 - 0.95 * e, deckY + (sillY - deckY) * e, jetty.z);
+          c.f.rotation.y = -Math.PI / 2;               // facing the hull, which lies to the west
+          climbFigure(c.f, u);
+          if (u > 0.86) c.f.visible = false;           // gone in through the opening
+          if (!lead) lead = c;
+          continue;
+        }
         let i = 1; while (i < L.length - 1 && L[i] < d) i++;
         const a = c.path[i - 1], b = c.path[i], k = (d - L[i - 1]) / Math.max(1e-3, L[i] - L[i - 1]);
         c.f.position.lerpVectors(a, b, k);
@@ -75,7 +88,7 @@ export function startWalkout(scene, plane, jetty, pontoon, spec) {
       // last, so the aircraft is buttoned up before the engines are started
       const wantOpen = t > 1.0 && !!lead;
       hatch += ((wantOpen ? 1 : 0) - hatch) * Math.min(1, dt * (wantOpen ? 2.2 : 1.6));
-      hinge.rotation.z = hatch * 1.35;
+      hinge.rotation.z = hatch * 2.35;
       const u = Math.min(1, t / total), e = u * u * (3 - 2 * u);
       const a = arc.a0 + (arc.a1 - arc.a0) * e, r = arc.r0 + (arc.r1 - arc.r0) * e;
       camera.position.set(Math.max(minX, B.x + Math.cos(a) * r), arc.y0 + (arc.y1 - arc.y0) * e, B.z + Math.sin(a) * r);

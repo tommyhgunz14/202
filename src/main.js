@@ -575,7 +575,7 @@ function update(dt) {
       planeWake.centre.visible = true;
       planeWake.centre.position.set(stern.x - Math.sin(yaw) * wakeLen * 0.5, seaHeight(stern.x, stern.z) + 0.2, stern.z - Math.cos(yaw) * wakeLen * 0.5);
       planeWake.centre.rotation.set(0, yaw, 0); planeWake.centre.scale.set(beam * (3.5 + k * 5), 1, wakeLen);
-      planeWake.centre.material.uniforms.uOpacity.value = 0.85 * vis; planeWake.centre.material.uniforms.uTime.value = G.time * (0.5 + sp / 20);
+      planeWake.centre.material.uniforms.uOpacity.value = 0.85 * vis; planeWake.centre.advance(G.time, 0.5 + sp / 20);
       // stern wash: the churned water thrown up behind the step, widest just astern
       {
         const st = planeWake.stern; st.visible = true;
@@ -583,7 +583,7 @@ function update(dt) {
         const head = p.clone().addScaledVector(fw0, -hullLen * 0.25);
         st.position.set(head.x - Math.sin(yaw) * len * 0.5, seaHeight(head.x, head.z) + 0.3, head.z - Math.cos(yaw) * len * 0.5);
         st.rotation.set(0, yaw, 0); st.scale.set(wid, 1, len);
-        st.material.uniforms.uOpacity.value = 1.0 * vis * (0.5 + 0.5 * k); st.material.uniforms.uTime.value = G.time * (0.8 + sp / 15);
+        st.material.uniforms.uOpacity.value = 1.0 * vis * (0.5 + 0.5 * k); st.advance(G.time, 0.8 + sp / 15);
       }
       // divergent V: two streaks angled ~19 degrees off the track (Kelvin angle)
       for (const [key, sgn] of [['left', 1], ['right', -1]]) {
@@ -594,7 +594,7 @@ function update(dt) {
         st.visible = true;
         st.position.set(origin.x - Math.sin(ang) * len * 0.5, seaHeight(origin.x, origin.z) + 0.2, origin.z - Math.cos(ang) * len * 0.5);
         st.rotation.set(0, ang, 0); st.scale.set(beam * 2.4, 1, len);
-        st.material.uniforms.uOpacity.value = 0.7 * vis * (0.4 + 0.6 * k); st.material.uniforms.uTime.value = G.time * (0.4 + sp / 25);
+        st.material.uniforms.uOpacity.value = 0.7 * vis * (0.4 + 0.6 * k); st.advance(G.time, 0.4 + sp / 25);
       }
       // wash sheets off the chines while on the step
       for (const [key, sgn] of [['washL', 1], ['washR', -1]]) {
@@ -607,7 +607,7 @@ function update(dt) {
           const ang = yaw + sgn * 0.42;
           st.position.set(origin.x - Math.sin(ang) * len * 0.5, seaHeight(origin.x, origin.z) + 0.4, origin.z - Math.cos(ang) * len * 0.5);
           st.rotation.set(0, ang, 0); st.scale.set(spread, 1, len);
-          st.material.uniforms.uOpacity.value = 1.0 * Math.min(1, (k - 0.15) / 0.35); st.material.uniforms.uTime.value = G.time * 1.5;
+          st.material.uniforms.uOpacity.value = 1.0 * Math.min(1, (k - 0.15) / 0.35); st.advance(G.time, 1.5);
         }
       }
       // chine spray: sheets of droplets thrown out and back from the forward hull

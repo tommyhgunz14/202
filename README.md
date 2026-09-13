@@ -108,7 +108,9 @@ the intro opens and asked for again on the first key or click; if the page was o
 comes in at that first touch rather than at the very first frame.
 
 The cue is a slow string theme: violins carry the melody over violas and cellos, with harp
-and soft woodwind beneath it and no brass or percussion anywhere. A second take of the same
+and soft woodwind beneath it and no brass or percussion anywhere. It is mastered for weight with
+a low shelf under the cellos and basses and a limiter, which puts about 4 dB more energy below
+120 Hz than the unmastered take without clipping. A second take of the same
 theme, sparser and quieter through its opening, sits beside it as `assets/sfx/music_title_alt.mp3`;
 swap the two filenames to use that one instead.
 

@@ -178,9 +178,12 @@ export class Vessel {
     if (this.wake) {
       const sp = speed;
       this.wake.visible = sp > 0.5 && (this.depth || 0) < 3;
-      this.wake.scale.z = 0.4 + Math.min(2.5, sp / 6);
-      this.wake.material.uniforms.uOpacity.value = 0.45 + Math.min(0.5, sp / 12);
-      this.wake.material.uniforms.uTime.value = ctx.time * (0.3 + sp / 15);
+      // a smoothed speed drives the length, so a ripple in speed does not make the wake breathe
+      this._wsp = this._wsp == null ? sp : this._wsp + (sp - this._wsp) * 0.04;
+      const wsp = this._wsp;
+      this.wake.scale.z = 0.4 + Math.min(2.5, wsp / 6);
+      this.wake.material.uniforms.uOpacity.value = 0.45 + Math.min(0.5, wsp / 12);
+      this.wake.advance(ctx.time, 0.3 + wsp / 15);
       this.wake.position.y = this.waterline + (this.depth || 0) + 0.15;
       this.wake.position.z = -this.spec.length * 0.5 - this.spec.length * 0.9 * this.wake.scale.z;
     }

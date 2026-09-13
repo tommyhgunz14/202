@@ -86,6 +86,31 @@ export function buildFigure(kind = 'aircrew') {
   return f;
 }
 
+// Climbing in through a hull hatch. u runs 0 to 1: he turns to the hull, reaches for the frame,
+// lifts his leading boot to the sill, rises and leans through the opening.
+export function climbFigure(f, u) {
+  const d = f.userData; if (!d.legs) return;
+  const k = Math.max(0, Math.min(1, u));
+  const ease = k * k * (3 - 2 * k);
+  // near arm up to the frame, far arm follows on to the sill
+  d.arms[0].shoulder.rotation.x = -2.0 * Math.min(1, k * 1.6);
+  d.arms[0].shoulder.rotation.z = 0.25 * Math.min(1, k * 1.6);
+  d.arms[0].elbow.rotation.x = -0.5 + 0.35 * Math.min(1, k * 1.6);
+  d.arms[1].shoulder.rotation.x = -1.3 * Math.max(0, (k - 0.25) / 0.75);
+  d.arms[1].elbow.rotation.x = -0.7 * Math.max(0, (k - 0.25) / 0.75);
+  // leading boot up on to the sill, trailing leg pushes off
+  d.legs[0].hip.rotation.x = -1.15 * Math.max(0, (k - 0.15) / 0.85);
+  d.legs[0].knee.rotation.x = 1.25 * Math.max(0, (k - 0.15) / 0.85);
+  d.legs[1].hip.rotation.x = 0.45 * ease;
+  d.legs[1].knee.rotation.x = 0.5 * ease;
+  // the walk-out moves the whole figure up on to the sill, so here he only dips and straightens
+  d.body.position.y = 0.9 - 0.1 * Math.sin(k * Math.PI) + 0.05 * ease;
+  d.body.rotation.x = 0.14 + 0.42 * ease;
+  d.body.rotation.z = 0;
+  d.body.rotation.y = 0;
+  if (d.neck) d.neck.rotation.x = 0.3 * ease;
+}
+
 // walk cycle: legs swing from the hip with the knee bending on the back swing, arms swing
 // opposite, the body bobs twice per stride and rolls a little; at rest the limbs settle
 export function animateFigure(f, t, speed = 0) {
