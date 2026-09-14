@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { COAST, PEAKS, pointInPoly, distToPoly } from '../data/geo.js';
+import { COAST, PEAKS, RIDGES, pointInPoly, distToPoly } from '../data/geo.js';
 import { toWorld, H_SCALE, V_SCALE, WORLD_HALF } from '../config.js';
 import { loadTex, terrainDetail } from './textures.js';
 
@@ -10,6 +10,46 @@ const PEAKS_W = PEAKS.map(([la, lo, h, r, dir, asp]) => {
   const p = toWorld(la, lo);
   return { x: p.x, z: p.z, h: h * V_SCALE, r: r * H_SCALE, dir: dir * Math.PI / 180, asp };
 });
+
+// Ridgelines in world space: each segment carries its end heights and widths, and the running
+// distance along the crest so the skyline can be broken into peaks and cols by noise along it.
+const RIDGES_W = RIDGES.map((line) => {
+  const pts = line.map(([la, lo, h, hw]) => { const p = toWorld(la, lo); return { x: p.x, z: p.z, h: h * V_SCALE, hw: hw * H_SCALE }; });
+  let s = 0; pts.forEach((p, i) => { if (i) s += Math.hypot(p.x - pts[i - 1].x, p.z - pts[i - 1].z); p.s = s; });
+  const pad = Math.max(...pts.map((p) => p.hw)) * 1.6;
+  return { pts, minX: Math.min(...pts.map((p) => p.x)) - pad, maxX: Math.max(...pts.map((p) => p.x)) + pad, minZ: Math.min(...pts.map((p) => p.z)) - pad, maxZ: Math.max(...pts.map((p) => p.z)) + pad };
+});
+// smooth 1-D and 2-D value noise, fixed so the hills are the same every load
+const h1 = (i) => { const s = Math.sin(i * 127.1 + 17.3) * 43758.5453; return s - Math.floor(s); };
+const n1 = (t) => { const i = Math.floor(t), f = t - i, u = f * f * (3 - 2 * f); return h1(i) * (1 - u) + h1(i + 1) * u; };
+const h2 = (i, j) => { const s = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return s - Math.floor(s); };
+const n2 = (x, z) => { const i = Math.floor(x), j = Math.floor(z), fx = x - i, fz = z - j, ux = fx * fx * (3 - 2 * fx), uz = fz * fz * (3 - 2 * fz);
+  return (h2(i, j) * (1 - ux) + h2(i + 1, j) * ux) * (1 - uz) + (h2(i, j + 1) * (1 - ux) + h2(i + 1, j + 1) * ux) * uz; };
+function ridgeHeight(x, z) {
+  let best = 0;
+  for (const r of RIDGES_W) {
+    if (x < r.minX || x > r.maxX || z < r.minZ || z > r.maxZ) continue;
+    let dMin = Infinity, h = 0, hw = 1, s = 0;
+    for (let i = 1; i < r.pts.length; i++) {
+      const a = r.pts[i - 1], b = r.pts[i];
+      const abx = b.x - a.x, abz = b.z - a.z, L2 = abx * abx + abz * abz;
+      const t = Math.max(0, Math.min(1, ((x - a.x) * abx + (z - a.z) * abz) / L2));
+      const d = Math.hypot(x - (a.x + abx * t), z - (a.z + abz * t));
+      if (d < dMin) { dMin = d; h = a.h + (b.h - a.h) * t; hw = a.hw + (b.hw - a.hw) * t; s = a.s + Math.sqrt(L2) * t; }
+    }
+    // the crest: peaks and cols along it, spurs reaching out and gullies cut back into the flanks
+    const along = s / 230;
+    const crest = h * (0.8 + 0.26 * n1(along) + 0.1 * n1(along * 3.3 + 7) + 0.04 * n1(along * 9 + 3));
+    const width = hw * (0.78 + 0.45 * n2(x / 260, z / 260));
+    const u = dMin / width;
+    if (u >= 1) continue;
+    let v = crest * Math.pow(1 - Math.pow(u, 1.5), 1.8);
+    // rock outcrops and broken ground near the top
+    v += crest * 0.05 * (n2(x / 45, z / 45) - 0.5) * (1 - u) * (1 - u);
+    if (v > best) best = v;
+  }
+  return best;
+}
 
 // Rock of Gibraltar: a N–S ridge 1.2 km real (300 m world) with a sheer north face and east
 // cliffs. Heights along the ridge from Rock Gun (north, 400 m) to O'Hara's Battery (426 m) then
@@ -77,11 +117,14 @@ export function terrainHeight(x, z) {
     const q = u * u + v * v;
     h += p.h * Math.exp(-q * 1.6);
   }
+  h = Math.max(h, h * 0.35 + ridgeHeight(x, z));
   // keep coast low so beaches exist
   h *= Math.min(1, d / (600 * H_SCALE)) ** 0.7;
   return Math.max(h, rock);
 }
 
+const SANDSTONE = new THREE.Color(0x8c7d62), SANDSTONE_DK = new THREE.Color(0x6a5e4a), CORK = new THREE.Color(0x4c5343), MAQUIS = new THREE.Color(0x6b6d5a);
+const WEST_OF_BAY = toWorld(36.10, -5.445).x;   // the Algeciras side and the Tarifa hills
 const LIMESTONE = new THREE.Color(0xb9b09a), LIMESTONE_DK = new THREE.Color(0x8f877a), SCRUB = new THREE.Color(0x6e7248), SCRUB_DRY = new THREE.Color(0xa2946a);
 const SAND = new THREE.Color(0xe6d5a6), SAND_WET = new THREE.Color(0xbfa884), SHORE_ROCK = new THREE.Color(0x6a635a), MEADOW = new THREE.Color(0x8c8a5a);
 const FIELDS = [new THREE.Color(0xc9b478), new THREE.Color(0x9c8f66), new THREE.Color(0x8e9377), new THREE.Color(0xa87f54), new THREE.Color(0xbcaf7e), new THREE.Color(0x6f7a4c), new THREE.Color(0xb08a5e)];
@@ -118,6 +161,18 @@ function shade(h, slope, x = 0, z = 0) {
   // farmed patchwork on the gentle low ground
   const flat = THREE.MathUtils.clamp(1 - slope / 0.13, 0, 1) * THREE.MathUtils.clamp((h - 3.5) / 5, 0, 1) * (1 - THREE.MathUtils.clamp((h - 90) / 60, 0, 1));
   if (flat > 0) { const f = fieldAt(x, z); c.lerp(f.col, flat * 0.8 * (0.6 + 0.4 * f.edge)); }
+  if (x < WEST_OF_BAY && z > toWorld(36.7, 0).z && !onEuropaFlats(x, z)) {
+    // cork-oak forest and maquis on the slopes, grading darker with height; sandstone only where
+    // the ground is steep enough to break through the cover
+    if (h > 12) {
+      const cover = THREE.MathUtils.clamp((h - 12) / 60, 0, 1);
+      c.lerp(MAQUIS.clone().lerp(CORK, 0.35 + 0.5 * n), cover * 0.85);
+      const bare = THREE.MathUtils.clamp((slope - 0.24) / 0.22, 0, 1) * THREE.MathUtils.clamp((h - 60) / 80, 0, 1);
+      if (bare > 0) c.lerp(SANDSTONE.clone().lerp(SANDSTONE_DK, n), bare * 0.8);
+      c.userData = bare * 0.6;
+      return c;
+    }
+  }
   const rockByHeight = THREE.MathUtils.clamp((h - 90) / 120, 0, 1);
   const rockBySlope = THREE.MathUtils.clamp((slope - 0.18) / 0.22, 0, 1);
   let rock = Math.max(rockByHeight, rockBySlope);

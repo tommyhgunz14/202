@@ -26,7 +26,7 @@ import { startWalkout } from './walkout.js';
 import { findCrewShots, startCrewCinematic } from './crewCinematic.js';
 import { showPromotion } from './promotion.js';
 import { MISSIONS, SKIES, PILOT } from './data/missions.js';
-import { AIRCRAFT } from './data/aircraft.js';
+import { AIRCRAFT, availableOn } from './data/aircraft.js';
 
 // ---------- renderer & scene ----------
 const canvas = document.getElementById('gl');
@@ -184,7 +184,7 @@ const G = {
   vessels: [], view: 'chase', stores: 0, ammo: 0, fireTimer: 0, dropTimer: 0, time: 0, clock: 0,
   objectives: [], events: [], reportCooldown: 0, crewGunTimer: 0, endTimer: -1, result: null,
   slick: null, score: 0, penalties: 0, tookOff: false, idCount: 0, identifiedTargets: new Set(),
-  views: ['chase', 'cockpit'], viewIdx: 0, aim: { yaw: 0, pitch: 0 }, bandits: [], pendingBandits: [], friendlies: [], pendingFriendlies: [], flags: new Set(), flagTimes: {}, triggers: [], timers: [], interior: null,
+  views: ['chase', 'cockpit'], viewIdx: 0, aim: { yaw: 0, pitch: 0 }, bandits: [], parked: [], pendingBandits: [], friendlies: [], pendingFriendlies: [], flags: new Set(), flagTimes: {}, triggers: [], timers: [], interior: null,
   range: { hits: 0, rounds: 0, dcScore: 0, drops: 0 }, gunInvert: true,
 };
 window.G = G;
@@ -211,6 +211,8 @@ function clearMission() {
   G.plane = null; G.flight = null;
   for (const g of glints) scene.remove(g.sprite);
   glints.length = 0;
+  for (const pk of G.parked || []) scene.remove(pk.g);
+  G.parked = [];
   for (const b of G.bandits) scene.remove(b.group);
   G.bandits = []; G.pendingBandits = []; G.gunners = {}; pipClose();
   for (const fr of G.friendlies) { scene.remove(fr.group); if (fr.tag) fr.tag.remove(); }
@@ -331,6 +333,26 @@ async function startMission(mission, spec) {
   const BEAMS = { catalina: 3.1, london: 3.2, sunderland: 3.4, swordfish: 2.2 };
   const walk = startWalkout(scene, plane, { x: G.berth.x, z: G.berth.z }, harbour.userData.pontoon, { crew: spec.crew, beam: BEAMS[spec.id] || 3, span: plane.userData.span || 30, length: plane.userData.length || 20, heading: toEnt, boarding: spec.id === 'swordfish' ? 'cockpit' : 'hatch', cockpit: G.cockpitLocal });
   // where film of this aircraft type's crew exists, it plays over the walk-out (see crewCinematic.js)
+  // the rest of the squadron at their buoys: the types it flew on the sortie's date, lying head to
+  // the easterly the windsock shows, each riding to her buoy by the bow. Buoys 3 to 5 only: the
+  // first is too close to the pontoon, the second is the title screen's aircraft, and all three
+  // are well clear of the line from the berth to the harbour entrance
+  G.parked = [];
+  {
+    const avail = availableOn(mission.date);
+    const order = [...avail.filter((a) => a.id !== spec.id), ...avail.filter((a) => a.id === spec.id)];
+    const slots = [2, 3, 4].map((i) => harbour.userData.moorings[i]).filter(Boolean);
+    for (let i = 0; i < slots.length && order.length; i++) {
+      const ps = order[i % order.length];
+      const pg = await loadOrPlaceholder(ps.asset, 20, 30, 'aircraft');
+      pg.traverse((n) => { if (n.isMesh && n.material) { const ms = Array.isArray(n.material) ? n.material : [n.material]; for (const mt of ms) { mt.clippingPlanes = [waterClip]; mt.clipShadows = true; } } });
+      const y0 = -(ps.draft || 1.0), h = Math.PI / 2 + (i - 1) * 0.1;
+      const back = (pg.userData.length || 20) * 0.5 + 5;   // the buoy is off the bow on a short pennant
+      pg.position.set(slots[i].x - Math.sin(h) * back, y0, slots[i].z - Math.cos(h) * back); pg.rotation.y = h;
+      scene.add(pg);
+      G.parked.push({ g: pg, y0, h, ph: i * 1.7 });
+    }
+  }
   const crewShots = await findCrewShots(spec.id);
   G.cine = crewShots.length ? startCrewCinematic(crewShots, walk) : walk;
   document.body.classList.add('cine');
@@ -660,6 +682,8 @@ function update(dt) {
   if (ctl.report) sightingReport();
 
   f.update(dt, flightCtl);
+  // aircraft at their buoys ride the harbour's small lop
+  for (const pk of G.parked) { pk.g.position.y = pk.y0 + Math.sin(G.time * 0.8 + pk.ph) * 0.07; pk.g.rotation.set(Math.sin(G.time * 0.6 + pk.ph) * 0.008, pk.h + Math.sin(G.time * 0.05 + pk.ph) * 0.03, Math.sin(G.time * 0.5 + pk.ph) * 0.012); }
   // brought in alongside: the last few seconds warp her gently into the berth, parallel to the
   // pontoon, so she never ends the sortie lying across it
   if (G.park) {

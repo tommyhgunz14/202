@@ -29,7 +29,6 @@ export const COAST = {
 export const PEAKS = [
   [36.140, -5.343, 426, 550, 0, 3.0],      // Rock of Gibraltar ridge (handled in detail mesh too)
   [36.185, -5.35, 300, 1500, 20, 1.5],     // Sierra Carbonera above La Línea
-  [36.16, -5.48, 500, 3000, 30, 1.3],      // hills west of Algeciras (Sierra de la Luna)
   [36.05, -5.60, 420, 3000, 60, 1.6],      // Tarifa hills
   [36.10, -5.75, 350, 4000, 60, 1.4],
   [36.25, -5.55, 700, 6000, 40, 1.2],      // Sierra del Niño / Los Alcornocales
@@ -42,6 +41,24 @@ export const PEAKS = [
   [35.75, -5.70, 500, 5000, 60, 1.3],
   [35.70, -5.35, 900, 8000, 30, 1.2],      // Rif
   [35.85, -5.32, 400, 2500, 30, 1.2],
+];
+
+// Ridgelines: a crest traced as a line of [lat, lon, crest height m, half-width m]. Where a range
+// reads as one skyline rather than a scatter of hills, a ridge gives the sharp crest, the cols and
+// the spurs that a round peak cannot. Seen from Gibraltar across the Bay, the hills behind
+// Algeciras are one long sandstone skyline: low at Punta Carnero, rising to the high massif of the
+// Sierra de la Luna and El Bujeo south-west of the town, a saddle, a second high hump in the Sierra
+// de Algeciras to the west of it, then falling away north towards Los Barrios and San Roque.
+// Heights are those of the real crests, rounded; the line of each is approximate.
+export const RIDGES = [
+  // Punta Carnero headland, climbing inland to join the main range
+  [[36.074, -5.436, 110, 650], [36.070, -5.462, 240, 1100], [36.066, -5.492, 420, 1500], [36.064, -5.515, 560, 1800]],
+  // Sierra de la Luna / El Bujeo, south-west of Algeciras, then the Sierra de Algeciras running north
+  [[36.030, -5.560, 380, 1800], [36.050, -5.548, 610, 2000], [36.068, -5.535, 810, 2200], [36.088, -5.522, 700, 2100],
+   [36.104, -5.518, 560, 1900], [36.122, -5.527, 740, 2100], [36.142, -5.530, 680, 2000], [36.162, -5.522, 560, 1900],
+   [36.184, -5.505, 430, 1800], [36.206, -5.482, 320, 1600], [36.230, -5.462, 240, 1400]],
+  // the lower ridge north of the Bay, behind Los Barrios towards San Roque
+  [[36.196, -5.455, 160, 1100], [36.210, -5.425, 230, 1300], [36.218, -5.395, 190, 1200]],
 ];
 
 export const PLACES = [

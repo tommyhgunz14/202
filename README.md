@@ -36,6 +36,7 @@ with a vendored `three.module.js`.)
   - Saro London Mk II (1939–41) · Fairey Swordfish floatplane (1940–41)
   - Consolidated Catalina Mk I (1941–) · Short Sunderland Mk I (Dec 1941–Sep 1942)
 - Take off from the Bay: full throttle, hold the nose up past 70–80 mph.
+- The rest of the squadron lies at the harbour buoys: three aircraft of the types it flew on the sortie date. Across the Bay, the hills behind Algeciras form one continuous sandstone ridgeline, as seen from the waterfront today.
 - Each sortie starts berthed alongside the pontoon at New Camp, parallel to it and clear of it by the wingtip. The crew walk-out is shown as a short film sequence for the aircraft type: three period-style stills of the crew walking out, boarding and at their stations, with a slow push-in and cross-fades, fading to the live aircraft as the engines start (Esc skips). The stills are Atlas generations listed in `assets/cine/shots.json`; a type with none listed falls back to the 3D walk-out along the floating gangway.
 - **Identify** a vessel by flying within 800 m of it below 1,500 ft. A British or Allied ship or submarine gets the crew's call: "She looks like one of ours, sir." **Report** it (R / X button)
   to bring the destroyers in. **Attack** submarines low along their length; depth charges sink at

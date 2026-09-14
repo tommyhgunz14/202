@@ -179,6 +179,9 @@ submarine model.
   The individual dial faces are generic RAF rather than the exact instruments of any one mark,
   and the London and Sunderland share the Catalina's arrangement.
 
+- **The hills across the Bay**: the Spanish shore west of Gibraltar is now modelled as ridgelines, not rounded hills. Seen from the harbour, it is one long skyline, checked against a present-day photograph taken from the Gibraltar waterfront, using only the landforms and ignoring modern development. The skyline starts low at Punta Carnero, rises to the high ground of the Sierra de la Luna and El Bujeo south-west of Algeciras (about 800 m), dips to a saddle, rises again in the Sierra de Algeciras to the west, then steps down north towards Los Barrios and San Roque. Crest heights are those of the real summits, rounded; the line of each ridge is approximate. The slopes are shaded as the Aljibe sandstone they are, under cork oak and maquis, with bare rock only where the ground is steep, rather than the pale limestone of the Rock.
+- **The squadron at its buoys**: three more of the squadron's aircraft lie at the harbour moorings on every sortie, of the types it flew on that date, head to wind and riding to their buoys by the bow. Which aircraft stood at which buoy on a given day is not recorded; this is representative.
+
 ## Photograph archive
 
 The archive screen separates real photographs from the images generated for this game, and labels
