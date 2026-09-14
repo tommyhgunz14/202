@@ -233,15 +233,31 @@ export class Vessel {
       if (this.bubbleT <= 0) { this.bubbleT = 0.8 + Math.random() * 0.8; ctx.weapons.bubbles(new THREE.Vector3(g.position.x, 0, g.position.z), 1.2); }
       if (this.oilT <= 0) { this.oilT = 25; ctx.weapons.oilSlick(new THREE.Vector3(g.position.x, 0, g.position.z), 14 + Math.random() * 8); }
     }
-    // burning: a badly hit vessel streams smoke and fire from the bridge
-    if (this.hit > 0.35 * this.spec.hp) {
-      this.fireT -= dt;
-      if (this.fireT <= 0) {
-        this.fireT = 0.25;
-        const bp = new THREE.Vector3(); (findNamed(g, 'bridge') || g).getWorldPosition(bp);
-        ctx.weapons.smoke(bp, 5 + 3 * Math.random(), 6, 0x2a2a2a);
-        if (Math.random() < 0.5) ctx.weapons.fire(bp);
+    // burning: a badly hit vessel is on fire at the bridge (the conning tower on a submarine) and,
+    // as the damage grows, along the deck; the harder she is hit the bigger the blaze
+    if (this.hit > 0.35 * this.spec.hp && this.kind !== 'survivors') {
+      const heat = Math.min(1, (this.hit / this.spec.hp - 0.35) / 0.65);
+      if (!this.firePts) {
+        g.updateMatrixWorld(true);
+        const bw = new THREE.Vector3(); (findNamed(g, 'bridge') || g).getWorldPosition(bw);
+        const bl = g.worldToLocal(bw.clone());
+        const deckY = this.kind === 'submarine' ? Math.max(this.waterline + 0.8, bl.y * 0.55) : Math.max(this.waterline + 1.5, bl.y * 0.7);
+        this.firePts = [bl, new THREE.Vector3(0, deckY, this.length * 0.2), new THREE.Vector3(0, deckY, -this.length * 0.22)];
+        this.smokeT = 0; this.emberT = 0;
       }
+      const lit = 1 + Math.round(heat * 2);          // one seat of fire, spreading to three
+      this.fireT -= dt;
+      const wp = new THREE.Vector3();
+      if (this.fireT <= 0) {
+        this.fireT = 0.045 - 0.02 * heat;
+        for (let n = 0; n < lit; n++) { wp.copy(this.firePts[n]); g.localToWorld(wp); for (let q = 0; q < 2; q++) ctx.weapons.flame(wp, (n === 0 ? 3 : 2.2) + heat * (this.length > 80 ? 4 : 2.5)); }
+      }
+      this.smokeT -= dt;
+      if (this.smokeT <= 0) { this.smokeT = 0.16 - 0.06 * heat; wp.copy(this.firePts[Math.floor(Math.random() * lit)]); g.localToWorld(wp); ctx.weapons.blackSmoke(wp, 7 + heat * (this.length > 80 ? 12 : 7)); }
+      this.emberT -= dt;
+      if (this.emberT <= 0) { this.emberT = 0.15 + Math.random() * 0.4; wp.copy(this.firePts[0]); g.localToWorld(wp); ctx.weapons.ember(wp); }
+      wp.copy(this.firePts[0]); g.localToWorld(wp);
+      ctx.weapons.fireGlow(wp, 0.5 + heat);
     }
     // draft: keel at y=0 in the model, so sink by the waterline, plus depth if submerged
     // ride the swell: small craft follow it fully, big hulls damp it

@@ -69,7 +69,7 @@ export class Bandit {
         this.fireTimer = 0.09;
         const from = new THREE.Vector3(); (this.gun || g).getWorldPosition(from);
         const dir = lead.clone().sub(from).normalize();
-        ctx.weapons.fireTracer(from, dir, 720, true, 0.03, this);
+        ctx.weapons.fireTracer(from, dir, 720, true, 0.014, this);
         if (p.friendly && Math.random() < 0.06) p.damage(0.02, ctx);
         if (Math.random() < 0.2) ctx.audio.enemyGun();
       }

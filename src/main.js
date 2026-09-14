@@ -407,7 +407,7 @@ const ctx = {
     from.y = Math.max(from.y, 2);
     const to = p.obj.position.clone().addScaledVector(p.forward(new THREE.Vector3()), p.speed * 0.6);
     const dir = to.sub(from).normalize();
-    weapons.fireTracer(from, dir, 320, true, 0.05, v);
+    weapons.fireTracer(from, dir, 320, true, 0.02, v);
     if (p.friendly && Math.random() < 0.012) p.damage(0.02, ctx);
     if (Math.random() < 0.15) audio.enemyGun();
   },

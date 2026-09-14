@@ -163,8 +163,9 @@ export class Audio {
   }
   gun(kind = 'vickers') {
     const clip = kind === 'browning' ? 'browning_twin' : 'vickers_k';
-    if (this.samples.has(clip)) { if (!this._gunT || this.ctx.currentTime - this._gunT > 0.25) { this._gunT = this.ctx.currentTime; this.samples.play(clip, 0.7, 0.95 + Math.random() * 0.1); } return; }
-    this.burst(0.5, 1400, 0.045, 0.5); this.burst(0.35, 180, 0.09, 0.6);
+    // our own guns sit a quarter lower than they did, so several positions firing together do not swamp the mix
+    if (this.samples.has(clip)) { if (!this._gunT || this.ctx.currentTime - this._gunT > 0.25) { this._gunT = this.ctx.currentTime; this.samples.play(clip, 0.525, 0.95 + Math.random() * 0.1); } return; }
+    this.burst(0.375, 1400, 0.045, 0.5); this.burst(0.2625, 180, 0.09, 0.6);
   }
   shellSplash() { if (this.samples.has('shell_splash')) this.samples.play('shell_splash', 0.6); else this.burst(0.4, 500, 0.5, 0.4); }
   gulls() { if (this.samples.has('gulls')) this.samples.play('gulls', 0.35); }
@@ -186,7 +187,47 @@ export class Audio {
     o.frequency.exponentialRampToValueAtTime(22, t + 1.4);
     o.connect(g2); g2.connect(this.master); o.start(); o.stop(t + 1.5);
   }
-  hitPlayer() { if (this.samples.has('flak_hits')) { if (!this._hitT || this.ctx.currentTime - this._hitT > 0.4) { this._hitT = this.ctx.currentTime; this.samples.play('flak_hits', 0.8); } return; } this.burst(0.5, 2600, 0.08); this.burst(0.3, 400, 0.15); }
+  // a round striking the airframe: a dull thud through the structure with a faint tick of the skin
+  hitPlayer() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    if (this._thudT && t - this._thudT < 0.07) return;
+    this._thudT = t;
+    const src = this.ctx.createBufferSource(); src.buffer = this.noiseBuf;
+    const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 240 + Math.random() * 80;
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.6, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+    src.connect(lp); lp.connect(g); g.connect(this.master); src.start(t); src.stop(t + 0.16);
+    const o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(120 + Math.random() * 30, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.11);
+    const g2 = this.ctx.createGain(); g2.gain.setValueAtTime(0.5, t); g2.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    o.connect(g2); g2.connect(this.master); o.start(t); o.stop(t + 0.14);
+    this.burst(0.07, 2200, 0.02, 1.5);
+    if (this.samples.has('flak_hits') && (!this._hitT || t - this._hitT > 0.6)) { this._hitT = t; this.samples.play('flak_hits', 0.3); }
+  }
+  // a round going past: a short falling whistle, louder and brighter the closer it came, panned to
+  // the side it passed on (side -1 left .. +1 right)
+  whiz(side = 0, dist = 10) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    if (this._whizT && t - this._whizT < 0.13) return;
+    this._whizT = t;
+    const near = Math.max(0, 1 - dist / 18);
+    const dur = 0.16 + 0.12 * (1 - near);
+    const pan = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+    if (pan) pan.pan.value = Math.max(-1, Math.min(1, side));
+    const out = this.ctx.createGain(); out.gain.value = 1;
+    if (pan) { out.connect(pan); pan.connect(this.master); } else out.connect(this.master);
+    const src = this.ctx.createBufferSource(); src.buffer = this.noiseBuf;
+    const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 7;
+    const f0 = 3600 + near * 1400;
+    bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f0 * 0.42, t + dur);
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.1 + 0.45 * near, t + dur * 0.35); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(bp); bp.connect(g); g.connect(out); src.start(t); src.stop(t + dur + 0.02);
+    // the whistle itself: a thin tone dropping in pitch as the round goes by (Doppler)
+    const o = this.ctx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(2300 + near * 900, t); o.frequency.exponentialRampToValueAtTime(1250, t + dur);
+    const g2 = this.ctx.createGain(); g2.gain.setValueAtTime(0.0001, t); g2.gain.exponentialRampToValueAtTime(0.02 + 0.07 * near, t + dur * 0.4); g2.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g2); g2.connect(out); o.start(t); o.stop(t + dur + 0.02);
+  }
   ping() { this.tone(880, 0.08, 0.2); }
   tone(hz, dur, vol = 0.2) {
     if (!this.ctx) return;
