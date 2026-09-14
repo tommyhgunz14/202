@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { COAST, PEAKS, RIDGES, pointInPoly, distToPoly } from '../data/geo.js';
-import { toWorld, H_SCALE, V_SCALE, WORLD_HALF } from '../config.js';
+import { toWorld, H_SCALE, V_SCALE, WORLD_HALF, GIB_ZOOM } from '../config.js';
 import { loadTex, terrainDetail } from './textures.js';
 
 // Convert coast polygons to world space once.
@@ -51,44 +51,85 @@ function ridgeHeight(x, z) {
   return best;
 }
 
-// Rock of Gibraltar: a N–S ridge 1.2 km real (300 m world) with a sheer north face and east
-// cliffs. Heights along the ridge from Rock Gun (north, 400 m) to O'Hara's Battery (426 m) then
-// dropping over Windmill Hill to the Europa flats.
-const ROCK = { n: toWorld(36.1625, -5.3435), s: toWorld(36.1230, -5.3440) };
-// where a point sits relative to the ridge: t 0 north .. 1 south, s + = west (world metres)
-export function rockFrame(x, z) {
-  const dx = ROCK.s.x - ROCK.n.x, dz = ROCK.s.z - ROCK.n.z, L = Math.hypot(dx, dz);
-  const ux = dx / L, uz = dz / L;
-  const px = x - ROCK.n.x, pz = z - ROCK.n.z;
-  return { t: (px * ux + pz * uz) / L, s: px * -uz + pz * ux };
+// The Rock of Gibraltar, from survey figures (Atlas, checked against the known summits): a crest
+// running almost due south from the sheer North Face to O'Hara's Battery, down over Windmill Hill
+// to the Europa flats and the point. Each crest point is [lat, lon, height m, distance to the west
+// shore m, distance to the east shore m, plateau]. The west side is the long slope the town climbs;
+// the east side is a sheer upper crag over a talus or sea-cliff foot. The Rock is shown at its true
+// height, and at twice the map's usual horizontal scale (see GIB_ZOOM in config.js), so it stands
+// beside true-size aircraft and ships in the right proportion.
+export const ROCK_V = 1.0;          // world metres per real metre of the Rock's height
+const CREST = [
+  [36.1486, -5.3445, 12, 380, 260, 0],      // foot of the North Face
+  [36.1478, -5.3445, 170, 480, 300, 0],
+  [36.1466, -5.3445, 360, 600, 330, 0],
+  [36.1444, -5.3444, 411, 700, 360, 0],     // Rock Gun, top of the North Face
+  [36.1418, -5.3445, 350, 730, 390, 0],     // the dip behind Rock Gun
+  [36.1394, -5.3447, 377, 760, 420, 0],     // Middle Hill
+  [36.1360, -5.3456, 340, 770, 440, 0],     // saddle below the Upper Rock
+  [36.1328, -5.3468, 387, 780, 450, 0],     // Upper Rock cable-car top station
+  [36.1319, -5.3467, 393, 780, 440, 0],     // Signal Hill
+  [36.1290, -5.3458, 360, 780, 380, 0],     // the saddle south of Signal Hill
+  [36.1260, -5.3448, 419, 775, 320, 0],     // top of the Mediterranean Steps
+  [36.1251, -5.3444, 426, 770, 300, 0],     // O'Hara's Battery, the summit
+  [36.1238, -5.3445, 395, 755, 300, 0],
+  [36.1222, -5.3446, 330, 735, 305, 0.05],  // Lord Airey's shelf
+  [36.1204, -5.3447, 240, 710, 315, 0.2],
+  [36.1188, -5.3449, 160, 680, 330, 0.4],
+  [36.1170, -5.3451, 125, 650, 340, 0.55],  // Windmill Hill
+  [36.1145, -5.3455, 105, 600, 380, 0.55],
+  [36.1118, -5.3460, 45, 520, 420, 0.5],    // Europa flats
+  [36.1096, -5.3462, 18, 450, 450, 0.45],   // Europa Point lighthouse
+  [36.1086, -5.3464, 0, 380, 380, 0.4],
+];
+const CREST_W = CREST.map(([la, lo, h, w, e, p]) => { const q = toWorld(la, lo); return { x: q.x, z: q.z, h: h * ROCK_V, w: w * GIB_ZOOM.inner, e: e * GIB_ZOOM.inner, p }; });
+// look the two reference summits up by position, so adding crest points never shifts them
+const crestZ = (lat) => CREST_W[CREST.findIndex((c) => c[0] === lat)].z;
+const Z_GUN = crestZ(36.1444), Z_OHARA = crestZ(36.1251);
+// the crest's x at a given z (the crest runs north to south, z increasing)
+function crestAt(z) {
+  if (z <= CREST_W[0].z) return { ...CREST_W[0], k: -1 };
+  for (let i = 1; i < CREST_W.length; i++) {
+    const a = CREST_W[i - 1], b = CREST_W[i];
+    if (z <= b.z) {
+      const u = (z - a.z) / (b.z - a.z);
+      return { x: a.x + (b.x - a.x) * u, h: a.h + (b.h - a.h) * u, w: a.w + (b.w - a.w) * u, e: a.e + (b.e - a.e) * u, p: a.p + (b.p - a.p) * u, k: 0 };
+    }
+  }
+  return { ...CREST_W[CREST_W.length - 1], k: 1 };
 }
-export function rockWestFace(x, z) { const { t, s } = rockFrame(x, z); return t > -0.01 && t < 0.78 && s > -6 && s < 140; }
+// where a point sits relative to the Rock: t 0 at Rock Gun .. 1 at O'Hara's Battery (beyond 1 is
+// the south end), s the distance west of the crest in world metres (negative east)
+export function rockFrame(x, z) {
+  const c = crestAt(z);
+  return { t: (z - Z_GUN) / (Z_OHARA - Z_GUN), s: c.x - x };
+}
+export function rockWestFace(x, z) { const { t, s } = rockFrame(x, z); return t > -0.25 && t < 1.4 && s > -6 && s < 380; }
 // The southern end of the peninsula - Windmill Hill and the Europa flats - is a limestone
 // platform running out to a low cliff. No beach, no pasture, no scrub worth speaking of.
-export function onEuropaFlats(x, z) { const { t, s } = rockFrame(x, z); return t > 0.72 && t < 1.45 && Math.abs(s) < 240; }
+export function onEuropaFlats(x, z) { const { t, s } = rockFrame(x, z); return t > 1.4 && t < 2.1 && s < 340 && s > -240; }
 function rockHeight(x, z) {
-  // parametric position along the ridge
-  const dx = ROCK.s.x - ROCK.n.x, dz = ROCK.s.z - ROCK.n.z, L = Math.hypot(dx, dz);
-  const ux = dx / L, uz = dz / L;
-  const px = x - ROCK.n.x, pz = z - ROCK.n.z;
-  const t = (px * ux + pz * uz) / L;            // 0 north, 1 south
-  const s = (px * -uz + pz * ux);               // signed lateral distance (+ = west)
-  if (t < -0.06 || t > 1.35) return 0;
-  // crest profile (real metres)
-  let crest;
-  if (t < 0) crest = 400 * Math.max(0, 1 + t / 0.06) ** 2 * 0.6;   // sheer north face
-  else if (t < 0.18) crest = 400 + 20 * Math.sin(t / 0.18 * Math.PI * 0.5);
-  else if (t < 0.55) crest = 415 + 11 * Math.sin((t - 0.18) / 0.37 * Math.PI);
-  else if (t < 0.72) crest = 426 - (t - 0.55) / 0.17 * 300;   // drop to Windmill Hill
-  else if (t < 0.95) crest = 126 - (t - 0.72) / 0.23 * 90;    // Windmill Hill flats
-  else crest = 36 - (t - 0.95) / 0.4 * 36;                     // Europa flats to the point
-  crest = Math.max(0, crest);
-  // lateral profile: east side cliff (steep), west side slope to the town
-  const halfW = (t < 0.72 ? 240 : 300) * H_SCALE * (t < 0 ? 0.6 : 1);   // world metres
+  const c = crestAt(z);
+  if (c.k !== 0) return 0;
+  const s = c.x - x;
   let f;
-  if (s >= 0) f = Math.max(0, 1 - (s / (halfW * 1.9)) ** 1.6);            // west: gentle
-  else f = Math.max(0, 1 - (-s / (halfW * 1.35)) ** 1.9);                 // east: sheer, but a cliff not a wall
-  return crest * V_SCALE * f;
+  if (s >= 0) {
+    // west: the long slope, flat-topped where the ground is a plateau
+    const u = s / c.w; if (u >= 1) return 0;
+    const v = u < c.p ? 0 : (u - c.p) / (1 - c.p);
+    // crags near the top, the slope easing as it comes down to the town
+    f = Math.pow(1 - v, 1.65);
+    // gullies and spurs running down the slope
+    f *= 1 - 0.12 * Math.sin(Math.min(1, v * 1.4) * Math.PI) * (0.5 + 0.5 * Math.sin(z * 0.045 + Math.sin(z * 0.013) * 2));
+  } else {
+    // east: a sheer upper crag falling to a gentler talus or sea-cliff foot
+    const u = -s / c.e; if (u >= 1) return 0;
+    const p = c.p * 0.6, v = u < p ? 0 : (u - p) / (1 - p);
+    f = 1 - Math.pow(v, 0.6);
+  }
+  // broken ground along the crest
+  const rough = 1 + (0.05 * (n2(x / 70, z / 70) - 0.5) + 0.025 * (n2(x / 23, z / 23) - 0.5)) * Math.max(0, 1 - Math.abs(s) / 90);
+  return c.h * f * rough;
 }
 
 function landDistance(x, z) {
@@ -223,8 +264,8 @@ function buildGrid(x0, z0, size, n, heightFn, opts = {}) {
   return mesh;
 }
 
-const GIB_CENTRE = toWorld(36.140, -5.350);
-const GIB_HALF = 900;   // world metres — covers the peninsula and the runway
+const GIB_CENTRE = toWorld(36.133, -5.356);
+const GIB_HALF = 1600;  // world metres — covers the peninsula, the harbour and the runway at the Gibraltar zoom
 
 // A medium tier (25 m cells) covers the Strait's eastern narrows: the Bay, Tarifa, Ceuta and
 // Jebel Musa, where the player spends the sortie; the coarse tier fills the rest.
@@ -238,7 +279,7 @@ export function buildTerrain() {
   const medium = buildGrid(MED.x, MED.z, MED.half * 2, 520, terrainHeight, { mask: (x, z) => !inGib(x, z), tile: 60 });
   medium.castShadow = true;
   g.add(medium);
-  const fine = buildGrid(GIB_CENTRE.x, GIB_CENTRE.z, GIB_HALF * 2, 300, terrainHeight, { tile: 45 });
+  const fine = buildGrid(GIB_CENTRE.x, GIB_CENTRE.z, GIB_HALF * 2, 540, terrainHeight, { tile: 45 });
   fine.castShadow = true;
   g.add(fine);
   return g;

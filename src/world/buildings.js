@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
-import { toWorld, H_SCALE, V_SCALE } from '../config.js';
+import { toWorld, H_SCALE, V_SCALE, GIB_ZOOM } from '../config.js';
 import { terrainHeight } from './terrain.js';
 import { planarUVs, texture } from './textures.js';
 
@@ -238,7 +238,9 @@ function town(b) {
   // Gibraltar town: streets run north–south along the contour on the west slope, so terraces
   // are laid in N–S rows stepping up the hill from the Line Wall to Castle Road.
   const n = toWorld(36.1470, -5.3545), s = toWorld(36.1260, -5.3510);
-  const rows = [0, 22, 46, 72, 100, 130, 165];   // metres east (uphill) of the waterfront line
+  // world metres east (uphill) of the waterfront line; Gibraltar is drawn at twice the map scale
+  const Z = GIB_ZOOM.inner / H_SCALE;
+  const rows = [0, 22, 46, 72, 100, 130, 165, 205, 250, 300].map((m) => m * Z * 0.62);
   const wallKeys = ['white', 'white', 'cream', 'ochre', 'pink', 'white', 'cream'];
   for (const off of rows) {
     let along = 0;
@@ -248,7 +250,7 @@ function town(b) {
       const w = 9 + rnd() * 9, gap = rnd() < 0.15 ? 6 + rnd() * 10 : 0.3;
       const cx = n.x + ux * (along + w / 2) + off + (rnd() - 0.5) * 3, cz = n.z + uz * (along + w / 2);
       const th = terrainHeight(cx, cz);
-      if (th > 0.5 && th < 95) {
+      if (th > 0.5 && th < 120) {
         const floors = 2 + (rnd() < 0.55 ? 1 : 0) + (off < 50 && rnd() < 0.4 ? 1 : 0);
         house(b, cx, cz, w, 8 + rnd() * 4, floors, Math.atan2(ux, uz) + Math.PI / 2, wallKeys[Math.floor(rnd() * wallKeys.length)], { balcony: rnd() < 0.6, flat: rnd() < 0.2 });
       }
@@ -308,23 +310,23 @@ function europaPoint(b) {
   const at = (inland, across) => ({ x: c.x + sin * inland + cos * across, z: c.z + cos * inland - sin * across });
   // terraced rows of barrack blocks
   for (let row = 0; row < 8; row++) {
-    const inland = 34 + row * 42;
-    for (let k = -3; k <= 3; k++) {
-      const p = at(inland, k * 40 + (row % 2) * 15);
+    const inland = 60 + row * 76;
+    for (let k = -5; k <= 5; k++) {
+      const p = at(inland, k * 62 + (row % 2) * 24);
       const th = terrainHeight(p.x, p.z);
-      if (th < 1.2 || th > 80) continue;
+      if (th < 1.2 || th > 150) continue;
       const long = 24 + rnd() * 16, wide = 8.5 + rnd() * 3;
       house(b, p.x, p.z, long, wide, 2, ax + Math.PI / 2, rnd() < 0.65 ? 'cream' : 'white', { flat: rnd() < 0.4, shutters: true });
     }
   }
   // a couple of heavier blocks and stores among them
-  for (const [inl, acr, w, d, fl] of [[92, -104, 34, 14, 2], [150, 96, 30, 13, 2], [216, -60, 28, 12, 1]]) {
+  for (const [inl, acr, w, d, fl] of [[170, -190, 34, 14, 2], [280, 175, 30, 13, 2], [400, -110, 28, 12, 1], [120, 260, 30, 12, 2], [330, -300, 26, 12, 1]]) {
     const p = at(inl, acr); const th = terrainHeight(p.x, p.z);
     if (th > 1) house(b, p.x, p.z, w, d, fl, ax + Math.PI / 2, 'stone', { flat: true });
   }
   // low boundary wall along the seaward edge of the platform
-  for (let k = -5; k <= 5; k++) {
-    const p = at(14, k * 26);
+  for (let k = -10; k <= 10; k++) {
+    const p = at(22, k * 26);
     const th = terrainHeight(p.x, p.z);
     if (th > 0.8) b.box(24, 1.5, 0.8, 'stone', p.x, th + 0.75, p.z, ax + Math.PI / 2);
   }

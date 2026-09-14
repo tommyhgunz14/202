@@ -27,7 +27,6 @@ export const COAST = {
 
 // Peaks / ridges: [lat, lon, height_m, radius_m, elongation dir deg, aspect]
 export const PEAKS = [
-  [36.140, -5.343, 426, 550, 0, 3.0],      // Rock of Gibraltar ridge (handled in detail mesh too)
   [36.185, -5.35, 300, 1500, 20, 1.5],     // Sierra Carbonera above La Línea
   [36.05, -5.60, 420, 3000, 60, 1.6],      // Tarifa hills
   [36.10, -5.75, 350, 4000, 60, 1.4],

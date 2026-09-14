@@ -106,7 +106,7 @@ function buildJetty(g) {
   const e0 = toWorld(HARBOUR.northMole[2][0], HARBOUR.northMole[2][1]), e1 = toWorld(HARBOUR.detachedMole[0][0], HARBOUR.detachedMole[0][1]);
   ENTRANCE.x = (e0.x + e1.x) / 2 - 20; ENTRANCE.z = (e0.z + e1.z) / 2;
   // sheltered water: the swell is broken by the moles, so inside this radius the sea lies flat
-  g.userData.shelter = { x: (px + ENTRANCE.x) / 2 - 150, z: (pz + ENTRANCE.z) / 2, r: 900 };
+  g.userData.shelter = { x: (px + ENTRANCE.x) / 2 - 300, z: (pz + ENTRANCE.z) / 2, r: 1800 };   // the harbour at the Gibraltar zoom
 }
 
 export function buildHarbour() {
