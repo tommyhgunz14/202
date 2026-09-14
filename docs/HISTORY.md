@@ -94,7 +94,8 @@ Corrections the full text forced on existing content:
   gives **14 February** and **FP223/J**, off Cape St Vincent, and records that the same crew
   damaged **U-381** less than an hour before sinking U-620.
 - The German freighter of 26 December 1939 is **Gluckberg** in the article; the game had
-  Glücksburg.
+  Glücksburg. The sortie now uses the article's spelling throughout (name, objectives and the
+  do-not-attack rule).
 - The **Durbo** attack was made by **K5913** (Hatfield) and **K5909** (Eagleton).
 - The **U-74** attack was flown by **AJ162/AX-C**, seven 250 lb charges at 1412hrs, 55 miles east
   of Cartagena; the article notes a second boat, **U-375**, was close by and some attacks may have
