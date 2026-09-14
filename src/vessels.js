@@ -17,6 +17,11 @@ export const VESSEL_TYPES = {
   hulk: { asset: 'assets/spanish_coaster.js', length: 48, beam: 8, kind: 'target', faction: 'target', label: 'Target hulk (condemned coaster)', hp: 5, surfSpeed: 0, recolour: 0x6b4a3a },
   subtarget: { asset: 'assets/uboat_viic.js', length: 67.1, beam: 6.2, kind: 'target', faction: 'target', label: 'Submarine silhouette target', hp: 3, surfSpeed: 0 },
   merchant: { asset: 'assets/german_freighter.js', length: 118, beam: 16, kind: 'merchant', faction: 'allied', label: 'Allied merchantman', hp: 3, surfSpeed: 10, recolour: 0x5a6068 },
+  // HMS Seraph (P219), an S-class boat: no model of her own, so the Type VIIC hull stands in with a
+  // White Ensign on the bridge. She never dives on a friendly aircraft and carries no flak here.
+  rnsub: { asset: 'assets/uboat_viic.js', length: 66.1, beam: 7.2, kind: 'submarine', faction: 'rn', label: 'British submarine (S class)', hp: 1.0, surfSpeed: 14, subSpeed: 9, ensign: true, noRef: true },
+  // men in the water after a boat is abandoned: Carley floats and heads in the oil
+  survivors: { asset: 'assets/target_raft.js', length: 12, beam: 12, kind: 'survivors', faction: 'survivors', label: 'Survivors in the water', hp: 99, surfSpeed: 0, noRef: true },
 };
 
 const _v = new THREE.Vector3();
@@ -44,15 +49,16 @@ export function getWakeTexture() {
 export class Vessel {
   constructor(def, spec, group, opts) {
     this.def = { hulk: 'spanish_coaster', subtarget: 'uboat_viic', merchant: 'german_freighter', uboat: 'uboat_viic', itsub: 'italian_sub_brin', wishart: 'rn_destroyer_wishart', freighter: 'german_freighter', vichy: 'vichy_destroyer_fantasque', coaster: 'spanish_coaster', fishing: 'fishing_boat' }[def] || def; this.spec = spec; this.group = group;
+    if (spec.noRef) this.def = null;   // no recognition card: the HUD must not ask for one every frame
     this.name = opts.name || spec.label;
-    this.label = spec.label;
+    this.label = opts.label || spec.label;
     this.kind = spec.kind; this.faction = spec.faction;
     this.length = spec.length;
     this.hp = spec.hp; this.alive = true; this.sinking = 0;
     this.heading = (opts.heading || 0) * Math.PI / 180;
     this.speedKt = opts.speed != null ? opts.speed : spec.surfSpeed * 0.6;
     if (this.speedKt < 3 && opts.role !== 'responder' && spec.faction !== 'target') this.speedKt = 5;
-    if (spec.faction === 'target') { this.speedKt = 0; this.stopped = true; }
+    if (spec.faction === 'target' || spec.faction === 'survivors') { this.speedKt = 0; this.stopped = true; }
     this.waypoints = (opts.waypoints || []).map(([la, lo]) => { const p = findWater(...Object.values(toWorld(la, lo))); return new THREE.Vector3(p.x, 0, p.z); });
     this.wpIdx = 0;
     this.identified = spec.faction === 'target'; this.idProgress = this.identified ? 1 : 0;
@@ -90,7 +96,7 @@ export class Vessel {
     if (!this.alive) {
       this.sinking += dt;
       g.position.y -= dt * (this.kind === 'submarine' ? 1.2 : 0.6);
-      g.rotation.x += dt * 0.03 * (this.kind === 'submarine' ? 1 : 0.5);
+      g.rotation.x += dt * (this.sternFirst ? -0.1 : 0.03 * (this.kind === 'submarine' ? 1 : 0.5));
       if (this.sinking > 40) g.visible = false;
       return;
     }
@@ -118,6 +124,9 @@ export class Vessel {
       const des = Math.atan2(goal.x - g.position.x, goal.z - g.position.z);
       this.turnToward(des, dt, 0.3);
       speed = Math.min(this.spec.surfSpeed / KT, Math.max(4, g.position.distanceTo(goal) * 0.05));
+    } else if (this.behaviour === 'circle') {
+      // steering gone: round and round on the helm she was left with
+      this.heading += (this.circleRate || 0.07) * dt;
     } else if (this.waypoints.length) {
       const wp = this.waypoints[this.wpIdx];
       const des = Math.atan2(wp.x - g.position.x, wp.z - g.position.z);
@@ -154,7 +163,7 @@ export class Vessel {
       const spotRange = (1100 + Math.min(2500, p ? p.obj.position.y * 5 : 0)) * this.lookout;
       const seen = p && !p.crashed && dist < spotRange && p.obj.position.y < 2500;
       const hunted = ctx.vessels.some((v) => v.hunting && v.huntTarget === this && v.group.position.distanceTo(g.position) < 2500);
-      if (this.surfaced && (seen || hunted) && this.diveCooldown <= 0 && this.hp > 0.3 && this.behaviour !== 'stayUp') {
+      if (this.surfaced && (seen || hunted) && this.faction !== 'rn' && this.diveCooldown <= 0 && this.hp > 0.3 && this.behaviour !== 'stayUp' && this.behaviour !== 'circle') {
         if (this.alarm == null) { this.alarm = this.alarmRange[0] + Math.random() * (this.alarmRange[1] - this.alarmRange[0]); ctx.log(`${this.name}: lookouts have seen you.`); }
         this.alarm -= dt;
         if (this.alarm <= 0) { this.surfaced = false; this.targetDepth = 30; this.diveCooldown = 60; this.alarm = null; ctx.log(`${this.name}: crash-diving!`); ctx.audio && ctx.audio.say('voice_diving', 30); }
@@ -166,10 +175,15 @@ export class Vessel {
       } else {
         this.depth = Math.max(0, this.depth - 0.6 * dt);
       }
-      // flak: surfaced boats fire at a close aircraft
-      if (this.surfaced && this.spec.flak && p && !p.crashed && dist < 1400 && p.obj.position.y < 900) {
-        this.flakTimer -= dt;
-        if (this.flakTimer <= 0) { this.flakTimer = 0.12; ctx.enemyFire(this, p); }
+      // flak: surfaced boats fire at the nearest close aircraft, yours or another
+      if (this.surfaced && this.spec.flak && !this.abandoned) {
+        let tgt = p && !p.crashed && dist < 1400 && p.obj.position.y < 900 ? p : null, td = tgt ? dist : 1400;
+        for (const a of ctx.friendlies || []) {
+          if (!a.alive || a.onWater) continue;
+          const d = Math.hypot(a.group.position.x - g.position.x, a.group.position.z - g.position.z);
+          if (d < td && a.group.position.y < 900) { td = d; tgt = a; }
+        }
+        if (tgt) { this.flakTimer -= dt; if (this.flakTimer <= 0) { this.flakTimer = 0.12 / (this.flakRate || 1); ctx.enemyFire(this, tgt); } }
       }
     } else if (this.spec.flak && ctx.player && !ctx.player.crashed && this.hit > 0) {
       const p = ctx.player, dist = p.obj.position.distanceTo(g.position);
@@ -246,6 +260,8 @@ export class Vessel {
 
   damage(amount, ctx, pos) {
     if (!this.alive) return;
+    // a boat the record says survived this action (or that the script sinks another way) holds here
+    if (this.hpFloor != null) amount = Math.max(0, Math.min(amount, this.hp - this.hpFloor));
     this.hp -= amount; this.hit += amount;
     // visible damage: sparks at the point of impact and a scorch mark that stays on the hull
     if (pos) {
@@ -303,5 +319,28 @@ export async function spawnVessel(type, opts = {}) {
   const v = new Vessel(type, spec, g, opts);
   g.rotation.y = v.heading;
   g.userData.vessel = v;
+  if (spec.ensign) addEnsign(g);
   return v;
+}
+
+// A White Ensign on a short staff at the back of the bridge, so a British boat reads as one.
+function addEnsign(g) {
+  const c = document.createElement('canvas'); c.width = 96; c.height = 48;
+  const x = c.getContext('2d');
+  x.fillStyle = '#f2f0ea'; x.fillRect(0, 0, 96, 48);
+  x.fillStyle = '#c8102e'; x.fillRect(0, 21, 96, 6); x.fillRect(45, 0, 6, 48);
+  x.fillStyle = '#1b2a5c'; x.fillRect(0, 0, 44, 20);
+  x.strokeStyle = '#f2f0ea'; x.lineWidth = 4; x.beginPath(); x.moveTo(0, 0); x.lineTo(44, 20); x.moveTo(44, 0); x.lineTo(0, 20); x.stroke();
+  x.strokeStyle = '#c8102e'; x.lineWidth = 2; x.stroke();
+  x.fillStyle = '#f2f0ea'; x.fillRect(18, 0, 8, 20); x.fillRect(0, 7, 44, 6);
+  x.fillStyle = '#c8102e'; x.fillRect(20, 0, 4, 20); x.fillRect(0, 8.5, 44, 3);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const bridge = findNamed(g, 'bridge');
+  const box = new THREE.Box3().setFromObject(bridge || g);
+  const top = g.worldToLocal(new THREE.Vector3((box.min.x + box.max.x) / 2, box.max.y, box.min.z + (box.max.z - box.min.z) * 0.15));
+  const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 2.4, 6), new THREE.MeshStandardMaterial({ color: 0x3a3a3a }));
+  staff.position.copy(top).add(new THREE.Vector3(0, 1.2, 0));
+  const flag = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.9), new THREE.MeshStandardMaterial({ map: tex, side: THREE.DoubleSide }));
+  flag.position.copy(top).add(new THREE.Vector3(0, 1.95, -0.95)); flag.rotation.y = Math.PI / 2;
+  g.add(staff, flag);
 }

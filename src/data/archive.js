@@ -21,6 +21,28 @@ export const PLATES = [
     credit: 'Photographer unknown. Supplied for this project; rights not established.',
   },
 
+  {
+    file: 'assets/archive/passing_out_1930_original.jpg',
+    kind: 'archive',
+    title: 'Passing-out term, winter 1930',
+    date: 'Winter 1930',
+    caption: 'The passing-out term photographed in front of a timber hut, thirteen standing and eleven seated, '
+           + 'with the names printed on the mount. T. Q. Horner is seated second from the left. This is the '
+           + 'print as it was supplied.',
+    credit: 'Photograph by Gale & Polden Ltd, Aldershot, as printed on the mount. Family collection; rights not established.',
+  },
+  {
+    file: 'assets/intro/passing_out_1930.jpg',
+    kind: 'archive',
+    title: 'Passing-out term, winter 1930 (colourised)',
+    date: 'Winter 1930',
+    caption: 'The same print tinted by hand for this project, the way studio prints were coloured at the time. '
+           + 'Only colour is added: the lightness of every point is the original photograph\'s, so no face or '
+           + 'detail has been redrawn. The colours are informed guesses (RAF blue-grey cloth, a dark timber hut, '
+           + 'winter grass), not a record.',
+    credit: 'Gale & Polden Ltd, Aldershot. Colourised for this project (tools/colourise-passing-out.mjs).',
+  },
+
   // The generated period pictures already in the game, gathered here so the archive shows what
   // the game looks at. Labelled as reconstructions, not photographs.
   { file: 'assets/intro/photo_london_gunwharf.jpg', kind: 'reconstruction', title: 'Saro London at the Gun Wharf', date: '1940',

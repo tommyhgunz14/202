@@ -40,7 +40,9 @@ export class Hud {
       const d = contact.dist / H_SCALE / 1852;
       this.el.contact.style.display = 'block';
       // recognition card: the generated reference picture of the type, once identified
-      const ref = contact.v.identified && contact.v.def ? `<img class="refcard" src="assets/refs/${contact.v.def}.jpg" onerror="this.style.display='none'" alt="">` : '';
+      // a card that failed to load once is not asked for again (the panel is rebuilt every frame)
+      const def = contact.v.def, noRef = (window.__noRef ||= {});
+      const ref = contact.v.identified && def && !noRef[def] ? `<img class="refcard" src="assets/refs/${def}.jpg" onerror="window.__noRef['${def}']=1;this.style.display='none'" alt="">` : '';
       this.el.contact.innerHTML = contact.v.identified
         ? `${ref}<b>${contact.v.name}</b><br>${contact.v.label}${contact.v.kind === 'submarine' ? (contact.v.surfaced ? ' — SURFACED' : ' — DIVED') : ''}<br>${d.toFixed(1)} nm · brg ${contact.brg.toFixed(0).padStart(3, '0')}°`
         : `<b>Unidentified vessel</b><br>${d.toFixed(1)} nm · brg ${contact.brg.toFixed(0).padStart(3, '0')}°<br><span class="idbar"><i style="width:${(contact.v.idProgress * 100).toFixed(0)}%"></i></span> close in below 1,500 ft to identify`;

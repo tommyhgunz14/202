@@ -82,6 +82,8 @@
   #hud-warn { position: absolute; top: 46%; left: 0; right: 0; text-align: center; color: #ff7a5a; font-weight: 700; font-size: 24px; letter-spacing: 6px; text-shadow: 0 0 8px #000; }
   #hud-guide { position: absolute; top: 60%; left: 0; right: 0; text-align: center; color: #ffd27a; font-family: monospace; font-size: 14px; text-shadow: 0 0 6px #000; }
   #track-tag { position: absolute; display: none; transform: translate(-50%, -140%); padding: 2px 6px; font-family: monospace; font-size: 11px; color: #ffd27a; background: rgba(0,0,0,0.45); border: 1px solid rgba(255,210,122,0.5); border-radius: 3px; white-space: nowrap; }
+  .friend-tag { position: absolute; display: none; transform: translate(-50%, -150%); padding: 1px 6px; font-family: monospace; font-size: 11px; color: #cfe6ff; background: rgba(10,20,40,0.45); border: 1px solid rgba(150,200,255,0.45); border-radius: 3px; white-space: nowrap; pointer-events: none; z-index: 5; }
+  body:not(.flying) .friend-tag, body.cine .friend-tag { display: none !important; }
   #track-tag::after { content: ""; position: absolute; left: 50%; bottom: -10px; margin-left: -1px; width: 2px; height: 10px; background: rgba(255,210,122,0.7); }
   #reticle { position: absolute; left: 50%; top: 50%; width: 60px; height: 60px; margin: -30px 0 0 -30px; border: 2px solid rgba(255,210,122,0.8); border-radius: 50%; display: none; }
   #reticle::before, #reticle::after { content: ""; position: absolute; background: rgba(255,210,122,0.8); }
@@ -134,6 +136,12 @@
   #intro .story { font-family: Georgia, "Times New Roman", serif; font-size: clamp(19px, 2.1vw, 34px); line-height: 1.7; max-width: 1100px; margin: 0; }
   #intro .title .photos .ph { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transform: scale(1); transition: opacity 1.4s ease, transform 4.2s linear, filter 3.4s linear; filter: grayscale(1) sepia(0.3) contrast(1.12) brightness(0.52); }
   #intro .title .photos .ph.on { opacity: 1; transform: scale(1.07); }
+  #intro .title .photos .ph.finale { inset: 11vh 3vw; background-size: contain; background-repeat: no-repeat; transition: opacity 1.6s ease, transform 10s linear, filter 5.5s ease-in-out; }
+  #intro .title .photos .ph.finale.on { transform: scale(1.025); }
+  #intro .title .tt { transition: opacity 1.2s ease; }
+  #intro .title.finale-on .tt { opacity: 0; }
+  #intro .fcap { position: absolute; left: 0; right: 0; bottom: 3.2vh; z-index: 2; margin: 0; text-align: center; font-family: Georgia, "Times New Roman", serif; font-style: italic; font-size: clamp(12px, 1.2vw, 17px); letter-spacing: 0.08em; color: #d8c9a6; opacity: 0; transition: opacity 1.6s ease 1.2s; }
+  #intro.finale-on .fcap { opacity: 0.9; }
   #intro .title .tt { position: relative; }
   #intro .title h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(38px, 7vw, 96px); letter-spacing: 0.12em; font-weight: normal; margin: 0; text-shadow: 0 2px 40px rgba(0, 0, 0, 0.85); transform: scale(0.96); transition: transform 6s ease-out; }
   #intro .title.on h1 { transform: scale(1.05); transition-duration: 24s; }

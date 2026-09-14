@@ -42,11 +42,11 @@ export class Weapons {
     this.tracers.push({ mesh: m, vel: d.multiplyScalar(speed), life: 1.6, enemy, owner });
   }
 
-  dropCharge(origin, vel, depthFt) {
+  dropCharge(origin, vel, depthFt, owner = null) {
     const m = new THREE.Mesh(this.dcGeo, this.dcMat);
     m.position.copy(origin); m.castShadow = true;
     this.scene.add(m);
-    this.charges.push({ mesh: m, vel: vel.clone(), depth: depthFt * 0.3048, phase: 'air', sink: 0, t: 0 });
+    this.charges.push({ mesh: m, vel: vel.clone(), depth: depthFt * 0.3048, phase: 'air', sink: 0, t: 0, owner });
     this.audio && this.audio.release();
   }
 
@@ -193,7 +193,7 @@ export class Weapons {
         c.mesh.visible = false;
         if (c.sink >= c.depth) {
           this.explosion(new THREE.Vector3(c.mesh.position.x, 0, c.mesh.position.z), 1.2, true);
-          if (onDetonate) onDetonate(new THREE.Vector3(c.mesh.position.x, 0, c.mesh.position.z), c.sink);
+          if (onDetonate && !c.owner) onDetonate(new THREE.Vector3(c.mesh.position.x, 0, c.mesh.position.z), c.sink);
           // lethal radius (Mk VIII Torpex): ~6 m real; damage radius ~ 20 m. Game uses a wider band.
           for (const v of vessels) {
             if (!v.alive) continue;
@@ -202,8 +202,8 @@ export class Weapons {
             const along = d - v.length * 0.35;
             const rr = Math.max(0, along);
             const eff = Math.hypot(rr, dz * 0.6);
-            if (eff < 12) onHit(v, 1.0, c.mesh.position.clone(), true);
-            else if (eff < 40) onHit(v, 0.45 * (1 - (eff - 12) / 28), c.mesh.position.clone(), true);
+            if (eff < 12) onHit(v, 1.0, c.mesh.position.clone(), true, c.owner);
+            else if (eff < 40) onHit(v, 0.45 * (1 - (eff - 12) / 28), c.mesh.position.clone(), true, c.owner);
           }
           this.scene.remove(c.mesh); this.charges.splice(i, 1);
         }

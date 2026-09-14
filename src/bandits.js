@@ -37,7 +37,9 @@ export class Bandit {
   }
 
   update(dt, ctx) {
-    const g = this.group, p = ctx.player;
+    const g = this.group;
+    // a bandit sent after another aircraft goes for her while she lasts, then for you
+    const p = this.target && this.target.alive && !this.target.remove ? this.target : ctx.player;
     this.t += dt; this.stateT += dt;
     for (const pr of this.props) pr.rotation.z += dt * 70;
     if (!this.alive) {
@@ -68,6 +70,7 @@ export class Bandit {
         const from = new THREE.Vector3(); (this.gun || g).getWorldPosition(from);
         const dir = lead.clone().sub(from).normalize();
         ctx.weapons.fireTracer(from, dir, 720, true, 0.03, this);
+        if (p.friendly && Math.random() < 0.06) p.damage(0.02, ctx);
         if (Math.random() < 0.2) ctx.audio.enemyGun();
       }
       if (dist < 130 || this.stateT > 12) { this.state = 'break'; this.stateT = 0; this.passes++; ctx.log(`${this.name} breaks away.`); }

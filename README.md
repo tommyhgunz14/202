@@ -20,9 +20,16 @@ with a vendored `three.module.js`.)
 
 ## Play
 
-- **Title → Begin** gives the pilot's page, then the **Operations Record Book**: thirteen sorties
+- **Title → Begin** gives the pilot's page, then the **Operations Record Book**: eighteen sorties
   on real dates from the squadron's Gibraltar record, in the order they were flown, plus a
   practice range and a free patrol.
+- Five of them were flown by other crews: Walshe and the Alabastro, Case collecting General Clark,
+  Louw collecting General Giraud, and Finch against U-343 and U-761. In those you fly the second
+  aircraft, and your job is to support theirs. The other machine flies its part of the record on
+  its own: it forms up, attacks, alights beside a submarine, takes off and goes home. A label over
+  it shows who it is and how far away. Your objectives are the supporting ones: form up, look the
+  boat over, draw the flak, signal the position, keep watch while she is on the water, see her
+  home.
 - **Choose your aircraft** from those the squadron had on that date. Each type shows its
   performance and eight scores (speed, endurance, climb, agility, payload, defence, detection,
   toughness) which also drive the flight model:
@@ -98,8 +105,12 @@ Commander T. Q. Horner.
 After "A True Story" and the situation card, the title and subtitle come up and hold over the
 whole run of pictures: three archive photographs and then the three crew stills, each
 dissolving into the next behind the same lettering, with the squadron's years at Gibraltar
-under the title. The prints start as monochrome and come up into colour as the sequence runs,
-so the last of them is in full colour by the time the menu appears. Only Escape, Enter, Space,
+under the title. The prints start as monochrome and come up into colour as the sequence runs.
+The last picture is a real one: the passing-out term photograph of winter 1930 with T. Q. Horner
+seated second from the left. The title steps aside for it, and the whole print is shown with its
+printed names, coming up from grey into colour, with a caption beneath. The colour was added by
+hand (`tools/colourise-passing-out.mjs`): only colour is painted in, and the lightness of every
+point is the original print's, so no face or detail has been redrawn. Only Escape, Enter, Space,
 a controller button or the skip label end the intro, so a click to focus the window does not
 lose it. The opening is scored with the Atlas-composed orchestral title cue
 (`assets/sfx/music_title.mp3`). It starts on the first card and plays unbroken through the

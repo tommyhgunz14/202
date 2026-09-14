@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { toWorld, H_SCALE, FT, MPH, KT } from './config.js';
+import { toWorld, toLatLon, H_SCALE, FT, MPH, KT } from './config.js';
 import { buildTerrain, terrainHeight, buildDepthTexture } from './world/terrain.js';
 import { buildSea, SEA, seaHeight } from './world/sea.js';
 import { buildSky, buildClouds } from './world/sky.js';
@@ -10,6 +10,7 @@ import { Flight } from './flight.js';
 import { Input } from './input.js';
 import { Weapons } from './weapons.js';
 import { spawnVessel } from './vessels.js';
+import { spawnFriendly } from './friendlies.js';
 import { foamStrip } from './world/foam.js';
 import { buildTown } from './world/buildings.js';
 import { buildVegetation } from './world/vegetation.js';
@@ -129,8 +130,10 @@ function applySky(name) {
   sea = buildSea(dir, p.fog, p.fogDensity, depthTex); scene.add(sea);
   if (harbour) { const sh = harbour.userData.shelter; sea.material.uniforms.uShelter.value.set(sh.x, sh.z, sh.r); SEA.shelter = sh; }
   scene.fog = new THREE.FogExp2(p.fog, p.fogDensity);
+  // a preset without a panorama (night) sets the water's colours itself
+  if (p.sea) { const u = sea.material.uniforms; u.uDeep.value.setHex(p.sea.deep); u.uShallow.value.setHex(p.sea.shallow); u.uSky.value.setHex(p.sea.sky); if (u.uShallowCol) u.uShallowCol.value.setHex(p.sea.shallowCol); }
   const gen = ++skyGen;
-  (panoramas[name] ||= loadPanorama(`assets/sky/${name}.jpg`).catch(() => null)).then((tex) => {
+  (p.sea ? Promise.resolve(null) : (panoramas[name] ||= loadPanorama(`assets/sky/${name}.jpg`).catch(() => null))).then((tex) => {
     if (!tex || gen !== skyGen) return;
     const pano = buildPanoramaSky(tex, dir);
     scene.remove(sky); sky = pano; scene.add(sky);
@@ -180,7 +183,7 @@ const G = {
   vessels: [], view: 'chase', stores: 0, ammo: 0, fireTimer: 0, dropTimer: 0, time: 0, clock: 0,
   objectives: [], events: [], reportCooldown: 0, crewGunTimer: 0, endTimer: -1, result: null,
   slick: null, score: 0, penalties: 0, tookOff: false, idCount: 0, identifiedTargets: new Set(),
-  views: ['chase', 'cockpit'], viewIdx: 0, aim: { yaw: 0, pitch: 0 }, bandits: [], pendingBandits: [], interior: null,
+  views: ['chase', 'cockpit'], viewIdx: 0, aim: { yaw: 0, pitch: 0 }, bandits: [], pendingBandits: [], friendlies: [], pendingFriendlies: [], flags: new Set(), flagTimes: {}, triggers: [], timers: [], interior: null,
   range: { hits: 0, rounds: 0, dcScore: 0, drops: 0 }, gunInvert: true,
 };
 window.G = G;
@@ -209,6 +212,8 @@ function clearMission() {
   glints.length = 0;
   for (const b of G.bandits) scene.remove(b.group);
   G.bandits = []; G.pendingBandits = []; G.gunners = {}; pipClose();
+  for (const fr of G.friendlies) { scene.remove(fr.group); if (fr.tag) fr.tag.remove(); }
+  G.friendlies = []; G.pendingFriendlies = []; G.flags = new Set(); G.flagTimes = {}; G.triggers = []; G.timers = [];
   if (G.cine) { G.cine.dispose(); G.cine = null; document.body.classList.remove('cine'); }
   if (G.interior) { cockpitScene.remove(G.interior.group); G.interior = null; }
   if (G.gunOverlay) { cockpitScene.remove(G.gunOverlay.group); G.gunOverlay = null; }
@@ -240,7 +245,8 @@ async function startMission(mission, spec) {
   clearMission();
   G.mission = mission; G.spec = spec; G.running = false; G.paused = false;
   G.time = 0; G.endTimer = -1; G.result = null; G.landedMsg = false; G.score = 0; G.penalties = 0; G.tookOff = false; G.idCount = 0; G.identifiedTargets.clear();
-  G.clock = { dawn: 6 * 3600 + 10 * 60, morning: 8 * 3600 + 30 * 60, afternoon: 14 * 3600 + 20 * 60, dusk: 18 * 3600 + 40 * 60 }[mission.sky] || 8 * 3600;
+  G.clock = { dawn: 6 * 3600 + 10 * 60, morning: 8 * 3600 + 30 * 60, afternoon: 14 * 3600 + 20 * 60, dusk: 18 * 3600 + 40 * 60, night: 22 * 3600 + 20 * 60 }[mission.sky] || 8 * 3600;
+  if (mission.clock) { const [hh, mm] = mission.clock.split(':').map(Number); G.clock = hh * 3600 + mm * 60; }
   const pal = applySky(mission.sky);
   clouds = buildClouds(mission.clouds || 25, 14000, 900 + Math.random() * 400, pal.horizon); scene.add(clouds);
   // aircraft
@@ -278,8 +284,10 @@ async function startMission(mission, spec) {
   const byName = {};
   for (const e of ents) {
     if (e.type === 'bandit') { if (Math.random() <= (e.chance == null ? 1 : e.chance)) G.pendingBandits.push({ ...e, timer: e.delay || 180 }); continue; }
+    if (e.type === 'friendly') { G.pendingFriendlies.push({ ...e, timer: e.delay == null ? 6 : e.delay }); continue; }
     const v = await spawnVessel(e.type, e);
     v.tag = e.tag || null;
+    if (e.set) Object.assign(v, e.set);
     v.heading = Math.PI - (e.heading || 0) * Math.PI / 180; v.group.rotation.y = v.heading;
     scene.add(v.group); G.vessels.push(v); byName[v.name] = v;
   }
@@ -289,7 +297,8 @@ async function startMission(mission, spec) {
     weapons.oilSlick(new THREE.Vector3(p.x, 0, p.z), 45, true);
     G.slick = new THREE.Vector3(p.x, 0, p.z);
   } else G.slick = null;
-  G.objectives = mission.objectives.map((o) => ({ ...o, done: false, failed: false, progress: 0, baseText: o.text }));
+  G.objectives = mission.objectives.map((o) => ({ ...o, done: false, failed: false, progress: 0, near: 0, elapsed: 0, baseText: o.text }));
+  G.triggers = (mission.triggers || []).map((t) => ({ ...t, fired: false }));
   G.range = { hits: 0, rounds: 0, dcScore: 0, drops: 0 };
   // views: chase, cockpit, then every manned gun position the type has
   G.views = ['chase', 'cockpit', 'bombsight', ...spec.guns.filter((g) => G.gunNodes[g.node] && !g.fixed).map((g) => 'gun:' + g.node)];
@@ -391,6 +400,7 @@ const ctx = {
     const to = p.obj.position.clone().addScaledVector(p.forward(new THREE.Vector3()), p.speed * 0.6);
     const dir = to.sub(from).normalize();
     weapons.fireTracer(from, dir, 320, true, 0.05, v);
+    if (p.friendly && Math.random() < 0.012) p.damage(0.02, ctx);
     if (Math.random() < 0.15) audio.enemyGun();
   },
   navalGunfire(ship, target, warning) {
@@ -426,7 +436,71 @@ const ctx = {
     }
     setTimeout(() => { if (G.running && target.alive) target.damage(0.25 + Math.random() * 0.3, ctx, null); }, 4000);
   },
+
+  // ---- mission scripting: friendlies' steps and the mission's triggers speak this ----
+  get friendlies() { return G.friendlies; },
+  named(n) { return G.vessels.find((v) => v.name === n) || G.friendlies.find((a) => a.name === n || a.short === n) || null; },
+  flag(name) { if (!G.flags.has(name)) { G.flags.add(name); G.flagTimes[name] = G.time; } },
+  cond(c, self) {
+    if (!c) return false;
+    if (c.all) return c.all.every((x) => ctx.cond(x, self));
+    if (c.any) return c.any.some((x) => ctx.cond(x, self));
+    const pp = G.flight.obj.position;
+    const hd = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+    let ok = true;
+    if (c.after != null) ok = ok && G.tookOff && G.time - G.tookOffAt >= c.after;
+    if (c.stepTime != null) ok = ok && !!self && self.stepT >= c.stepTime;
+    if (c.flag) ok = ok && G.flags.has(c.flag);
+    if (c.since) ok = ok && G.flags.has(c.since[0]) && G.time - G.flagTimes[c.since[0]] >= c.since[1];
+    if (c.identified) { const v = ctx.named(c.identified); ok = ok && !!v && v.identified; }
+    if (c.reported) { const v = ctx.named(c.reported); ok = ok && !!v && v.reported; }
+    if (c.hpBelow) { const v = ctx.named(c.hpBelow[0]); ok = ok && !!v && (v.hp < c.hpBelow[1] || !v.alive); }
+    if (c.sunk) { const v = ctx.named(c.sunk); ok = ok && !!v && !v.alive; }
+    if (c.near) { const t = ctx.named(c.near[0]); ok = ok && !!t && hd(t.group.position, pp) < c.near[1]; }
+    return ok;
+  },
+  acts(list) {
+    for (const a of [].concat(list || [])) {
+      if (a.after != null) { G.timers.push({ t: a.after, acts: a.do }); continue; }
+      if (a.log) ctx.log(a.log, a.cls || 'ok');
+      if (a.say) audio.say(a.say, 20);
+      if (a.music) audio.music.setMood(a.music);
+      if (a.flag) ctx.flag(a.flag);
+      if (a.spawn) G.pendingFriendlies.push({ ...a.spawn, timer: a.spawn.delay || 0 });
+      if (a.bandit && Math.random() <= (a.bandit.chance == null ? 1 : a.bandit.chance)) G.pendingBandits.push({ ...a.bandit, timer: a.bandit.delay || 0 });
+      if (a.friendly) { const fr = ctx.named(a.friendly); if (fr && a.damage) fr.damage(a.damage, ctx); }
+      if (a.vessel) {
+        const v = ctx.named(a.vessel); if (!v || !v.alive) continue;
+        if (a.set) Object.assign(v, a.set);
+        if (a.route) { v.waypoints = a.route.map(([la, lo]) => { const w = toWorld(la, lo); return new THREE.Vector3(w.x, 0, w.z); }); v.wpIdx = 0; }
+        if (a.hunt) { const t = ctx.named(a.hunt); if (t) { v.hunting = true; v.huntTarget = t; v.stopped = false; } }
+        if (a.damageTo != null && v.hp > a.damageTo) { const floor = v.hpFloor; v.hpFloor = null; v.damage(v.hp - a.damageTo, ctx, v.group.position.clone().setY(2)); v.hpFloor = floor; }
+        if (a.abandon != null) abandonShip(v, a);
+      }
+    }
+  },
 };
+
+// A boat given up by her crew: stopped, men over the side, then down (stern first if so ordered),
+// leaving survivors in the water where she went.
+function abandonShip(v, a) {
+  v.abandoned = true; v.stopped = true; v.hunting = false; v.surfaced = true; v.targetDepth = 0; v.behaviour = 'stayUp';
+  if (v.depth > 4) v.depth = 4;   // blown up to the surface, or near it
+  G.timers.push({ t: a.abandon, fn: async () => {
+    if (!v.alive) return;
+    v.alive = false; v.sternFirst = !!a.sternFirst; G.score += 200;
+    weapons.oilSlick(v.group.position, 60);
+    if (a.sunkLog) ctx.log(a.sunkLog, 'ok');
+    if (a.sunkFlag) ctx.flag(a.sunkFlag);
+    for (const d of G.vessels) if (d.huntTarget === v) { d.hunting = false; d.huntTarget = null; }
+    if (a.survivors) {
+      const ll = toLatLon(v.group.position.x, v.group.position.z);
+      const s = await spawnVessel('survivors', { name: a.survivors, lat: ll.lat, lon: ll.lon });
+      s.identified = true; s.idProgress = 1;
+      if (G.running) { scene.add(s.group); G.vessels.push(s); }
+    }
+  } });
+}
 
 function gunArc(arc) {
   return { forward: { yaw: [-1.05, 1.05], pitch: [-0.5, 0.6] }, rear: { yaw: [-1.2, 1.2], pitch: [-0.6, 0.5] }, upper: { yaw: [-3.1, 3.1], pitch: [-0.1, 1.3] },
@@ -449,8 +523,29 @@ function onDetonate(pos, depth) {
   G.range.dcScore += pts;
   ctx.log(pts === 100 ? `BULLSEYE — ${bd.toFixed(0)} m from ${best.name}: 100.` : pts ? `${bd.toFixed(0)} m from ${best ? best.name : 'the target'}: ${pts} points.` : `Miss — ${bd.toFixed(0)} m from the nearest target.`, pts >= 60 ? 'ok' : pts ? '' : 'bad');
 }
-function onHit(v, amount, pos, byCharge = false) {
+function onHit(v, amount, pos, byCharge = false, owner = null) {
   if (v === 'player') { G.flight.hit(amount); audio.hitPlayer(); return; }
+  if (v.friendly) {
+    G.penalties += 5; v.damage(amount * 0.2, ctx);
+    if (!v.warnedFF) { v.warnedFF = true; ctx.log(`Cease fire — that is ${v.short}, one of ours!`, 'bad'); }
+    return;
+  }
+  if (owner) {
+    // another aircraft's stick: no score or penalty to you, and it leaves what the record says
+    if (v.kind === 'survivors' || v.faction === 'rn' || v.faction === 'allied' || v.kind === 'neutral') return;
+    const floor = owner.floorFor(v);
+    const amt = Math.max(0, Math.min(amount, v.hp - floor));
+    if (amount > 0.2 && !v['straddled_' + owner.short]) { v['straddled_' + owner.short] = true; ctx.log(`${owner.short}'s charges straddle ${v.name}!`, 'ok'); }
+    if (amt > 0) v.damage(amt, ctx, pos);
+    return;
+  }
+  if (v.kind === 'survivors') {
+    G.penalties += byCharge ? 100 : 10;
+    if (!v.warned) { v.warned = true; ctx.log('You are firing on men in the water. Cease fire — this will go in the report.', 'bad'); }
+    return;
+  }
+  if (v.holdFor && !G.flags.has(v.holdFor)) amount = Math.min(amount, Math.max(0, v.hp - 0.5));
+  v.playerDmg = (v.playerDmg || 0) + amount;
   if (v.kind === 'aircraft') { v.damage(amount, ctx); weapons.spark(pos, 1); if (G.pip && v.alive) audio.say('gun_hits', 14); return; }
   if (v.faction === 'target') { if (!byCharge) G.range.hits += 2; v.damage(amount * (byCharge ? 0.6 : 3), ctx, pos); return; }
   const rules = G.mission.rules || {};
@@ -629,7 +724,7 @@ function update(dt) {
       planeWake.washL.visible = false; planeWake.washR.visible = false;
     }
   }
-  if (!f.onWater && !G.tookOff) { G.tookOff = true; ctx.log(`Airborne ${fmtClock(G.clock)}. Course for the patrol area.`); }
+  if (!f.onWater && !G.tookOff) { G.tookOff = true; G.tookOffAt = G.time; ctx.log(`Airborne ${fmtClock(G.clock)}. Course for the patrol area.`); }
 
   // guns: the pilot fires the fixed/bow gun straight ahead; a manned position fires where it aims
   G.fireTimer -= dt;
@@ -679,7 +774,7 @@ function update(dt) {
       };
       const valid = (v) => {
         if (v.kind === 'aircraft') return v.alive && !v.remove && v.group.position.distanceTo(p) < 1000;
-        if (!v.alive || (v.faction !== 'german' && v.faction !== 'italian') || (v.kind === 'submarine' && !v.surfaced)) return false;
+        if (!v.alive || v.abandoned || (v.faction !== 'german' && v.faction !== 'italian') || (v.kind === 'submarine' && !v.surfaced)) return false;   // not on a crew going over the side
         if (v.kind !== 'submarine' && v.hit <= 0) return false;   // do not shoot merchants unprovoked
         return v.group.position.distanceTo(p) < 800;
       };
@@ -743,16 +838,41 @@ function update(dt) {
       }
     }
   }
-  weapons.update(dt, G.vessels, f, onHit, onDetonate, G.bandits);
+  weapons.update(dt, G.vessels, f, onHit, onDetonate, [...G.bandits, ...G.friendlies]);
   // bandits
   for (const pb of G.pendingBandits) {
     if (pb.done || !G.tookOff) continue;
     pb.timer -= dt;
-    if (pb.timer <= 0) { pb.done = true; spawnBandit(f, pb.name, pb.from).then((b) => { scene.add(b.group); G.bandits.push(b); ctx.log(`Rear gunner: aircraft closing from astern — ${b.name}!`, 'bad'); audio.music.setMood('combat'); audio.say('voice_bandit', 60); }); }
+    if (pb.timer <= 0) { pb.done = true; spawnBandit(f, pb.name, pb.from).then((b) => { if (pb.target) b.target = ctx.named(pb.target); scene.add(b.group); G.bandits.push(b); ctx.log(`Rear gunner: aircraft closing from astern — ${b.name}!`, 'bad'); audio.music.setMood('combat'); audio.say('voice_bandit', 60); }); }
   }
   for (let i = G.bandits.length - 1; i >= 0; i--) {
     const b = G.bandits[i]; b.update(dt, ctx);
+    if ((!b.alive || b.state === 'leave') && !b.goneFlag) { b.goneFlag = true; ctx.flag('bandit-gone'); }
     if (b.remove) { scene.remove(b.group); G.bandits.splice(i, 1); }
+  }
+
+  // friendly aircraft: a squadron machine takes off just behind you; others appear where they were
+  for (const pf of G.pendingFriendlies) {
+    if (pf.done || !G.tookOff) continue;
+    pf.timer -= dt;
+    if (pf.timer <= 0) {
+      pf.done = true;
+      spawnFriendly(pf, f).then((fr) => {
+        if (!G.running) return;
+        scene.add(fr.group); G.friendlies.push(fr);
+        fr.tag = document.createElement('div'); fr.tag.className = 'friend-tag'; document.body.appendChild(fr.tag);
+        if (pf.hello) ctx.log(pf.hello, 'ok');
+      });
+    }
+  }
+  for (let i = G.friendlies.length - 1; i >= 0; i--) {
+    const fr = G.friendlies[i]; fr.update(dt, ctx);
+    if (fr.remove) { scene.remove(fr.group); if (fr.tag) fr.tag.remove(); G.friendlies.splice(i, 1); }
+  }
+  for (const tr of G.triggers) if (!tr.fired && ctx.cond(tr.when)) { tr.fired = true; ctx.acts(tr.acts); }
+  for (let i = G.timers.length - 1; i >= 0; i--) {
+    const tm = G.timers[i]; tm.t -= dt;
+    if (tm.t <= 0) { G.timers.splice(i, 1); if (tm.fn) tm.fn(); else ctx.acts(tm.acts); }
   }
 
   // music mood: quiet patrol, tension on an enemy contact, combat when shooting starts
@@ -861,6 +981,7 @@ function update(dt) {
   document.body.classList.toggle('cockpit', G.view === 'cockpit');
   updateBombsight(f, ctl);
   updateTrackTag(f);
+  updateFriendTags(f);
   if (manning && G.gunOverlay) {
     const sunW = new THREE.Vector3(...(SKIES[G.mission.sky] || SKIES.morning).sun).normalize();
     G.gunOverlay.update({ firing: ctl.fire && G.ammo > 0, sunDir: sunW.applyQuaternion(camera.quaternion.clone().invert()) });
@@ -903,6 +1024,20 @@ function updateBombsight(f, ctl) {
 // A small tag over a dived boat while her shadow is in sight, with range and depth, so she can
 // be followed from the cockpit or the chase view.
 const trackEl = document.getElementById('track-tag');
+// a small label over each friendly aircraft so you can find her in the sky
+function updateFriendTags(f) {
+  for (const fr of G.friendlies) {
+    if (!fr.tag) continue;
+    const d = fr.group.position.distanceTo(f.obj.position);
+    const ndc = fr.group.position.clone().add(new THREE.Vector3(0, 6, 0)).project(camera);
+    const show = d > 60 && d < 15000 && ndc.z < 1 && Math.abs(ndc.x) < 1 && Math.abs(ndc.y) < 1;
+    fr.tag.style.display = show ? 'block' : 'none';
+    if (!show) continue;
+    fr.tag.style.left = ((ndc.x + 1) / 2 * window.innerWidth) + 'px';
+    fr.tag.style.top = ((1 - ndc.y) / 2 * window.innerHeight) + 'px';
+    fr.tag.textContent = `${fr.short}${fr.pilot ? ' · ' + fr.pilot : ''} · ${d < 1000 ? d.toFixed(0) + ' m' : (d / H_SCALE / 1852).toFixed(1) + ' nm'}${fr.hp < 0.65 ? ' · damaged' : ''}`;
+  }
+}
 function updateTrackTag(f) {
   let best = null, bd = 1e9;
   for (const v of G.vessels) if (v.kind === 'submarine' && v.shadowSeen && v.identified) { const d = v.group.position.distanceTo(f.obj.position); if (d < bd) { bd = d; best = v; } }
@@ -917,6 +1052,7 @@ function updateTrackTag(f) {
 function evaluateObjectives(dt) {
   const f = G.flight, p = f.obj.position;
   const byName = (n) => G.vessels.find((v) => v.name === n);
+  const hd = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
   for (const o of G.objectives) {
     if (o.done || o.failed) continue;
     const t = o.target ? byName(o.target) : null;
@@ -957,6 +1093,41 @@ function evaluateObjectives(dt) {
         o.progress += dt; if (o.progress >= o.seconds) { o.done = true; G.score += 150; ctx.log('Convoy through safely.', 'ok'); }
         break;
       }
+      case 'join': {
+        const fr = ctx.named(o.target);
+        if (fr && !f.onWater && fr.group.position.distanceTo(p) < (o.radius || 1000)) { o.done = true; ctx.log(`Formating on ${fr.short}.`, 'ok'); }
+        break;
+      }
+      case 'event':
+        if (G.flags.has(o.flag)) o.done = true;
+        else if (o.failFlag && G.flags.has(o.failFlag)) o.failed = true;
+        break;
+      case 'share': {
+        // your own hits on her, guns or charges, not another aircraft's
+        const tv = byName(o.target);
+        if (tv) { o.text = `${o.baseText} — ${Math.min(100, (tv.playerDmg || 0) / o.amount * 100).toFixed(0)}%`; if ((tv.playerDmg || 0) >= o.amount) o.done = true; }
+        if (tv && !tv.alive && !o.done) o.failed = true;
+        break;
+      }
+      case 'cover': {
+        // stay with an aircraft (or over a boat) while something happens: counted from the start
+        // flag to the end flag, done if you were close for at least half of it
+        const tg = ctx.named(o.target);
+        if (!tg) { if (o.seen) o.failed = true; break; }   // not on the scene yet, or gone
+        o.seen = true;
+        if (tg.alive === false) { o.failed = true; ctx.log(`${tg.short || tg.name} is lost.`, 'bad'); break; }
+        const started = !o.start || G.flags.has(o.start);
+        if (started) {
+          o.elapsed += dt;
+          if (hd(tg.group.position, p) < (o.radius || 3000) && !f.onWater) o.near += dt;
+          o.text = `${o.baseText} — with her ${(o.near / Math.max(1, o.elapsed) * 100).toFixed(0)}% of the time`;
+        }
+        if (G.flags.has(o.flag)) {
+          if (o.elapsed < 1 || o.near / o.elapsed >= (o.share || 0.5)) { o.done = true; G.score += 100; }
+          else { o.failed = true; ctx.log(`You were not with ${tg.short || tg.name} when it mattered.`, 'bad'); }
+        }
+        break;
+      }
       case 'return': {
         const others = G.objectives.filter((x) => x !== o);
         const dj = Math.hypot(p.x - JETTY.x, p.z - JETTY.z);
@@ -972,6 +1143,7 @@ function evaluateObjectives(dt) {
       }
     }
     if (o.done && o.kind !== 'return') G.score += 25;
+    if (o.done && o.raise) ctx.flag(o.raise);
   }
 }
 
@@ -1049,6 +1221,10 @@ function frame() {
 }
 function loop() { requestAnimationFrame(loop); frame(); }
 window.DBG.frame = frame;
+// test hooks: start a sortie by id without the menus, and reach the mission scripting
+window.DBG.start = (id, ac) => { const m = MISSIONS.find((x) => x.id === id); ui.hide(); return startMission(m, AIRCRAFT[ac || m.aircraft[0]]).then(() => finishWalkout()); };
+window.DBG.ctx = ctx;
+window.DBG.step = (seconds, dt = 0.05) => { for (let t = 0; t < seconds && G.running; t += dt) update(dt); };
 loop();
 // Fallback: some embedded browsers throttle or suspend requestAnimationFrame; keep the sim alive.
 setInterval(() => { if (performance.now() - lastFrame > 100) frame(); }, 33);

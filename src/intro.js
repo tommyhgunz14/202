@@ -1,10 +1,14 @@
 // Launch intro: a cinematic run of cards shown once per page load before the title menu.
 //   black → "A True Story.." → the situation in 1941 → the title over the harbour → three
-//   stills of the crew walking out and boarding (about six seconds) → the menu.
+//   stills of the crew walking out and boarding (about six seconds) → the passing-out photograph of
+//   winter 1930 with T. Q. Horner in the front row, coming up from grey into colour → the menu.
 // Any key, click or controller button skips the whole sequence.
 
 const STILLS = ['intro_walk', 'intro_board', 'intro_cockpit'];
 const ARCHIVE = ['photo_london_gunwharf', 'photo_briefing', 'photo_crew_dusk'];
+// the last picture is a real one: the family's print, colourised by hand (tools/colourise-passing-out.mjs)
+const FINALE = 'passing_out_1930';
+const PICS = [...ARCHIVE, ...STILLS, FINALE];
 
 const STORY = `Gibraltar, 1941. German U-Boats and Italian submarines are using the Gibraltar Strait to prey on
 the convoys supplying Allied nations in the Mediterranean Ocean. Known commonly as 'The Rock', Gibraltar
@@ -20,13 +24,14 @@ export function runIntro(root, input, { onDone, onTitle, onMusic } = {}) {
   el.innerHTML = `
     <div class="icard" id="intro-true"><p class="true">A True Story</p></div>
     <div class="icard" id="intro-story"><p class="story">${STORY.replace(/\n/g, ' ')}</p></div>
-    <div class="icard title" id="intro-title"><div class="photos">${[...ARCHIVE, ...STILLS].map((n) => `<div class="ph" style="background-image:url(assets/intro/${n}.jpg)"></div>`).join('')}</div><div class="tt"><h1>Guardians of the Rock</h1><p class="sub">No. 202 Squadron &middot; Gibraltar &middot; 1939&ndash;1944</p></div></div>
+    <div class="icard title" id="intro-title"><div class="photos">${PICS.map((n) => `<div class="ph${n === FINALE ? ' finale' : ''}" style="background-image:url(assets/intro/${n}.jpg)"></div>`).join('')}</div><div class="tt"><h1>Guardians of the Rock</h1><p class="sub">No. 202 Squadron &middot; Gibraltar &middot; 1939&ndash;1944</p></div></div>
+    <p class="fcap">Passing-out term, winter 1930 &middot; T. Q. Horner, seated second from left</p>
     <div class="bars"><i></i><i></i></div>
     <div class="grain"></div>
     <div class="skip">Esc &middot; skip</div>`;
   root.appendChild(el);
   // preload every picture; any that is missing is dropped from the run
-  const ready = Promise.all([...ARCHIVE, ...STILLS].map((n) => new Promise((res) => { const i = new Image(); i.onload = () => res(true); i.onerror = () => res(false); i.src = `assets/intro/${n}.jpg`; })));
+  const ready = Promise.all(PICS.map((n) => new Promise((res) => { const i = new Image(); i.onload = () => res(true); i.onerror = () => res(false); i.src = `assets/intro/${n}.jpg`; })));
 
   let done = false, timer = 0, cancel = [];
   const wait = (ms) => new Promise((r) => { const t = setTimeout(r, ms); cancel.push(() => clearTimeout(t)); });
@@ -66,15 +71,31 @@ export function runIntro(root, input, { onDone, onTitle, onMusic } = {}) {
     show('intro-title', true);
     const have = await ready;
     const phs = [...el.querySelectorAll('#intro-title .ph')].filter((_, i) => have[i]);
-    const n = Math.max(1, phs.length);
+    const n = Math.max(1, phs.filter((p) => !p.classList.contains('finale')).length);   // the grade runs over the stills; the photograph has its own
     const grade = (el2, g) => { el2.style.filter = `grayscale(${g.toFixed(2)}) sepia(${(0.3 * g).toFixed(2)}) contrast(${(1.06 + 0.06 * g).toFixed(2)}) brightness(${(0.52 + 0.06 * (1 - g)).toFixed(2)})`; };
     phs.forEach((p, i) => grade(p, 1 - i / n));
     for (let i = 0; i < phs.length; i++) {
+      if (phs[i].classList.contains('finale')) {
+        // the photograph itself: the title steps aside, the print is shown whole and bright, and
+        // comes up from grey into colour over a longer hold
+        el.querySelector('#intro-title').classList.add('finale-on');
+        el.classList.add('finale-on');
+        phs[i].style.filter = 'grayscale(1) sepia(0.25) contrast(1.02) brightness(0.9)';
+        phs[i].classList.add('on');
+        if (i > 0) phs[i - 1].classList.remove('on');
+        await wait(1600);
+        phs[i].style.filter = 'grayscale(0) sepia(0.06) contrast(1.02) brightness(0.98)';
+        await wait(7400);
+        phs[i].classList.remove('on');
+        await wait(900);
+        continue;
+      }
       phs[i].classList.add('on');
       requestAnimationFrame(() => grade(phs[i], 1 - (i + 1) / n));   // this print comes up into colour while it is held
       await wait(3600);
-      if (i < phs.length - 1) phs[i + 1].classList.add('on');        // cross-fade: the next is up before this one goes
-      phs[i].classList.remove('on');
+      const nextFinale = phs[i + 1] && phs[i + 1].classList.contains('finale');
+      if (i < phs.length - 1 && !nextFinale) phs[i + 1].classList.add('on');        // cross-fade: the next is up before this one goes
+      if (!nextFinale) phs[i].classList.remove('on');
       await wait(i < phs.length - 1 ? 0 : 900);
     }
     show('intro-title', false); await wait(1200);

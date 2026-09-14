@@ -103,6 +103,55 @@ Corrections the full text forced on existing content:
 The article is subscription content. Its facts are used and cited; none of its text is reproduced
 in this repository.
 
+## Sorties flown by other crews
+
+Five actions in the article were flown by other crews of the squadron. They are in the game as
+sorties where you fly a second aircraft alongside the crew the record names. That crew's aircraft
+is flown by the game and does what the record says it did; your objectives support it. **The
+second aircraft is the game's invention in every one of them**: the article does not say another
+squadron machine was there.
+
+- **14 Sep 1942, the Alabastro** — Flt Lt E. Walshe, Sunderland W6002/AX-R, 1510hrs, about fifty
+  miles north-west of Bougie. He attacked a surfaced submarine from astern at 800 ft with six
+  charges, four straddling. She circled out of control for 35 minutes firing back, was abandoned,
+  and sank with about forty men in the water. The boat was Tenente di vascello Giuseppe Bonadies'
+  Alabastro, and Walshe got the DFC. *Staged* at the eastern edge of the map, with the 35 minutes
+  shortened to a few. Alabastro was an Adua-class boat, shown on the Brin-class model and labelled
+  as Adua class. The Durbo, also an Adua-class boat, is now labelled that way too.
+- **24 Oct 1942, General Clark** — Wg Cdr A. Case, Catalina Mk.IB FP164/L, in the afternoon,
+  picked up Major General Mark Clark from a waiting submarine on his return from a clandestine
+  trip to Algiers. The article does not name the boat or the position. The submarine is given as
+  **HMS Seraph**, which carried Clark to and from the Algerian coast in October 1942. That is
+  general history, not this article. The transfer is *staged* at sea east of Europa Point.
+- **7 Nov 1942, General Giraud** — Flt Lt J. Louw, Catalina Mk.IB FP122/K, picked up General
+  Henri Giraud from a submarine in the Gulf of Lyons. Giraud fell into the water during the
+  transfer, and Louw received the Légion d'honneur. Seraph is again named from general history;
+  she brought Giraud out of France. *Staged* at the eastern edge of the map. A Vichy fighter may
+  come out at the Catalina on the water (a 60% chance). **No interception is recorded**; it is a
+  play hazard, and the briefing says so.
+- **8 Jan 1944, U-343** — Wg Cdr G. Harger commanding. Flt Lt John Finch's crew attacked U-343 at
+  2300hrs after a 179 Squadron Wellington had already attacked her. Finch took hits to the port
+  wing, fuselage and fuel tanks, his flight engineer was wounded, and he dropped his charges and
+  got back to Gibraltar. U-343 reached Toulon, so the game will not let her be sunk in this
+  sortie. The account gives neither Finch's serial nor the position; the action is *staged* east
+  of the Rock. It is flown at night under a procedural moonlit sky, and the phase of the moon is
+  not modelled.
+- **24 Feb 1944, U-761** — Finch's crew, on patrol north of Tangier, found Oblt z.S. Horst Geider's
+  U-761. She was being tracked by HMS Anthony and HMS Wishart and had already been attacked by
+  several US Navy aircraft. Finch followed the next American wave in and straddled her as she
+  headed south. She dived, the destroyers hounded her until she came up partly surfaced and was
+  abandoned, and she sank stern first three minutes later. 48 men were picked up and the squadron
+  shared the credit. This is fought **where it happened**. The US Navy aircraft are not
+  identified in the article and are shown as Catalinas. HMS Anthony, an A-class destroyer, is
+  shown on the Wishart model.
+
+How the scripted parts are kept to the record: an attacking aircraft's stick leaves its target in
+the state the record describes, whatever the dice would have made of it. A boat that survived
+(U-343) has a floor under her damage. A boat that was abandoned (Alabastro, U-761) goes down when
+her crew leave her, not when a hit happens to take her to zero. HMS Seraph, an S-class boat, is
+shown on the Type VIIC hull with a White Ensign on the bridge, because there is no British
+submarine model.
+
 ## Additions in the second pass
 
 - **Vichy fighters**: the squadron record notes attacks by French aircraft on 14 September 1940,
@@ -136,7 +185,18 @@ every generated plate as a reconstruction. Nothing generated is presented as a c
 photograph anywhere in the game.
 
 Photographs supplied to the project are listed in `src/data/archive.js` with whatever is known of
-their provenance. Where rights are not established the entry says so rather than implying a
+their provenance.
+
+**Passing-out term, winter 1930.** A group photograph by Gale & Polden Ltd of Aldershot. The
+mount prints the names of thirteen standing and eleven seated, with Horner second in the seated
+row. The caps with white bands and the sergeants' chevrons on some sleeves look like flight cadets
+of the RAF College, Cranwell. The print does not say so, so the game does not either. It is shown
+twice in the archive: as supplied, and colourised. The colourised version closes the launch intro.
+It was tinted locally by `tools/colourise-passing-out.mjs`: every pixel keeps the photograph's own
+CIE lightness, and colour is painted in from soft regions (RAF blue-grey cloth, skin, white cap
+bands, a dark timber hut, winter grass, the cream mount). No generative model touched it, the
+photograph was not sent to any outside service, and no face has been redrawn. The colours are
+informed guesses, not a record. Where rights are not established the entry says so rather than implying a
 licence. Wartime British official photographs are frequently held by the Imperial War Museum under
 their own terms; none are bundled in this repository.
 
