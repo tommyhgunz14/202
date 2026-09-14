@@ -42,11 +42,13 @@ export class Friendly {
   // the hp a vessel may be left with by this aircraft's charges while an attack step runs
   floorFor(v) { const s = this.step; return s && s.do === 'attack' && s.leave != null && s.at === v.name ? s.leave : 0; }
 
-  next(ctx) {
+  next(ctx, skipThen = false) {
     const s = this.step;
-    if (s) { if (s.then) ctx.acts(s.then); if (s.flag) ctx.flag(s.flag); }
+    if (s && !skipThen) { if (s.then) ctx.acts(s.then); if (s.flag) ctx.flag(s.flag); }
     this.idx++; this.stepT = 0; this.phase = null; this.aPhase = null; this.dropped = 0; this.forced = false;
-    const n = this.step;
+    let n = this.step;
+    // an attack on a boat that has already gone is dropped, radio call and all
+    while (n && n.do === 'attack' && !(ctx.named(n.at) && ctx.named(n.at).alive)) { this.idx++; n = this.step; }
     if (!n) return;
     if (n.log) ctx.log(n.log, n.cls || 'ok');
     if (n.acts) ctx.acts(n.acts);
@@ -161,7 +163,7 @@ export class Friendly {
   // release a stick spaced across her, pull away ahead and climb.
   attack(dt, ctx, s) {
     const t = ctx.named(s.at); const g = this.group.position;
-    if (!t || !t.alive) { this.next(ctx); return; }
+    if (!t || !t.alive) { this.next(ctx, true); return; }   // she has gone: nothing of this attack is reported
     const tp = t.group.position, th = t.heading;
     const back = new THREE.Vector3(-Math.sin(th), 0, -Math.cos(th));
     const alt = s.attackAlt || 245;

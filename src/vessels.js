@@ -20,8 +20,8 @@ export const VESSEL_TYPES = {
   // HMS Seraph (P219), an S-class boat: no model of her own, so the Type VIIC hull stands in with a
   // White Ensign on the bridge. She never dives on a friendly aircraft and carries no flak here.
   rnsub: { asset: 'assets/uboat_viic.js', length: 66.1, beam: 7.2, kind: 'submarine', faction: 'rn', label: 'British submarine (S class)', hp: 1.0, surfSpeed: 14, subSpeed: 9, ensign: true, noRef: true },
-  // men in the water after a boat is abandoned: Carley floats and heads in the oil
-  survivors: { asset: 'assets/target_raft.js', length: 12, beam: 12, kind: 'survivors', faction: 'survivors', label: 'Survivors in the water', hp: 99, surfSpeed: 0, noRef: true },
+  // men in the water after a boat is abandoned: Carley floats, men in life-jackets, wreckage
+  survivors: { asset: 'assets/survivors.js', length: 26, beam: 26, kind: 'survivors', faction: 'survivors', label: 'Survivors in the water', hp: 99, surfSpeed: 0, noRef: true },
 };
 
 const _v = new THREE.Vector3();
@@ -117,9 +117,11 @@ export class Vessel {
       if (canShoot && this.gunTimer <= 0) { this.gunTimer = this.interceptOnly ? 9 : 7; ctx.navalGunfire(this, tgt, !!this.interceptOnly); }
       if (d < 120 && this.dcTimer <= 0 && tgt.kind === 'submarine') { this.dcTimer = 14; ctx.destroyerAttack(this, this.huntTarget); }
       if (!this.huntTarget.alive) { this.hunting = false; this.huntTarget = null; }
-    } else if (this.behaviour === 'escort' && this.escortOf) {
+    } else if (this.behaviour === 'escort' && this.escortOf && this.escortOf.alive) {
       const t = this.escortOf.group.position;
-      const off = new THREE.Vector3(Math.sin(this.escortOf.heading + 1.2) * 250, 0, Math.cos(this.escortOf.heading + 1.2) * 250);
+      // station on the escorted ship's quarter; side and distance can be set per ship (shadowing)
+      const sa = this.escortOf.heading + 1.2 * (this.escortSide || 1), sd = this.escortDist || 250;
+      const off = new THREE.Vector3(Math.sin(sa) * sd, 0, Math.cos(sa) * sd);
       const goal = t.clone().add(off);
       const des = Math.atan2(goal.x - g.position.x, goal.z - g.position.z);
       this.turnToward(des, dt, 0.3);

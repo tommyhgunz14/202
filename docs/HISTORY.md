@@ -141,7 +141,7 @@ squadron machine was there.
   several US Navy aircraft. Finch followed the next American wave in and straddled her as she
   headed south. She dived, the destroyers hounded her until she came up partly surfaced and was
   abandoned, and she sank stern first three minutes later. 48 men were picked up and the squadron
-  shared the credit. This is fought **where it happened**. The US Navy aircraft are not
+  shared the credit. This is fought **where it happened**. The hunt is compressed. The destroyers shadow her from the moment she surfaces, and once they are sent in she is brought up and sunk in about 75 seconds. Her three minutes on the surface before she sank are shortened to thirty seconds. The US Navy aircraft are not
   identified in the article and are shown as Catalinas. HMS Anthony, an A-class destroyer, is
   shown on the Wishart model.
 

@@ -304,6 +304,7 @@ async function startMission(mission, spec) {
     weapons.oilSlick(new THREE.Vector3(p.x, 0, p.z), 45, true);
     G.slick = new THREE.Vector3(p.x, 0, p.z);
   } else G.slick = null;
+  mission.datums = [];
   G.objectives = mission.objectives.map((o) => ({ ...o, done: false, failed: false, progress: 0, near: 0, elapsed: 0, baseText: o.text }));
   G.triggers = (mission.triggers || []).map((t) => ({ ...t, fired: false }));
   G.range = { hits: 0, rounds: 0, dcScore: 0, drops: 0 };
@@ -374,8 +375,8 @@ function gunnerReport(g, st, kind) {
     audio.say(Math.random() < 0.5 ? 'gun_kill_1' : 'gun_kill_2', 2);
     if (mine) pipSet('Kill!', 'kill', 4); else pipShow(g, st, 'Kill!', 'kill'), pipSet('Kill!', 'kill', 4);
   } else if (kind === 'sunk') {
-    ctx.log(`${label}: ${tg.name} finished.`, 'ok');
-    if (mine) pipSet('Target sunk', 'kill', 3);
+    if (tg.alive && tg.abandoned) { ctx.log(`${label}: her crew are going over the side. Ceasing fire.`, 'ok'); if (mine) pipSet('Ceased fire', 'kill', 3); }
+    else { ctx.log(`${label}: ${tg.name} finished.`, 'ok'); if (mine) pipSet('Target sunk', 'kill', 3); }
   } else if (kind === 'escape') {
     ctx.log(`${label}: ${tg.name} breaking off for home.`);
     audio.say(Math.random() < 0.5 ? 'gun_escape_1' : 'gun_escape_2', 4);
@@ -469,6 +470,7 @@ const ctx = {
   acts(list) {
     for (const a of [].concat(list || [])) {
       if (a.after != null) { G.timers.push({ t: a.after, acts: a.do }); continue; }
+      if (a.vessel) { const v = ctx.named(a.vessel); if (!v || !v.alive) continue; }
       if (a.log) ctx.log(a.log, a.cls || 'ok');
       if (a.say) audio.say(a.say, 20);
       if (a.music) audio.music.setMood(a.music);
@@ -481,6 +483,7 @@ const ctx = {
         if (a.set) Object.assign(v, a.set);
         if (a.route) { v.waypoints = a.route.map(([la, lo]) => { const w = toWorld(la, lo); return new THREE.Vector3(w.x, 0, w.z); }); v.wpIdx = 0; }
         if (a.hunt) { const t = ctx.named(a.hunt); if (t) { v.hunting = true; v.huntTarget = t; v.stopped = false; } }
+        if (a.shadow) { const t = ctx.named(a.shadow); if (t) { v.behaviour = 'escort'; v.escortOf = t; v.escortSide = a.side || 1; v.escortDist = a.dist || 600; v.stopped = false; } }
         if (a.damageTo != null && v.hp > a.damageTo) { const floor = v.hpFloor; v.hpFloor = null; v.damage(v.hp - a.damageTo, ctx, v.group.position.clone().setY(2)); v.hpFloor = floor; }
         if (a.abandon != null) abandonShip(v, a);
       }
@@ -789,7 +792,7 @@ function update(dt) {
       };
       const valid = (v) => {
         if (v.kind === 'aircraft') return v.alive && !v.remove && v.group.position.distanceTo(p) < 1000;
-        if (!v.alive || v.abandoned || (v.faction !== 'german' && v.faction !== 'italian') || (v.kind === 'submarine' && !v.surfaced)) return false;   // not on a crew going over the side
+        if (!v.alive || v.abandoned || (v.faction !== 'german' && v.faction !== 'italian') || (v.kind === 'submarine' && (!v.surfaced || (v.depth || 0) > 2.5))) return false;   // a boat still coming up from depth is not a target yet   // not on a crew going over the side
         if (v.kind !== 'submarine' && v.hit <= 0) return false;   // do not shoot merchants unprovoked
         return v.group.position.distanceTo(p) < 800;
       };
@@ -797,7 +800,7 @@ function update(dt) {
         const tg = st.target;
         if (tg.kind === 'aircraft' && !tg.alive) gunnerReport(g, st, 'kill');
         else if (tg.kind === 'aircraft' && (tg.state === 'leave' || tg.remove)) gunnerReport(g, st, 'escape');
-        else if (tg.kind !== 'aircraft' && !tg.alive) gunnerReport(g, st, 'sunk');
+        else if (tg.kind !== 'aircraft' && (!tg.alive || tg.abandoned)) gunnerReport(g, st, 'sunk');
         else gunnerReport(g, st, 'lost');
         st.target = null; st.state = 'idle';
       }
@@ -901,7 +904,7 @@ function update(dt) {
   for (const v of G.vessels) {
     if (v.kind !== 'submarine') continue;
     const d = v.group.position.distanceTo(p);
-    const shadowVis = v.alive && !v.surfaced && (v.depth || 0) < 35 && d < 2200 && p.y < 900;
+    const shadowVis = v.alive && !v.abandoned && !v.surfaced && (v.depth || 0) < 35 && d < 2200 && p.y < 900;
     if (shadowVis && !v.shadowSeen && v.identified) ctx.log(`${v.name}: her shadow is showing under the surface — hold her.`, 'ok');
     v.shadowSeen = shadowVis;
     if (v.identified && !v.surfaced && !v.wasDived) { v.wasDived = true; G.mission.datums = G.mission.datums.filter((x) => x.name !== v.name); G.mission.datums.push({ name: v.name, x: v.group.position.x, z: v.group.position.z, t: G.time, speed: v.spec.subSpeed / KT }); }

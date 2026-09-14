@@ -350,8 +350,7 @@ export const MISSIONS = [
             log: 'AX-R: "Submarine on the surface, fine on the bow. Going in from astern at eight hundred feet."', acts: [{ flag: 'walshe-running' }, { music: 'combat' }],
             dropLog: 'AX-R: "Six away. Four across her casing!"',
             then: [
-              { vessel: 'Alabastro', set: { behaviour: 'circle', circleRate: 0.06, speedKt: 4, stopped: false, flakRate: 1.4 } },
-              { log: 'The submarine is circling out of control, and her gunners are firing back at AX-R.', cls: 'bad' },
+              { vessel: 'Alabastro', set: { behaviour: 'circle', circleRate: 0.06, speedKt: 4, stopped: false, flakRate: 1.4 }, log: 'The submarine is circling out of control, and her gunners are firing back at AX-R.', cls: 'bad' },
               { flag: 'walshe-attacked' },
             ] },
           { do: 'orbit', at: 'Alabastro', radius: 1100, alt: 260, until: { flag: 'alabastro-sunk' } },
@@ -363,7 +362,7 @@ export const MISSIONS = [
       { when: { flag: 'strafed' }, acts: [{ vessel: 'Alabastro', set: { flakRate: 0.25 } }, { log: 'Her gun crews are down or sheltering. The fire is slackening.' }] },
       { when: { any: [{ since: ['walshe-attacked', 160] }, { all: [{ flag: 'strafed' }, { since: ['walshe-attacked', 50] }] }] },
         acts: [
-          { log: 'Men are coming up out of the conning tower and going over the side. They are abandoning her.' },
+          { vessel: 'Alabastro', log: 'Men are coming up out of the conning tower and going over the side. They are abandoning her.' },
           { vessel: 'Alabastro', abandon: 30, survivors: 'Crew of the Alabastro', sunkFlag: 'alabastro-sunk', sunkLog: 'The Alabastro has gone down. About forty men in the water.' },
         ] },
     ],
@@ -475,8 +474,7 @@ export const MISSIONS = [
             ],
             dropLog: 'Finch: "Charges away!"',
             then: [
-              { vessel: 'U-343', set: { behaviour: 'stayDown', surfaced: false, targetDepth: 35, diveCooldown: 999, leaking: true, speedKt: 6 }, route: [[36.06, -4.84]] },
-              { log: 'U-343 is going under, trailing oil, heading east.' },
+              { vessel: 'U-343', set: { behaviour: 'stayDown', surfaced: false, targetDepth: 35, diveCooldown: 999, leaking: true, speedKt: 6 }, route: [[36.06, -4.84]], log: 'U-343 has submerged, trailing oil, heading east.' },
               { log: 'Finch: "Turning for home on what we have left. Stay with us."' },
               { flag: 'finch-attacked' },
             ] },
@@ -516,9 +514,10 @@ export const MISSIONS = [
           { do: 'attack', at: 'U-761', charges: 6, depth: 25, attackAlt: 60, leave: 0.7,
             log: 'US Navy aircraft: "On the contact. Attacking."', dropLog: 'US Navy aircraft: "Bombs away on the contact."',
             then: [
-              { vessel: 'U-761', set: { behaviour: 'stayUp', surfaced: true, targetDepth: 0, speedKt: 8, diveCooldown: 999 }, route: [[35.86, -5.77]] },
-              { log: 'U-761 is surfacing, running south for Tangier on the surface!' },
+              { vessel: 'U-761', set: { behaviour: 'stayUp', surfaced: true, targetDepth: 0, speedKt: 8, diveCooldown: 999 }, route: [[35.86, -5.77]], log: 'U-761 is surfacing, running south for Tangier on the surface!' },
               { flag: 'u761-up' }, { music: 'combat' },
+              // the destroyers had her all along: they close and shadow her on either quarter
+              { vessel: 'HMS Anthony', shadow: 'U-761', side: 1, dist: 650 }, { vessel: 'HMS Wishart', shadow: 'U-761', side: -1, dist: 650 },
             ] },
           { do: 'orbit', at: 'U-761', radius: 1800, alt: 320, until: { flag: 'u761-sunk' } },
           { do: 'orbit', lat: 35.95, lon: -5.75, radius: 1600, alt: 320, until: { stepTime: 40 } },
@@ -532,8 +531,7 @@ export const MISSIONS = [
             log: 'Finch: "Following the Americans in. Running in on her now."', acts: [{ flag: 'finch-running' }],
             dropLog: 'Finch: "Straddled her!"',
             then: [
-              { vessel: 'U-761', set: { behaviour: 'stayDown', surfaced: false, targetDepth: 40, diveCooldown: 999, speedKt: 5 } },
-              { log: 'U-761 is going down again.' },
+              { vessel: 'U-761', set: { behaviour: 'stayDown', surfaced: false, targetDepth: 40, diveCooldown: 999, speedKt: 5 }, log: 'U-761 has submerged again.' },
               // the destroyers come on once she is under: they hounded her down, not on the surface
               { after: 25, do: [{ vessel: 'HMS Anthony', hunt: 'U-761' }, { vessel: 'HMS Wishart', hunt: 'U-761' }, { log: 'HMS Anthony and HMS Wishart are going in after her with depth charges.' }] },
               { flag: 'finch-attacked' },
@@ -544,15 +542,17 @@ export const MISSIONS = [
         ] },
     ],
     triggers: [
-      { when: { all: [{ since: ['finch-attacked', 45] }, { hpBelow: ['U-761', 0.3] }] },
+      { when: { all: [{ since: ['finch-attacked', 70] }, { hpBelow: ['U-761', 0.3] }] },
         acts: [
-          { log: 'U-761 has come up again, partly surfaced, with men pouring out of the conning tower. She is being abandoned.' },
-          { vessel: 'U-761', abandon: 25, sternFirst: true, survivors: 'Survivors of U-761', sunkFlag: 'u761-sunk', sunkLog: 'U-761 has gone down stern first.' },
+          { vessel: 'U-761', log: 'U-761 has come up again, partly surfaced, with men pouring out of the conning tower. She is being abandoned.' },
+          { vessel: 'U-761', abandon: 30, sternFirst: true, survivors: 'Survivors of U-761', sunkFlag: 'u761-sunk', sunkLog: 'U-761 has gone down stern first.' },
           { vessel: 'HMS Anthony', set: { hunting: false, huntTarget: null, stopped: true } },
           { vessel: 'HMS Wishart', set: { hunting: false, huntTarget: null, stopped: true } },
         ] },
-      // the destroyers' patterns told in the end, whatever the dice make of them here
-      { when: { since: ['finch-attacked', 170] }, acts: [{ vessel: 'U-761', damageTo: 0.25 }] },
+      // the destroyers' patterns told in the end, whatever the dice make of them here. From the
+      // destroyers being sent in (25 s after Finch's straddle) to her going down is about 75 s:
+      // she is brought up 45 s in, by their charges or by this fallback, and sinks 30 s later
+      { when: { since: ['finch-attacked', 72] }, acts: [{ vessel: 'U-761', damageTo: 0.25 }] },
       { when: { flag: 'u761-sunk' }, acts: [{ after: 70, do: [{ log: 'HMS Anthony and HMS Wishart have picked up 48 survivors.' }, { flag: 'pickup-done' }] }] },
     ],
     objectives: [
