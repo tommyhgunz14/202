@@ -96,7 +96,18 @@ surfaced U-boat) he calls it over the intercom, opens fire inside 700 m, reports
 claims the kill or reports the fighter breaking off for home. While a gunner is engaged a small
 window at the top right shows the view from his gun, titled with the position and weapon, with
 the state of the engagement (Sighted, Engaging, Kill!, Escaped). Taking a gun yourself silences
-that position's automatic fire.
+that position's automatic fire. The Catalina's tunnel gun fires down and aft through the hatch in
+the hull bottom, so its view starts pitched down under the tail and cannot rise above it.
+
+When you release depth charges the same corner switches to a depth-charge camera: low over the
+water abeam your line of attack, it follows the stick down, the splashes, the pause while the
+charges sink to their setting and the plumes, with the boat beside them if one is near. It ends
+with the result (Straddle, Close, Wide) and closes a few seconds later.
+
+Rounds fired at you are heard when they pass within about 30 m: the crack of a close one, then a
+falling whistle, panned to the side it went by. Rounds that hit are a dull thud through the
+airframe. A submarine's gun crews only fire while her deck is out of the water, so a boat that
+is diving or still coming up cannot shoot back.
 
 ## Launch intro
 

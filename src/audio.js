@@ -203,29 +203,38 @@ export class Audio {
     this.burst(0.07, 2200, 0.02, 1.5);
     if (this.samples.has('flak_hits') && (!this._hitT || t - this._hitT > 0.6)) { this._hitT = t; this.samples.play('flak_hits', 0.3); }
   }
-  // a round going past: a short falling whistle, louder and brighter the closer it came, panned to
-  // the side it passed on (side -1 left .. +1 right)
-  whiz(side = 0, dist = 10) {
+  // a round going past: the crack of a close one, then a falling whistle, louder and brighter the
+  // closer it came, panned to the side it passed on (side -1 left .. +1 right); big = a slower cannon shell
+  whiz(side = 0, dist = 10, big = false) {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
-    if (this._whizT && t - this._whizT < 0.13) return;
+    if (this._whizT && t - this._whizT < 0.08) return;
     this._whizT = t;
-    const near = Math.max(0, 1 - dist / 18);
-    const dur = 0.16 + 0.12 * (1 - near);
+    const R = 30, near = Math.max(0, 1 - dist / R);
     const pan = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
     if (pan) pan.pan.value = Math.max(-1, Math.min(1, side));
-    const out = this.ctx.createGain(); out.gain.value = 1;
+    // it has to cut through a pair of radial engines and the slipstream, so it goes to the output
+    // at well above the engine bed, not buried in it
+    const out = this.ctx.createGain(); out.gain.value = 1.4;
     if (pan) { out.connect(pan); pan.connect(this.master); } else out.connect(this.master);
+    // a close round is supersonic: first the sharp crack of its shock wave going past
+    if (near > 0.35) {
+      const c = this.ctx.createBufferSource(); c.buffer = this.noiseBuf; c.playbackRate.value = 2;
+      const hp = this.ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1400;
+      const cg = this.ctx.createGain(); cg.gain.setValueAtTime(1.6 * near, t); cg.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+      c.connect(hp); hp.connect(cg); cg.connect(out); c.start(t, Math.random()); c.stop(t + 0.04);
+    }
+    // then the rushing whistle of the round tearing past, falling in pitch as it goes (Doppler)
+    const dur = (big ? 0.34 : 0.22) + 0.1 * (1 - near);
     const src = this.ctx.createBufferSource(); src.buffer = this.noiseBuf;
-    const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 7;
-    const f0 = 3600 + near * 1400;
-    bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f0 * 0.42, t + dur);
-    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.1 + 0.45 * near, t + dur * 0.35); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    src.connect(bp); bp.connect(g); g.connect(out); src.start(t); src.stop(t + dur + 0.02);
-    // the whistle itself: a thin tone dropping in pitch as the round goes by (Doppler)
-    const o = this.ctx.createOscillator(); o.type = 'sine';
-    o.frequency.setValueAtTime(2300 + near * 900, t); o.frequency.exponentialRampToValueAtTime(1250, t + dur);
-    const g2 = this.ctx.createGain(); g2.gain.setValueAtTime(0.0001, t); g2.gain.exponentialRampToValueAtTime(0.02 + 0.07 * near, t + dur * 0.4); g2.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 2.2;
+    const f0 = (big ? 2600 : 4200) + near * 1200;
+    bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f0 * 0.35, t + dur);
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9 + 2.6 * near, t + dur * 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(bp); bp.connect(g); g.connect(out); src.start(t, Math.random()); src.stop(t + dur + 0.02);
+    const o = this.ctx.createOscillator(); o.type = 'triangle';
+    o.frequency.setValueAtTime((big ? 1500 : 2600) + near * 900, t); o.frequency.exponentialRampToValueAtTime(big ? 700 : 1100, t + dur);
+    const g2 = this.ctx.createGain(); g2.gain.setValueAtTime(0.0001, t); g2.gain.exponentialRampToValueAtTime(0.06 + 0.16 * near, t + dur * 0.4); g2.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g2); g2.connect(out); o.start(t); o.stop(t + dur + 0.02);
   }
   ping() { this.tone(880, 0.08, 0.2); }

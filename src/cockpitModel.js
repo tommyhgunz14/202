@@ -165,7 +165,7 @@ export function buildGunnerOverlay(spec, gunDef) {
   if (turret) {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.03, 8, 40), M.frame); ring.rotation.x = Math.PI / 2; ring.position.set(0, -0.5, -0.3); g.add(ring);
     // no vertical turret frames: they crossed the sight line
-    const cap = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.025, 8, 40), M.frame); cap.rotation.x = Math.PI / 2; cap.position.set(0, 0.45, -0.3); g.add(cap);
+    const cap = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.025, 8, 40), M.frame); cap.rotation.x = Math.PI / 2; cap.position.set(0, 0.75, 0.1); g.add(cap);
   } else {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.04, 8, 40), M.frame); ring.rotation.x = Math.PI / 2; ring.position.set(0, -0.45, 0.05); g.add(ring);
     const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 8), M.frame); pillar.position.set(0, -0.45, -0.35); gun.add(pillar);
@@ -178,7 +178,7 @@ export function buildGunnerOverlay(spec, gunDef) {
   const beadPost = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.11, 0.004), M.frame); beadPost.position.set(0, -0.16, -1.35); gun.add(beadPost);
   const hemi = new THREE.HemisphereLight(0xdfe8f0, 0x2a2a26, 0.9); const sun = new THREE.DirectionalLight(0xfff2dc, 1.2); g.add(hemi, sun);
   // the gun rides low in the view so the barrel and mount stay out of the middle of the screen
-  g.position.set(0, -0.06, -0.05);
+  g.position.set(0, -0.15, 0.05);
   return {
     group: g,
     update(st) {

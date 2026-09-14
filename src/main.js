@@ -214,7 +214,7 @@ function clearMission() {
   for (const pk of G.parked || []) scene.remove(pk.g);
   G.parked = [];
   for (const b of G.bandits) scene.remove(b.group);
-  G.bandits = []; G.pendingBandits = []; G.gunners = {}; pipClose();
+  G.bandits = []; G.pendingBandits = []; G.gunners = {}; pipClose(); dcCamClose();
   for (const fr of G.friendlies) { scene.remove(fr.group); if (fr.tag) fr.tag.remove(); }
   G.friendlies = []; G.pendingFriendlies = []; G.flags = new Set(); G.flagTimes = {}; G.triggers = []; G.timers = [];
   if (G.cine) { G.cine.dispose(); G.cine = null; document.body.classList.remove('cine'); }
@@ -427,6 +427,81 @@ function updatePip() {
   pipCam.up.set(0, 1, 0); pipCam.lookAt(_v3);
 }
 
+// ---------- depth-charge camera ----------
+// From the moment a stick is released, an inset follows it down: low over the water abeam the line
+// of the attack, the charges falling, the splashes, the pause while they sink to their setting and
+// the plumes, with the boat beside them if one is there. It closes a few seconds after the last.
+const dcCam = new THREE.PerspectiveCamera(50, 340 / 200, 0.5, 60000);
+const dcEl = { title: document.getElementById('dc-cam-title'), state: document.getElementById('dc-cam-state'), frame: document.getElementById('dc-cam-frame') };
+const _dcC = new THREE.Vector3(), _dcL = new THREE.Vector3(), _dcP = new THREE.Vector3();
+function dcCamClose() { G.dc = null; document.body.classList.remove('dccam'); }
+function dcCamAdd(c) {
+  if (!c) return;
+  if (!G.dc || G.dc.lastDet != null) {
+    const fw = G.flight.forward(new THREE.Vector3()).setY(0).normalize();
+    G.dc = { charges: [], track: fw, side: 1, lastDet: null, closeAt: G.time + 25, pos: null, look: null, depthFt: weapons.depthSetting, best: null, target: null };
+    dcEl.title.textContent = `${G.spec.stores.kind} · ${weapons.depthSetting} ft`;
+    dcEl.state.textContent = 'Released'; dcEl.state.className = '';
+    document.body.classList.add('dccam');
+  }
+  G.dc.charges.push(c);
+}
+function dcTarget(at) {
+  // the vessel the stick was meant for: the nearest one to the fall of the charges
+  let best = null, bd = 260;
+  for (const v of G.vessels) {
+    if (v.kind === 'survivors' || (!v.alive && v.sinking > 20)) continue;
+    const d = Math.hypot(v.group.position.x - at.x, v.group.position.z - at.z) - v.length * 0.5;
+    if (d < bd) { bd = d; best = v; }
+  }
+  return best;
+}
+function updateDcCam(dt) {
+  const dc = G.dc; if (!dc) return;
+  if (!G.running || G.time > dc.closeAt) { dcCamClose(); return; }
+  // centre of the stick: charges still falling or sinking, or where they went off
+  _dcC.set(0, 0, 0); let live = 0, inWater = 0;
+  for (const c of dc.charges) {
+    _dcC.x += c.mesh.position.x; _dcC.z += c.mesh.position.z; _dcC.y += Math.max(0, c.mesh.position.y);
+    if (!c.detonated) { live++; if (c.phase === 'water') inWater++; }
+    else if (c.detAt == null) {
+      c.detAt = G.time;
+      const v = dcTarget(c.mesh.position);
+      if (v) { const d = Math.max(0, Math.hypot(v.group.position.x - c.mesh.position.x, v.group.position.z - c.mesh.position.z) - v.length * 0.35); if (!dc.best || d < dc.best.d) dc.best = { d, v }; }
+    }
+  }
+  _dcC.multiplyScalar(1 / dc.charges.length); _dcC.y = Math.min(_dcC.y, 40);
+  if (!dc.target || (!dc.target.alive && dc.target.sinking > 20)) dc.target = dcTarget(_dcC);
+  const tgt = dc.target;
+  if (live === 0 && dc.lastDet == null) { dc.lastDet = G.time; dc.closeAt = G.time + 5; }
+  // what to look at: the stick, pulled toward the boat so both are in the frame
+  _dcL.copy(_dcC);
+  if (tgt) { _dcL.x = _dcL.x * 0.6 + tgt.group.position.x * 0.4; _dcL.z = _dcL.z * 0.6 + tgt.group.position.z * 0.4; }
+  _dcL.y = Math.max(4, _dcL.y * 0.5 + (dc.lastDet != null || inWater ? 8 : 0));
+  // where to stand: abeam the line of the attack on the far side from the boat, low and a little ahead
+  if (!dc.pos) {
+    if (tgt) { const rx = tgt.group.position.x - _dcC.x, rz = tgt.group.position.z - _dcC.z; dc.side = (rx * dc.track.z - rz * dc.track.x) > 0 ? 1 : -1; }
+  }
+  const span = tgt ? Math.hypot(tgt.group.position.x - _dcC.x, tgt.group.position.z - _dcC.z) : 0;
+  const dist = 95 + Math.min(110, span * 0.8);
+  _dcP.set(_dcC.x - dc.track.z * dc.side * dist + dc.track.x * 30, 12, _dcC.z + dc.track.x * dc.side * dist + dc.track.z * 30);
+  if (!dc.pos) { dc.pos = _dcP.clone(); dc.look = _dcL.clone(); }
+  else if (dc.lastDet == null) dc.pos.lerp(_dcP, Math.min(1, dt * 3));   // once they have gone off, hold still for the plumes
+  dc.look.lerp(_dcL, Math.min(1, dt * 4));
+  dcCam.position.copy(dc.pos); dcCam.up.set(0, 1, 0); dcCam.lookAt(dc.look);
+  // the state line
+  let label, cls = '';
+  if (dc.lastDet != null) {
+    if (dc.best && dc.best.d < 12) { label = `Straddle! ${dc.best.v.name}`; cls = 'kill'; }
+    else if (dc.best && dc.best.d < 40) { label = `Close · ${dc.best.d.toFixed(0)} m from ${dc.best.v.name}`; cls = 'kill'; }
+    else if (dc.best) { label = `Wide · ${dc.best.d.toFixed(0)} m`; cls = 'esc'; }
+    else label = 'Detonated';
+  } else if (dc.charges.some((c) => c.detonated)) label = 'Detonating';
+  else if (inWater) label = `Sinking to ${dc.depthFt} ft`;
+  else label = dc.charges.length > 1 ? `Stick of ${dc.charges.length} falling` : 'Falling';
+  if (dcEl.state.textContent !== label) { dcEl.state.textContent = label; dcEl.state.className = cls; }
+}
+
 // ---------- helpers used by vessel AI ----------
 const ctx = {
   get player() { return G.flight; }, get vessels() { return G.vessels; }, get time() { return G.time; },
@@ -435,9 +510,13 @@ const ctx = {
   enemyFire(v, p) {
     const from = new THREE.Vector3(); (findNamed(v.group, 'flak') || findNamed(v.group, 'bridge') || v.group).getWorldPosition(from);
     from.y = Math.max(from.y, 2);
-    const to = p.obj.position.clone().addScaledVector(p.forward(new THREE.Vector3()), p.speed * 0.6);
+    // lead for the time of flight, and aim off above for the drop of the round over that time
+    const tof = from.distanceTo(p.obj.position) / 320;
+    // (gun layers habitually under-led a crossing aircraft: the stream falls a little behind her, close enough to be heard going past)
+    const to = p.obj.position.clone().addScaledVector(p.forward(new THREE.Vector3()), p.speed * Math.max(0, tof - 0.35));
+    to.y += 0.5 * 9.81 * 0.3 * tof * tof;
     const dir = to.sub(from).normalize();
-    weapons.fireTracer(from, dir, 320, true, 0.02, v);
+    weapons.fireTracer(from, dir, 320, true, 0.026 + 0.012 * tof, v);   // wider at long range: a gun layer's error grows with the distance
     if (p.friendly && Math.random() < 0.012) p.damage(0.02, ctx);
     if (Math.random() < 0.15) audio.enemyGun();
   },
@@ -542,7 +621,8 @@ function abandonShip(v, a) {
   } });
 }
 
-function gunArc(arc) {
+function gunArc(arc, gd) {
+  if (gd && gd.tunnel) return { yaw: [-0.7, 0.7], pitch: [-1.1, 0.02] };
   return { forward: { yaw: [-1.05, 1.05], pitch: [-0.5, 0.6] }, rear: { yaw: [-1.2, 1.2], pitch: [-0.6, 0.5] }, upper: { yaw: [-3.1, 3.1], pitch: [-0.1, 1.3] },
     left: { yaw: [-1.2, 1.2], pitch: [-0.9, 0.7] }, right: { yaw: [-1.2, 1.2], pitch: [-0.9, 0.7] } }[arc] || { yaw: [-1, 1], pitch: [-0.5, 0.5] };
 }
@@ -666,6 +746,7 @@ function update(dt) {
   G.reportCooldown -= dt;
   if (ctl.camera) {
     G.viewIdx = (G.viewIdx + 1) % G.views.length; G.view = G.views[G.viewIdx]; G.aim = { yaw: 0, pitch: 0 };
+    if (G.view.startsWith('gun:') && G.spec.guns.find((g) => g.node === G.view.slice(4)).tunnel) G.aim.pitch = -0.3;
     if (G.gunOverlay) { cockpitScene.remove(G.gunOverlay.group); G.gunOverlay = null; }
     if (G.view === 'bombsight') hud.log('Bomb-aimer\'s position. The ring marks where a charge released now will fall; it turns red when it sits on a target.');
     if (G.view.startsWith('gun:')) {
@@ -780,7 +861,7 @@ function update(dt) {
   G.fireTimer -= dt;
   if (manning) {
     const gd = G.spec.guns.find((g) => g.node === G.view.slice(4));
-    const lim = gunArc(gd.arc);
+    const lim = gunArc(gd.arc, gd);
     // stick right = traverse right (a positive yaw about the vertical axis turns left, hence the sign)
     G.aim.yaw = THREE.MathUtils.clamp(G.aim.yaw - ctl.roll * 1.6 * dt, lim.yaw[0], lim.yaw[1]);
     // elevation: flight-stick sense by default (push forward = barrel down); I toggles
@@ -860,7 +941,7 @@ function update(dt) {
     G.dropTimer = 0.4; if (!(G.mission.rules && G.mission.rules.unlimitedStores)) G.stores--;
     (G.bayNode || G.plane).getWorldPosition(_v1);
     const vel = f.forward(_v2).clone().multiplyScalar(f.speed); vel.y += f.vertSpeed;
-    weapons.dropCharge(_v1, vel, weapons.depthSetting);
+    dcCamAdd(weapons.dropCharge(_v1, vel, weapons.depthSetting));
     audio.say('voice_charges_away', 6);
     ctx.log(`${G.spec.stores.kind} released — set ${weapons.depthSetting} ft. ${G.stores} left.`);
   }
@@ -889,6 +970,7 @@ function update(dt) {
     }
   }
   weapons.update(dt, G.vessels, f, onHit, onDetonate, [...G.bandits, ...G.friendlies]);
+  updateDcCam(dt);
   // bandits
   for (const pb of G.pendingBandits) {
     if (pb.done || !G.tookOff) continue;
@@ -979,7 +1061,8 @@ function update(dt) {
     G.gunNodes[gd.node].getWorldPosition(camPos);
     camera.quaternion.copy(gunQuat(gd.arc, gd.node));
     // eye well above and behind the breech so the stream of tracer is seen rising to the sight
-    camera.position.copy(camPos).addScaledVector(new THREE.Vector3(0, 0, 1).applyQuaternion(camera.quaternion), 1.1).addScaledVector(f.up(_v2), 0.8);
+    // (the Catalina's tunnel gun is under the hull, so its gunner's eye is just above the hatch, below the keel line)
+    camera.position.copy(camPos).addScaledVector(new THREE.Vector3(0, 0, 1).applyQuaternion(camera.quaternion), gd.tunnel ? 0.35 : 1.1).addScaledVector(f.up(_v2), gd.tunnel ? -0.25 : 0.8);
     if (camera.near !== 1.6) { camera.near = 1.6; camera.updateProjectionMatrix(); }
   } else if (G.view === 'bombsight') {
     (G.gunNodes.gun_nose || G.bayNode || G.plane).getWorldPosition(camPos);
@@ -1263,8 +1346,8 @@ function frame() {
   }
   if (G.running && G.pip) {
     updatePip();
-    if (G.pip) {
-      const fr = document.getElementById('gun-cam-frame').getBoundingClientRect();
+    const fr = G.pip && document.getElementById('gun-cam-frame').getBoundingClientRect();
+    if (G.pip && fr.width > 0) {   // hidden while the depth-charge camera has the corner
       renderer.getSize(_size);
       const x = fr.left, y = _size.y - fr.bottom, w = fr.width, h = fr.height;
       pipCam.aspect = w / h; pipCam.updateProjectionMatrix();
@@ -1273,12 +1356,26 @@ function frame() {
       renderer.setScissorTest(false); renderer.setViewport(0, 0, _size.x, _size.y);
     }
   }
+  if (G.running && G.dc && G.dc.pos) {
+    const fr = dcEl.frame.getBoundingClientRect();
+    if (fr.width > 0) {
+      renderer.getSize(_size);
+      const x = fr.left, y = _size.y - fr.bottom, w = fr.width, h = fr.height;
+      dcCam.aspect = w / h; dcCam.updateProjectionMatrix();
+      renderer.setScissorTest(true); renderer.setScissor(x, y, w, h); renderer.setViewport(x, y, w, h);
+      // the fine swell mesh follows whichever camera is drawing, so the water under the inset is not coarse
+      if (sea && sea.follow) sea.follow(dcCam.position.x, dcCam.position.z);
+      renderer.clear(); renderer.render(scene, dcCam);
+      if (sea && sea.follow) sea.follow(camera.position.x, camera.position.z);
+      renderer.setScissorTest(false); renderer.setViewport(0, 0, _size.x, _size.y);
+    }
+  }
 }
 function loop() { requestAnimationFrame(loop); frame(); }
 window.DBG.frame = frame;
 // test hooks: start a sortie by id without the menus, and reach the mission scripting
 window.DBG.start = (id, ac, keepWalkout) => { const m = MISSIONS.find((x) => x.id === id); ui.hide(); return startMission(m, AIRCRAFT[ac || m.aircraft[0]]).then(() => { if (!keepWalkout) finishWalkout(); }); };
-window.DBG.ctx = ctx;
+window.DBG.ctx = ctx; window.DBG.dcCam = dcCam;
 window.DBG.step = (seconds, dt = 0.05) => { for (let t = 0; t < seconds && G.running; t += dt) update(dt); };
 loop();
 // Fallback: some embedded browsers throttle or suspend requestAnimationFrame; keep the sim alive.

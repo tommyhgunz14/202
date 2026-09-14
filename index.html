@@ -191,6 +191,16 @@
   #gun-cam .frame { height: 180px; background: transparent; }
   body.pip #gun-cam { display: block; }
   body.pip #hud-contact { top: 260px; }
+  /* depth-charge camera: the stick seen from low over the water, from release to the plumes */
+  #dc-cam { position: fixed; top: 44px; right: 14px; width: min(340px, 44vw); display: none; border: 2px solid #9fc4d8; border-radius: 4px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6); overflow: hidden; font-family: monospace; font-size: 12px; }
+  #dc-cam .bar { display: flex; justify-content: space-between; align-items: center; padding: 3px 8px; background: rgba(12, 18, 22, 0.85); color: #e8f0f2; }
+  #dc-cam .bar b { color: #bfe0ee; letter-spacing: 0.06em; }
+  #dc-cam .bar span { color: #ffd27a; } #dc-cam .bar span.kill { color: #8ee07a; } #dc-cam .bar span.esc { color: #9fb6c8; }
+  #dc-cam .frame { aspect-ratio: 17 / 10; background: transparent; }
+  body.dccam #dc-cam { display: block; }
+  body.dccam #gun-cam { display: none !important; }
+  body.dccam #hud-contact { top: 280px; }
+  body.cine #dc-cam { display: none !important; }
 </style>
 </head>
 <body>
@@ -225,6 +235,7 @@
     <button id="btn-abandon">Abandon sortie</button>
   </div>
 </div>
+<div id="dc-cam"><div class="bar"><b id="dc-cam-title">Depth charges</b><span id="dc-cam-state"></span></div><div class="frame" id="dc-cam-frame"></div></div>
 <div id="gun-cam"><div class="bar"><b id="gun-cam-title">Tail gunner</b><span id="gun-cam-state"></span></div><div class="frame" id="gun-cam-frame"></div></div>
 <div id="ui"></div>
 <script type="module" src="./src/main.js"></script>

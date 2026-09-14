@@ -59,7 +59,7 @@ export const AIRCRAFT = {
       { node: 'gun_nose', name: '.303 Vickers K (bow)', rounds: 1000, rpm: 950, arc: 'forward' },
       { node: 'gun_waist_l', name: '.303 Vickers K (port blister)', rounds: 1000, rpm: 950, arc: 'left' },
       { node: 'gun_waist_r', name: '.303 Vickers K (stbd blister)', rounds: 1000, rpm: 950, arc: 'right' },
-      { node: 'gun_tail', name: '.303 (tunnel)', rounds: 500, rpm: 950, arc: 'rear' },
+      { node: 'gun_tail', name: '.303 (tunnel)', rounds: 500, rpm: 950, arc: 'rear', tunnel: true },   // fires down and aft through the hatch in the hull bottom: the gunner looks out under the tail, not into it
     ],
     stores: { kind: '250 lb Mk VIII depth charge', count: 8, label: 'depth charges' },
     asv: true,

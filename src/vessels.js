@@ -181,8 +181,10 @@ export class Vessel {
       } else {
         this.depth = Math.max(0, this.depth - 0.6 * dt);
       }
-      // flak: surfaced boats fire at the nearest close aircraft, yours or another
-      if (this.surfaced && this.spec.flak && !this.abandoned) {
+      // flak: surfaced boats fire at the nearest close aircraft, yours or another. Only with the deck
+      // out of the water: a boat still coming up (surfaced is set as she starts to blow tanks) or
+      // going down has no one at the guns
+      if (this.surfaced && (this.depth || 0) < 0.8 && this.spec.flak && !this.abandoned) {
         let tgt = p && !p.crashed && dist < 1400 && p.obj.position.y < 900 ? p : null, td = tgt ? dist : 1400;
         for (const a of ctx.friendlies || []) {
           if (!a.alive || a.onWater) continue;
