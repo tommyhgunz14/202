@@ -244,7 +244,7 @@ function randomEntities(m) {
 async function startMission(mission, spec) {
   clearMission();
   G.mission = mission; G.spec = spec; G.running = false; G.paused = false;
-  G.time = 0; G.endTimer = -1; G.result = null; G.landedMsg = false; G.score = 0; G.penalties = 0; G.tookOff = false; G.idCount = 0; G.identifiedTargets.clear();
+  G.time = 0; G.park = null; G.endTimer = -1; G.result = null; G.landedMsg = false; G.score = 0; G.penalties = 0; G.tookOff = false; G.idCount = 0; G.identifiedTargets.clear();
   G.clock = { dawn: 6 * 3600 + 10 * 60, morning: 8 * 3600 + 30 * 60, afternoon: 14 * 3600 + 20 * 60, dusk: 18 * 3600 + 40 * 60, night: 22 * 3600 + 20 * 60 }[mission.sky] || 8 * 3600;
   if (mission.clock) { const [hh, mm] = mission.clock.split(':').map(Number); G.clock = hh * 3600 + mm * 60; }
   const pal = applySky(mission.sky);
@@ -272,9 +272,16 @@ async function startMission(mission, spec) {
   G.cockpitNode = findNamed(plane, 'cockpit'); G.bayNode = findNamed(plane, 'bomb_bay');
   buildGlints(plane);
   G.flight = new Flight(spec, plane);
-  // start alongside the seaplane jetty, bow toward the north entrance
-  const toEnt = Math.atan2(ENTRANCE.x - JETTY.x, ENTRANCE.z - JETTY.z);
-  G.flight.reset(new THREE.Vector3(JETTY.x, 0, JETTY.z), toEnt, 0, true);
+  // berthed alongside the pontoon: the hull parallel to its long (north-south) edge, port side to
+  // it and bow to the south, standing off far enough that the wingtip and its float clear the deck
+  // by three metres. The hatch the crew use is aft of the wing, and a floating gangway reaches it.
+  const pont = harbour.userData.pontoon;
+  const span = plane.userData.span || 30, length = plane.userData.length || 20;
+  const hatchZ = -0.3 * length;                                  // hatch position along the hull
+  const berth = { x: pont.x - pont.halfW - span / 2 - 3, z: JETTY.z, heading: 0, hullZ: JETTY.z - hatchZ };
+  const toEnt = berth.heading;
+  G.berth = berth;
+  G.flight.reset(new THREE.Vector3(berth.x, 0, berth.z - hatchZ), berth.heading, 0, true);
   G.taxiedOut = false;
   input.throttle = 0;
   G.stores = spec.stores.count; G.ammo = spec.guns[0].rounds;
@@ -316,7 +323,7 @@ async function startMission(mission, spec) {
   // squadron record calls him Wing Commander (see docs/HISTORY.md)
   if (mission.id === 'casablanca' && !G.promoShown) { G.promoShown = true; await showPromotion(document.body, input); }
   const BEAMS = { catalina: 3.1, london: 3.2, sunderland: 3.4, swordfish: 2.2 };
-  G.cine = startWalkout(scene, plane, JETTY, harbour.userData.pontoon, { crew: spec.crew, beam: BEAMS[spec.id] || 3, span: plane.userData.span || 30, length: plane.userData.length || 20, heading: toEnt });
+  G.cine = startWalkout(scene, plane, { x: G.berth.x, z: G.berth.z }, harbour.userData.pontoon, { crew: spec.crew, beam: BEAMS[spec.id] || 3, span: plane.userData.span || 30, length: plane.userData.length || 20, heading: toEnt });
   document.body.classList.add('cine');
   if (titlePlane) titlePlane.visible = false;
   G.running = true;
@@ -642,6 +649,14 @@ function update(dt) {
   if (ctl.report) sightingReport();
 
   f.update(dt, flightCtl);
+  // brought in alongside: the last few seconds warp her gently into the berth, parallel to the
+  // pontoon, so she never ends the sortie lying across it
+  if (G.park) {
+    G.park.t = Math.min(1, G.park.t + dt / 2.5);
+    const e = G.park.t * G.park.t * (3 - 2 * G.park.t);
+    let dh = G.berth.heading - G.park.h0; while (dh > Math.PI) dh -= Math.PI * 2; while (dh < -Math.PI) dh += Math.PI * 2;
+    f.reset(new THREE.Vector3(G.park.x0 + (G.berth.x - G.park.x0) * e, 0, G.park.z0 + (G.berth.hullZ - G.park.z0) * e), G.park.h0 + dh * e, 0, true);
+  }
   for (const pr of G.props) pr.rotation.z += dt * (8 + 60 * f.rpm);
   audio.setEngine(f.rpm, ctl.throttle, f.engineHealth, { cockpit: G.view === 'cockpit', speed: f.speed, onWater: f.onWater, planing: f.planing });
   // water: wake, wash and spray while on the surface; the foam fades after lift-off
@@ -902,8 +917,10 @@ function update(dt) {
     if (!v.identified && d < 800 && p.y < 1500 / FT && !(v.kind === 'submarine' && !v.surfaced && v.depth > 12)) {
       v.idProgress = Math.min(1, v.idProgress + dt / 3);
       if (v.idProgress >= 1) {
-        v.identified = true; G.idCount++; ctx.log(`Identified: ${v.name} — ${v.label}${v.kind === 'neutral' ? ' (neutral: do not attack)' : ''}.`, v.kind === 'neutral' ? '' : 'ok'); G.score += 20;
-        if (v.kind === 'submarine') audio.say('voice_contact', 30); else if (v.kind === 'neutral') audio.say('voice_neutral', 40);
+        const ours = v.faction === 'rn' || v.faction === 'allied';
+        v.identified = true; G.idCount++; ctx.log(`Identified: ${v.name} — ${v.label}${v.kind === 'neutral' ? ' (neutral: do not attack)' : ''}.${ours ? ' "She looks like one of ours, sir."' : ''}`, v.kind === 'neutral' ? '' : 'ok'); G.score += 20;
+        // a British or Allied boat gets the crew's own call, submarine or not, before any contact call
+        if (ours) audio.say('voice_ours', 20); else if (v.kind === 'submarine') audio.say('voice_contact', 30); else if (v.kind === 'neutral') audio.say('voice_neutral', 40);
       }
     }
   }
@@ -963,7 +980,8 @@ function update(dt) {
   if (plotT > 0.25) { plotT = 0; radar.drawPlot(f, G.vessels, BASE, G.mission, G.time, JETTY); }
   const st = { throttle: ctl.throttle, stores: G.stores, ammo: G.ammo, time: fmtClock(G.clock), padName: input.padName };
   if (f.onWater && G.tookOff) {
-    const dj = Math.hypot(p.x - JETTY.x, p.z - JETTY.z), bj = (Math.atan2(JETTY.x - p.x, -(JETTY.z - p.z)) * 180 / Math.PI + 360) % 360;
+    const B = { x: G.berth.x, z: G.berth.hullZ };
+    const dj = Math.hypot(p.x - B.x, p.z - B.z), bj = (Math.atan2(B.x - p.x, -(B.z - p.z)) * 180 / Math.PI + 360) % 360;
     st.guide = dj < 3000 ? 'JETTY brg ' + bj.toFixed(0).padStart(3, '0') + '\u00b0 \u00b7 ' + dj.toFixed(0) + ' m \u2014 taxi in under 3 kn and stop alongside' : null;
   } else if (f.onWater && !G.tookOff) {
     const de = Math.hypot(p.x - ENTRANCE.x, p.z - ENTRANCE.z), be = (Math.atan2(ENTRANCE.x - p.x, -(ENTRANCE.z - p.z)) * 180 / Math.PI + 360) % 360;
@@ -1130,12 +1148,14 @@ function evaluateObjectives(dt) {
       }
       case 'return': {
         const others = G.objectives.filter((x) => x !== o);
-        const dj = Math.hypot(p.x - JETTY.x, p.z - JETTY.z);
+        const dj = Math.hypot(p.x - G.berth.x, p.z - G.berth.hullZ);
         if (f.onWater && G.tookOff && !G.landedMsg && f.speed < 25 && Math.hypot(p.x - BASE.x, p.z - BASE.z) < 2500) {
           G.landedMsg = true; ctx.log('Down at ' + fmtClock(G.clock) + '. Taxi to the jetty at New Camp (the yellow flag) and cut the engines alongside.', 'ok'); audio.say('voice_down', 999);
         }
         if (f.onWater && f.speed < 1.5 && dj < 70 && G.tookOff) {
           o.done = true; G.score += 50; ctx.log('Alongside the jetty ' + fmtClock(G.clock) + '. Engines cut. Sortie complete.', 'ok'); audio.say('voice_alongside', 999);
+          const fw = f.forward(new THREE.Vector3());
+          G.park = { t: 0, x0: p.x, z0: p.z, h0: Math.atan2(fw.x, fw.z) };
           for (const x of others) if (!x.done) x.failed = true;
           G.endTimer = 3;
         }
@@ -1222,7 +1242,7 @@ function frame() {
 function loop() { requestAnimationFrame(loop); frame(); }
 window.DBG.frame = frame;
 // test hooks: start a sortie by id without the menus, and reach the mission scripting
-window.DBG.start = (id, ac) => { const m = MISSIONS.find((x) => x.id === id); ui.hide(); return startMission(m, AIRCRAFT[ac || m.aircraft[0]]).then(() => finishWalkout()); };
+window.DBG.start = (id, ac, keepWalkout) => { const m = MISSIONS.find((x) => x.id === id); ui.hide(); return startMission(m, AIRCRAFT[ac || m.aircraft[0]]).then(() => { if (!keepWalkout) finishWalkout(); }); };
 window.DBG.ctx = ctx;
 window.DBG.step = (seconds, dt = 0.05) => { for (let t = 0; t < seconds && G.running; t += dt) update(dt); };
 loop();

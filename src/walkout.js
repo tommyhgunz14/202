@@ -11,10 +11,21 @@ import { buildFigure, animateFigure, climbFigure } from './world/crew.js';
 export function startWalkout(scene, plane, jetty, pontoon, spec) {
   const g = new THREE.Group(); scene.add(g);
   const deckY = pontoon.deckY;
-  // the aircraft lies alongside the pontoon's west edge; the gangplank reaches her hull
+  // the aircraft lies parallel to the pontoon's west edge, clear of it by her half-span, and a
+  // floating gangway on drums runs out under the wing to the hatch in her port side
+  // (jetty.x is the hull centreline, jetty.z the hatch)
   const hullX = jetty.x + (spec.beam || 3) * 0.5 + 0.2, edgeX = pontoon.x - pontoon.halfW;
-  const plank = new THREE.Mesh(new THREE.BoxGeometry(edgeX - hullX + 0.6, 0.06, 0.7), new THREE.MeshStandardMaterial({ color: 0x8a6a45, roughness: 0.95 }));
-  plank.position.set((edgeX + hullX) / 2, deckY + 0.02, jetty.z); g.add(plank);
+  const wood = new THREE.MeshStandardMaterial({ color: 0x8a6a45, roughness: 0.95 });
+  const plankLen = edgeX - hullX + 0.6;
+  const plank = new THREE.Mesh(new THREE.BoxGeometry(plankLen, 0.08, 0.9), wood);
+  plank.position.set((edgeX + hullX) / 2, deckY - 0.1, jetty.z); g.add(plank);
+  const drumMat = new THREE.MeshStandardMaterial({ color: 0x4a4f55, roughness: 0.6, metalness: 0.3 });
+  for (let x = hullX + 1.6; x < edgeX - 0.8; x += 3.2) {
+    const d = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 1.0, 10), drumMat);
+    d.position.set(x, deckY - 0.55, jetty.z); g.add(d);
+    for (const s of [-0.42, 0.42]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.9, 0.06), wood); post.position.set(x, deckY + 0.35, jetty.z + s); g.add(post); }
+  }
+  for (const s of [-0.42, 0.42]) { const rail = new THREE.Mesh(new THREE.BoxGeometry(plankLen - 1.2, 0.05, 0.05), wood); rail.position.set((edgeX + hullX) / 2 + 0.3, deckY + 0.78, jetty.z + s); g.add(rail); }
   // hull hatch: a dark opening with a panel hinged along its top edge that swings out and up
   const sillY = deckY + 0.75, hatchH = 1.05, hatchW = 0.8;
   const hull = new THREE.MeshStandardMaterial({ color: 0x4b5057, roughness: 0.85, side: THREE.DoubleSide });

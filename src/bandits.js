@@ -51,7 +51,7 @@ export class Bandit {
       g.position.z += Math.cos(this.heading) * Math.cos(this.pitch) * this.speed * dt;
       g.position.y += Math.sin(this.pitch) * this.speed * dt;
       if (g.position.y <= 0) { ctx.weapons.explosion(g.position.clone().setY(0), 1.5, true); this.remove = true; }
-      g.rotation.set(0, 0, 0); g.rotateY(this.heading); g.rotateX(-this.pitch); g.rotateZ(this.bank);
+      g.rotation.set(0, 0, 0); g.rotateY(this.heading); g.rotateX(-this.pitch); g.rotateZ(-this.bank);   // a turn to the left (heading increasing, nose toward +x) lowers the +x wing
       return;
     }
     const pp = p.obj.position;
@@ -86,7 +86,7 @@ export class Bandit {
     g.position.z += Math.cos(this.heading) * Math.cos(this.pitch) * this.speed * dt;
     g.position.y += Math.sin(this.pitch) * this.speed * dt;
     if (g.position.y < 30) { g.position.y = 30; this.pitch = Math.max(0, this.pitch); }
-    g.rotation.set(0, 0, 0); g.rotateY(this.heading); g.rotateX(-this.pitch); g.rotateZ(this.bank);
+    g.rotation.set(0, 0, 0); g.rotateY(this.heading); g.rotateX(-this.pitch); g.rotateZ(-this.bank);   // a turn to the left (heading increasing, nose toward +x) lowers the +x wing
     if (this.hp < 0.6) { this.smokeT -= dt; if (this.smokeT <= 0) { this.smokeT = 0.2; ctx.weapons.smoke(g.position, 3, 2, 0x3a3a3a); } }
   }
 

@@ -148,7 +148,7 @@ export class Friendly {
   }
   pose() {
     const g = this.group;
-    g.rotation.set(0, 0, 0); g.rotateY(this.heading); g.rotateX(-this.pitch); g.rotateZ(this.bank);
+    g.rotation.set(0, 0, 0); g.rotateY(this.heading); g.rotateX(-this.pitch); g.rotateZ(-this.bank);   // a turn to the left (heading increasing, nose toward +x) lowers the +x wing
   }
   orbit(dt, c, radius, alt) {
     const g = this.group.position;

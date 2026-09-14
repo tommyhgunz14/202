@@ -20,7 +20,7 @@ with a vendored `three.module.js`.)
 
 ## Play
 
-- **Title → Begin** gives the pilot's page, then the **Operations Record Book**: eighteen sorties
+- **Main menu → Mission Briefings** gives the pilot's page, then the **Operations Record Book**: eighteen sorties
   on real dates from the squadron's Gibraltar record, in the order they were flown, plus a
   practice range and a free patrol.
 - Five of them were flown by other crews: Walshe and the Alabastro, Case collecting General Clark,
@@ -36,7 +36,8 @@ with a vendored `three.module.js`.)
   - Saro London Mk II (1939–41) · Fairey Swordfish floatplane (1940–41)
   - Consolidated Catalina Mk I (1941–) · Short Sunderland Mk I (Dec 1941–Sep 1942)
 - Take off from the Bay: full throttle, hold the nose up past 70–80 mph.
-- **Identify** a vessel by flying within 800 m of it below 1,500 ft. **Report** it (R / X button)
+- Each sortie starts berthed alongside the pontoon at New Camp, parallel to it and clear of it by the wingtip, with the crew walking out along a floating gangway.
+- **Identify** a vessel by flying within 800 m of it below 1,500 ft. A British or Allied ship or submarine gets the crew's call: "She looks like one of ours, sir." **Report** it (R / X button)
   to bring the destroyers in. **Attack** submarines low along their length; depth charges sink at
   ~10 ft/s and detonate at the set depth (25 / 50 / 100 ft).
 - Return and alight in Gibraltar harbour to complete the sortie. The debrief is written as a

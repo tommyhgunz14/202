@@ -95,9 +95,8 @@ export class UI {
         <div class="crest">202</div>
         <h1>Guardians of the Rock</h1>
         <h2>No. 202 Squadron RAF · Gibraltar 1939–1943</h2>
-        <p class="tag">Flying boats over the Strait. Submarines, blockade-runners and the neutral traffic of the narrows.</p>
         <div class="menu">
-          <button class="primary" data-action="pilot">Begin · Sqn Ldr T. Q. Horner</button>
+          <button class="primary" data-action="pilot">Mission Briefings</button>
           <button data-action="controls">Controls (USB controller supported)</button>
           <button data-action="history">Sources &amp; accuracy</button>
           <button data-action="archive">Photograph archive</button>
@@ -248,7 +247,7 @@ export class UI {
           ${r.objectives.map((o) => `<tr><td>${o.done ? '✔' : o.failed ? '✘' : '—'}</td><td>${o.text}</td></tr>`).join('')}
           <tr><td>Score</td><td><b>${r.score}</b></td></tr>
         </table>
-        <div class="menu"><button class="primary" data-action="missions">Operations record</button><button data-action="title">Title</button></div>
+        <div class="menu"><button class="primary" data-action="missions">Operations record</button><button data-action="title">Main Menu</button></div>
       </div>`;
     }
     this.el.innerHTML = html;

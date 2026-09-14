@@ -5,7 +5,7 @@
 export const PILOT = {
   name: 'T. Q. Horner',
   rank1: 'Squadron Leader', rank2: 'Wing Commander',
-  bio: 'Your grandfather flew with No. 202 Squadron from the Rock. The squadron came to Gibraltar on 9 September 1939 with six Saro London flying boats under Wing Commander E. A. Blake, its headquarters on the North Mole and its aircraft moored in the harbour and at the Gun Wharf. Over five years it exchanged the Londons for Swordfish floatplanes, Catalinas and Sunderlands, and hunted the submarines and blockade-runners that used the Strait. These sorties put you in his seat.',
+  bio: 'Wing Commander Thomas Q. Horner flew with No. 202 Squadron from the Rock. The squadron came to Gibraltar on 9 September 1939 with six Saro London flying boats initially under Wing Commander E. A. Blake, its headquarters on the North Mole and its aircraft moored in the harbour and at the Gun Wharf. Over five years it exchanged the Londons for Swordfish floatplanes, Catalinas and Sunderlands, and hunted the submarines and blockade-runners that used the Strait. These sorties put you in his seat in order to experience his contribution to defeating the Nazis during World War II.',
 };
 
 const BASE = { lat: 36.1330, lon: -5.3880 };   // take-off area in the Bay, west of the Detached Mole
