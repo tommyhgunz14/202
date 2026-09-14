@@ -1,0 +1,6 @@
+{
+  "london": ["crew_london_1.jpg", "crew_london_2.jpg", "crew_london_3.jpg"],
+  "swordfish": ["crew_swordfish_1.jpg", "crew_swordfish_2.jpg", "crew_swordfish_3.jpg"],
+  "catalina": ["crew_catalina_1.jpg", "crew_catalina_2.jpg", "crew_catalina_3.jpg"],
+  "sunderland": ["crew_sunderland_1.jpg", "crew_sunderland_2.jpg", "crew_sunderland_3.jpg"]
+}

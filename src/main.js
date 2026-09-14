@@ -23,6 +23,7 @@ import { buildCockpitInterior, buildGunnerOverlay } from './cockpitModel.js';
 import { spawnBandit } from './bandits.js';
 import { runIntro } from './intro.js';
 import { startWalkout } from './walkout.js';
+import { findCrewShots, startCrewCinematic } from './crewCinematic.js';
 import { showPromotion } from './promotion.js';
 import { MISSIONS, SKIES, PILOT } from './data/missions.js';
 import { AIRCRAFT } from './data/aircraft.js';
@@ -328,7 +329,10 @@ async function startMission(mission, spec) {
   // squadron record calls him Wing Commander (see docs/HISTORY.md)
   if (mission.id === 'casablanca' && !G.promoShown) { G.promoShown = true; await showPromotion(document.body, input); }
   const BEAMS = { catalina: 3.1, london: 3.2, sunderland: 3.4, swordfish: 2.2 };
-  G.cine = startWalkout(scene, plane, { x: G.berth.x, z: G.berth.z }, harbour.userData.pontoon, { crew: spec.crew, beam: BEAMS[spec.id] || 3, span: plane.userData.span || 30, length: plane.userData.length || 20, heading: toEnt, boarding: spec.id === 'swordfish' ? 'cockpit' : 'hatch', cockpit: G.cockpitLocal });
+  const walk = startWalkout(scene, plane, { x: G.berth.x, z: G.berth.z }, harbour.userData.pontoon, { crew: spec.crew, beam: BEAMS[spec.id] || 3, span: plane.userData.span || 30, length: plane.userData.length || 20, heading: toEnt, boarding: spec.id === 'swordfish' ? 'cockpit' : 'hatch', cockpit: G.cockpitLocal });
+  // where film of this aircraft type's crew exists, it plays over the walk-out (see crewCinematic.js)
+  const crewShots = await findCrewShots(spec.id);
+  G.cine = crewShots.length ? startCrewCinematic(crewShots, walk) : walk;
   document.body.classList.add('cine');
   if (titlePlane) titlePlane.visible = false;
   G.running = true;

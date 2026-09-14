@@ -45,6 +45,14 @@ export const PLATES = [
 
   // The generated period pictures already in the game, gathered here so the archive shows what
   // the game looks at. Labelled as reconstructions, not photographs.
+  { file: 'assets/cine/crew_london_1.jpg', kind: 'reconstruction', title: 'Walking out to a Saro London', date: '1940',
+    caption: 'A crew in Sidcot suits and Mae Wests going out along the pontoon to their twin-finned London biplane flying boat. From the pre-flight walk-out sequence.', credit: 'Generated for this project (Atlas).' },
+  { file: 'assets/cine/crew_swordfish_2.jpg', kind: 'reconstruction', title: 'Boarding the Swordfish floatplane', date: '1941',
+    caption: 'A crewman climbing the float strut to the open cockpit of a Swordfish floatplane at the pontoon. From the pre-flight walk-out sequence.', credit: 'Generated for this project (Atlas).' },
+  { file: 'assets/cine/crew_catalina_1.jpg', kind: 'reconstruction', title: 'A Catalina crew walking out', date: '1941',
+    caption: 'Nine men in Irvin jackets and Mae Wests heading for a Coastal Command Catalina, the Rock behind. From the pre-flight walk-out sequence.', credit: 'Generated for this project (Atlas).' },
+  { file: 'assets/cine/crew_sunderland_2.jpg', kind: 'reconstruction', title: 'Boarding a Sunderland', date: '1942',
+    caption: 'Kit passed up from a dinghy through the forward entry door of a Sunderland. From the pre-flight walk-out sequence.', credit: 'Generated for this project (Atlas).' },
   { file: 'assets/intro/photo_london_gunwharf.jpg', kind: 'reconstruction', title: 'Saro London at the Gun Wharf', date: '1940',
     caption: 'A London Mk II of the squadron moored at the Gun Wharf and refuelling from a barge, the Rock behind.', credit: 'Generated for this project (Atlas).' },
   { file: 'assets/intro/photo_briefing.jpg', kind: 'reconstruction', title: 'Briefing on the North Mole', date: '1941',
