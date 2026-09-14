@@ -277,7 +277,11 @@ async function startMission(mission, spec) {
   // by three metres. The hatch the crew use is aft of the wing, and a floating gangway reaches it.
   const pont = harbour.userData.pontoon;
   const span = plane.userData.span || 30, length = plane.userData.length || 20;
-  const hatchZ = -0.3 * length;                                  // hatch position along the hull
+  // the hatch the crew use, along the hull; a Swordfish is boarded from her port float aft of the
+  // lower wing, 2.75 m behind the pilot's cockpit
+  const cockpitLocal = G.cockpitNode ? plane.worldToLocal(G.cockpitNode.getWorldPosition(new THREE.Vector3())) : null;
+  const hatchZ = spec.id === 'swordfish' && cockpitLocal ? cockpitLocal.z - 2.75 : -0.3 * length;
+  G.cockpitLocal = cockpitLocal;
   const berth = { x: pont.x - pont.halfW - span / 2 - 3, z: JETTY.z, heading: 0, hullZ: JETTY.z - hatchZ };
   const toEnt = berth.heading;
   G.berth = berth;
@@ -324,7 +328,7 @@ async function startMission(mission, spec) {
   // squadron record calls him Wing Commander (see docs/HISTORY.md)
   if (mission.id === 'casablanca' && !G.promoShown) { G.promoShown = true; await showPromotion(document.body, input); }
   const BEAMS = { catalina: 3.1, london: 3.2, sunderland: 3.4, swordfish: 2.2 };
-  G.cine = startWalkout(scene, plane, { x: G.berth.x, z: G.berth.z }, harbour.userData.pontoon, { crew: spec.crew, beam: BEAMS[spec.id] || 3, span: plane.userData.span || 30, length: plane.userData.length || 20, heading: toEnt });
+  G.cine = startWalkout(scene, plane, { x: G.berth.x, z: G.berth.z }, harbour.userData.pontoon, { crew: spec.crew, beam: BEAMS[spec.id] || 3, span: plane.userData.span || 30, length: plane.userData.length || 20, heading: toEnt, boarding: spec.id === 'swordfish' ? 'cockpit' : 'hatch', cockpit: G.cockpitLocal });
   document.body.classList.add('cine');
   if (titlePlane) titlePlane.visible = false;
   G.running = true;
@@ -1098,7 +1102,7 @@ function evaluateObjectives(dt) {
       case 'reach': {
         const tv = o.target && byName(o.target);
         const rp = tv ? tv.group.position : G.slick;
-        if (rp && Math.hypot(p.x - rp.x, p.z - rp.z) < o.radius && p.y < 700) { o.done = true; ctx.log('Oil and a line of air bubbles on the surface — she is down there, and moving.', 'ok'); }
+        if (rp && Math.hypot(p.x - rp.x, p.z - rp.z) < o.radius && p.y < 700) { o.done = true; ctx.log(o.log || 'Oil and a line of air bubbles on the surface — she is down there, and moving.', 'ok'); }
         break;
       }
       case 'warning_pass':

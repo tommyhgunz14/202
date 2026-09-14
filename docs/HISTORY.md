@@ -78,7 +78,7 @@ the part of it that is readable without a subscription:
   Vichy Hawk 75s, escaping with a few bullet holes.
 - **8 Jun 1941, the ditching of W8407** — Catalina W8407 came down in the Strait inbound from
   Britain; Swordfish K8354/TQ-D found the wreck and directed rescuers, who saved seven of the
-  nine aboard. It was B Flight's last action, its Swordfish being withdrawn the next day.
+  nine aboard. It was B Flight's last action, its Swordfish being withdrawn the next day. In the game the ditching is shown as floating wreckage (the tail unit, a wing panel awash, debris and fuel sheen) with seven men, the number saved, six in a yellow dinghy and one in the water, next to a fluorescein sea-marker stain. How W8407 actually lay on the water is not recorded; the dinghy and marker are the standard RAF kit of the time, not a detail from the account.
 - **7 Jun 1942, the Veniero** — F/O Corrie in Sunderland W4029/AX-M attacked from thirty feet
   astern, the charges failed to release, and he went round again through heavy fire. The first
   submarine 202 Squadron sank unaided.

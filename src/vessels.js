@@ -21,6 +21,8 @@ export const VESSEL_TYPES = {
   // White Ensign on the bridge. She never dives on a friendly aircraft and carries no flak here.
   rnsub: { asset: 'assets/uboat_viic.js', length: 66.1, beam: 7.2, kind: 'submarine', faction: 'rn', label: 'British submarine (S class)', hp: 1.0, surfSpeed: 14, subSpeed: 9, ensign: true, noRef: true },
   // men in the water after a boat is abandoned: Carley floats, men in life-jackets, wreckage
+  // a ditched flying boat: floating wreckage, fuel sheen and her crew in the dinghy
+  wreck: { asset: 'assets/catalina_wreck.js', length: 30, beam: 30, kind: 'survivors', faction: 'survivors', label: 'Wreckage of a Catalina, crew in the dinghy', hp: 99, surfSpeed: 0, noRef: true },
   survivors: { asset: 'assets/survivors.js', length: 26, beam: 26, kind: 'survivors', faction: 'survivors', label: 'Survivors in the water', hp: 99, surfSpeed: 0, noRef: true },
 };
 
@@ -59,6 +61,7 @@ export class Vessel {
     this.speedKt = opts.speed != null ? opts.speed : spec.surfSpeed * 0.6;
     if (this.speedKt < 3 && opts.role !== 'responder' && spec.faction !== 'target') this.speedKt = 5;
     if (spec.faction === 'target' || spec.faction === 'survivors') { this.speedKt = 0; this.stopped = true; }
+    this.waveArm = findNamed(group, 'wave');   // someone in a dinghy signalling to the aircraft
     this.waypoints = (opts.waypoints || []).map(([la, lo]) => { const p = findWater(...Object.values(toWorld(la, lo))); return new THREE.Vector3(p.x, 0, p.z); });
     this.wpIdx = 0;
     this.identified = spec.faction === 'target'; this.idProgress = this.identified ? 1 : 0;
@@ -93,6 +96,7 @@ export class Vessel {
 
   update(dt, ctx) {
     const g = this.group;
+    if (this.waveArm) this.waveArm.rotation.z = -0.5 + Math.sin(ctx.time * 5) * 0.55;
     if (!this.alive) {
       this.sinking += dt;
       g.position.y -= dt * (this.kind === 'submarine' ? 1.2 : 0.6);

@@ -14,11 +14,22 @@ export function startWalkout(scene, plane, jetty, pontoon, spec) {
   // the aircraft lies parallel to the pontoon's west edge, clear of it by her half-span, and a
   // floating gangway on drums runs out under the wing to the hatch in her port side
   // (jetty.x is the hull centreline, jetty.z the hatch)
-  const hullX = jetty.x + (spec.beam || 3) * 0.5 + 0.2, edgeX = pontoon.x - pontoon.halfW;
+  // A floatplane (the Swordfish) has no hull door: the gangway runs to her port float aft of the
+  // lower wing, and each man walks up the float, climbs the rear float strut to the wing root and
+  // drops into his own open cockpit, pilot forward, observer, then the gunner aft.
+  const cockpitMode = spec.boarding === 'cockpit' && spec.cockpit;
+  let C = null, floatX = 0, floatTop = 0;
+  if (cockpitMode) {
+    plane.updateMatrixWorld(true);
+    C = plane.localToWorld(spec.cockpit.clone());
+    floatX = C.x + 1.6; floatTop = C.y - 2.45;
+  }
+  const hullX = cockpitMode ? floatX + 0.5 : jetty.x + (spec.beam || 3) * 0.5 + 0.2, edgeX = pontoon.x - pontoon.halfW;
   const wood = new THREE.MeshStandardMaterial({ color: 0x8a6a45, roughness: 0.95 });
   const plankLen = edgeX - hullX + 0.6;
   const plank = new THREE.Mesh(new THREE.BoxGeometry(plankLen, 0.08, 0.9), wood);
   plank.position.set((edgeX + hullX) / 2, deckY - 0.1, jetty.z); g.add(plank);
+  if (cockpitMode) { const drop = (deckY - 0.1) - (floatTop - 0.02); plank.position.y = (deckY - 0.1 + floatTop - 0.02) / 2; plank.rotation.z = -Math.atan2(drop, plankLen); }
   const drumMat = new THREE.MeshStandardMaterial({ color: 0x4a4f55, roughness: 0.6, metalness: 0.3 });
   for (let x = hullX + 1.6; x < edgeX - 0.8; x += 3.2) {
     const d = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 1.0, 10), drumMat);
@@ -30,8 +41,8 @@ export function startWalkout(scene, plane, jetty, pontoon, spec) {
   const sillY = deckY + 0.75, hatchH = 1.05, hatchW = 0.8;
   const hull = new THREE.MeshStandardMaterial({ color: 0x4b5057, roughness: 0.85, side: THREE.DoubleSide });
   const hole = new THREE.Mesh(new THREE.PlaneGeometry(hatchW, hatchH), new THREE.MeshStandardMaterial({ color: 0x0b0d0f, roughness: 1 }));
-  hole.rotation.y = Math.PI / 2; hole.position.set(hullX - 0.04, sillY + hatchH / 2, jetty.z); g.add(hole);
-  const hinge = new THREE.Group(); hinge.position.set(hullX, sillY + hatchH, jetty.z); g.add(hinge);
+  hole.rotation.y = Math.PI / 2; hole.position.set(hullX - 0.04, sillY + hatchH / 2, jetty.z); if (!cockpitMode) g.add(hole);
+  const hinge = new THREE.Group(); hinge.position.set(hullX, sillY + hatchH, jetty.z); if (!cockpitMode) g.add(hinge);
   const door = new THREE.Mesh(new THREE.BoxGeometry(0.05, hatchH, hatchW), hull);
   door.position.set(0.025, -hatchH / 2, 0); hinge.add(door);
   const grab = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.012, 6, 12), new THREE.MeshStandardMaterial({ color: 0x9aa0a6, metalness: 0.6, roughness: 0.4 }));
@@ -43,6 +54,15 @@ export function startWalkout(scene, plane, jetty, pontoon, spec) {
     // start by the hut, staggered, and walk the west edge of the pontoon to the plank
     const start = new THREE.Vector3(pontoon.x + 1 - (i % 2) * 1.3, deckY, pontoon.z - 10 - Math.floor(i / 2) * 1.6);
     f.position.copy(start); g.add(f);
+    if (cockpitMode) {
+      const seatZ = C.z - [0, 1.15, 2.3][Math.min(2, i)];
+      const path = [start, new THREE.Vector3(edgeX + 1.0, deckY, pontoon.z - 4 - (i % 2) * 0.9), new THREE.Vector3(edgeX + 0.6, deckY, jetty.z),
+        new THREE.Vector3(floatX + 0.35, floatTop + 0.02, jetty.z),                     // off the gangway on to the float
+        new THREE.Vector3(floatX, floatTop + 0.02, C.z - 1.55),                         // forward along the float to the strut
+        new THREE.Vector3(C.x + 0.65, C.y - 1.35, C.z - 1.35),                          // up the strut to the wing root
+        new THREE.Vector3(C.x, C.y - 1.75, seatZ)];                                     // over the coaming and down into his seat
+      return { f, path, climbFrom: 4, s: 0, delay: i * 1.6, done: false };
+    }
     const path = [start, new THREE.Vector3(edgeX + 1.0, deckY, pontoon.z - 4 - (i % 2) * 0.9), new THREE.Vector3(edgeX + 0.6, deckY, jetty.z), new THREE.Vector3(hullX + 0.3, deckY + 0.1, jetty.z), new THREE.Vector3(hullX - 0.8, deckY + 0.9, jetty.z)];
     return { f, path, s: 0, delay: i * 0.7, done: false };
   });
@@ -74,6 +94,25 @@ export function startWalkout(scene, plane, jetty, pontoon, spec) {
         const d = Math.max(0, t - c.delay) * speed;
         const L = c.len, end = L[L.length - 1];
         if (d >= end) { c.done = true; c.f.visible = false; continue; }   // through the hatch
+        if (cockpitMode) {
+          let i = 1; while (i < L.length - 1 && L[i] < d) i++;
+          const a = c.path[i - 1], b = c.path[i], k = (d - L[i - 1]) / Math.max(1e-3, L[i] - L[i - 1]);
+          if (i > c.climbFrom) {
+            // hand over hand up the strut, then a leg over the side and down into the cockpit
+            aboard++;
+            const e = k * k * (3 - 2 * k);
+            c.f.position.lerpVectors(a, b, e);
+            c.f.rotation.y = -Math.PI / 2;             // facing the fuselage, which lies to the west
+            climbFigure(c.f, i === c.path.length - 1 ? 0.6 + 0.4 * k : k * 0.6);
+            if (i === c.path.length - 1 && k > 0.7) c.f.visible = false;
+          } else {
+            c.f.position.lerpVectors(a, b, k);
+            c.f.rotation.y = Math.atan2(b.x - a.x, b.z - a.z);
+            animateFigure(c.f, t, d > 0 ? speed * 0.8 : 0);
+          }
+          if (!lead) lead = c;
+          continue;
+        }
         const CLIMB = 2.2;                              // the last stretch is the climb in
         if (d > end - CLIMB) {
           aboard++;

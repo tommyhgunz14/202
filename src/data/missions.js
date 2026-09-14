@@ -291,14 +291,14 @@ export const MISSIONS = [
     spawn: { ...BASE, heading: 230 },
     area: { lat: 35.97, lon: -5.58, radius: 3000 },
     entities: [
-      { type: 'raft', name: 'Catalina W8407', lat: 35.968, lon: -5.585, heading: 0, speed: 0 },
+      { type: 'wreck', name: 'Catalina W8407', label: 'Wreckage of Catalina W8407, survivors in the dinghy', lat: 35.968, lon: -5.585, heading: 0, speed: 0 },
       { type: 'wishart', name: 'HMS Wishart', lat: 36.06, lon: -5.44, heading: 230, speed: 8, role: 'responder', waypoints: [[35.98, -5.56]] },
       { type: 'fishing', name: 'Fishing boat', lat: 35.99, lon: -5.62, heading: 120, speed: 4, waypoints: [[35.95, -5.52], [35.99, -5.64]], behaviour: 'loop' },
       { type: 'coaster', name: 'Spanish coaster', lat: 36.02, lon: -5.66, heading: 210, speed: 8, waypoints: [[35.94, -5.74]] },
     ],
     objectives: [
       { id: 'takeoff', kind: 'takeoff', text: 'Take off' },
-      { id: 'find', kind: 'reach', target: 'Catalina W8407', radius: 600, text: 'Search the Strait and find the ditched Catalina' },
+      { id: 'find', kind: 'reach', target: 'Catalina W8407', radius: 600, text: 'Search the Strait and find the ditched Catalina', log: 'Wreckage in the water ahead: a tail fin, a wing awash, and a yellow dinghy with men in it. They are waving.' },
       { id: 'id', kind: 'identify', target: 'Catalina W8407', text: 'Close and identify the wreck' },
       { id: 'report', kind: 'report', target: 'Catalina W8407', text: 'Send the position so the launches can be dispatched' },
       { id: 'shadow', kind: 'shadow', target: 'Catalina W8407', seconds: 150, text: 'Stay over the wreck until help is on its way' },
