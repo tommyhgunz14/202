@@ -87,6 +87,33 @@ export const HARBOUR = {
   newCamp: [36.1470, -5.3600],          // RAF New Camp slipway (reclaimed land, from 1942)
   northFrontRunway: [[36.1520, -5.3630], [36.1515, -5.3400]],
   europaLighthouse: [36.1092, -5.3463],
+  // Ships in the harbour and the Bay. The wartime photographs of Gibraltar show the harbour never
+  // empty: destroyers alongside the Detached and South Moles, submarines of the flotilla berthed
+  // together, a merchantman or two at the wall, and convoys lying at anchor in the Bay. These are
+  // representative, not a record of any one day. [type, lat, lon, bow lat, bow lon]; all are
+  // kept clear of the moorings, the line from the jetty to the north entrance, the take-off run
+  // west into the Bay and the approach the returning aircraft use south of the harbour.
+  ships: [
+    ['wishart', 36.1368, -5.3757, 36.1400, -5.3757],     // alongside the Detached Mole, inside
+    ['wishart', 36.1349, -5.3757, 36.1381, -5.3757],
+    ['wishart', 36.1330, -5.3757, 36.1362, -5.3757],
+    ['merchant', 36.1239, -5.3702, 36.1239, -5.3750],    // alongside the South Mole, inside
+    ['wishart', 36.1239, -5.3662, 36.1239, -5.3630],
+    ['rnsub', 36.1240, -5.3634, 36.1240, -5.3610],       // two boats of the flotilla, berthed together
+    ['rnsub', 36.1245, -5.3634, 36.1245, -5.3610],
+    ['wishart', 36.1290, -5.3690, 36.1320, -5.3690],     // at a buoy in the south of the harbour
+    ['wishart', 36.1300, -5.3655, 36.1330, -5.3650],
+    ['wishart', 36.1272, -5.3672, 36.1300, -5.3680],
+    ['merchant', 36.1580, -5.3980, 36.1600, -5.3930],    // convoy at anchor in the north of the Bay
+    ['merchant', 36.1620, -5.4080, 36.1640, -5.4030],
+    ['merchant', 36.1540, -5.4120, 36.1560, -5.4070],
+    ['merchant', 36.1660, -5.3950, 36.1680, -5.3900],
+    ['merchant', 36.1700, -5.4060, 36.1720, -5.4010],
+    ['merchant', 36.1590, -5.4200, 36.1610, -5.4150],
+    ['merchant', 36.1680, -5.4170, 36.1700, -5.4120],
+    ['coaster', 36.1560, -5.3870, 36.1580, -5.3820],
+    ['merchant', 36.1150, -5.3790, 36.1170, -5.3750],    // and off Rosia
+  ],
 };
 
 // Point-in-polygon and distance-to-polygon in world coordinates.

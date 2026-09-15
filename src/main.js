@@ -27,6 +27,7 @@ import { findCrewShots, startCrewCinematic } from './crewCinematic.js';
 import { showPromotion } from './promotion.js';
 import { MISSIONS, SKIES, PILOT } from './data/missions.js';
 import { AIRCRAFT, availableOn } from './data/aircraft.js';
+import { HARBOUR } from './data/geo.js';
 
 // ---------- renderer & scene ----------
 const canvas = document.getElementById('gl');
@@ -184,7 +185,7 @@ const G = {
   vessels: [], view: 'chase', stores: 0, ammo: 0, fireTimer: 0, dropTimer: 0, time: 0, clock: 0,
   objectives: [], events: [], reportCooldown: 0, crewGunTimer: 0, endTimer: -1, result: null,
   slick: null, score: 0, penalties: 0, tookOff: false, idCount: 0, identifiedTargets: new Set(),
-  views: ['chase', 'cockpit'], viewIdx: 0, aim: { yaw: 0, pitch: 0 }, bandits: [], parked: [], pendingBandits: [], friendlies: [], pendingFriendlies: [], flags: new Set(), flagTimes: {}, triggers: [], timers: [], interior: null,
+  views: ['chase', 'cockpit'], viewIdx: 0, aim: { yaw: 0, pitch: 0 }, bandits: [], parked: [], pendingBandits: [], friendlies: [], ferries: [], pendingFriendlies: [], flags: new Set(), flagTimes: {}, triggers: [], timers: [], interior: null,
   range: { hits: 0, rounds: 0, dcScore: 0, drops: 0 }, gunInvert: true,
 };
 window.G = G;
@@ -217,6 +218,8 @@ function clearMission() {
   G.bandits = []; G.pendingBandits = []; G.gunners = {}; pipClose(); dcCamClose();
   for (const fr of G.friendlies) { scene.remove(fr.group); if (fr.tag) fr.tag.remove(); }
   G.friendlies = []; G.pendingFriendlies = []; G.flags = new Set(); G.flagTimes = {}; G.triggers = []; G.timers = [];
+  for (const fe of G.ferries || []) scene.remove(fe.g);
+  G.ferries = [];
   if (G.cine) { G.cine.dispose(); G.cine = null; document.body.classList.remove('cine'); }
   if (G.interior) { cockpitScene.remove(G.interior.group); G.interior = null; }
   if (G.gunOverlay) { cockpitScene.remove(G.gunOverlay.group); G.gunOverlay = null; }
@@ -587,6 +590,8 @@ const ctx = {
       if (a.spawn) G.pendingFriendlies.push({ ...a.spawn, timer: a.spawn.delay || 0 });
       if (a.bandit && Math.random() <= (a.bandit.chance == null ? 1 : a.bandit.chance)) G.pendingBandits.push({ ...a.bandit, timer: a.bandit.delay || 0 });
       if (a.friendly) { const fr = ctx.named(a.friendly); if (fr && a.damage) fr.damage(a.damage, ctx); }
+      if (a.ferry) startFerry(a.ferry);
+      if (a.ferryDo) ferryDo(a.ferryDo);
       if (a.vessel) {
         const v = ctx.named(a.vessel); if (!v || !v.alive) continue;
         if (a.set) Object.assign(v, a.set);
@@ -599,6 +604,68 @@ const ctx = {
     }
   },
 };
+
+// ---------- boats between a ship and an aircraft on the water ----------
+// When an aircraft alights beside a submarine to take passengers off, her boat is seen doing it:
+// out from the submarine's side to the aircraft's, abaft the wing where the hatches are; alongside
+// while the passengers climb in; back again once the aircraft is under way.
+//   { ferry: { from, to, boat: 'folboats' | 'dinghy', trip: seconds out } }
+//   { ferryDo: { to, board: true } }  the passengers climb aboard, one after another
+//   { ferryDo: { to, dunk: true } }   one of them misses his footing and goes into the water
+const _fv = new THREE.Vector3(), _fw = new THREE.Vector3();
+async function startFerry(f) {
+  const from = ctx.named(f.from), to = ctx.named(f.to);
+  if (!from || !to) return;
+  const g = await loadOrPlaceholder(`assets/${f.boat || 'folboats'}.js`, 5, 3, 'boat');
+  if (!G.running) return;
+  scene.add(g);
+  const fe = { g, from, to, key: f.to, trip: f.trip || 25, t: 0, phase: 'out', h: 0, a: new THREE.Vector3(), b: new THREE.Vector3(),
+    paddles: findAllNamed(g, 'paddle'), oars: findAllNamed(g, 'oar'), passengers: findAllNamed(g, 'passenger') };
+  ferryEnds(fe); fe.h = Math.atan2(fe.b.x - fe.a.x, fe.b.z - fe.a.z);
+  G.ferries.push(fe);
+}
+function ferryDo(d) {
+  const fe = G.ferries.find((x) => x.key === d.to); if (!fe) return;
+  if (d.dunk && fe.passengers[0]) { const p = fe.passengers[0]; p.position.y -= 0.95; p.position.x += 1.3; p.userData.dunked = true; }
+  if (d.board) fe.passengers.forEach((p, k) => G.timers.push({ t: 0.5 + k * 2.2, fn: () => { p.visible = false; } }));
+}
+function ferryEnds(fe) {
+  const sp = fe.from.group.position, pp = fe.to.group.position;
+  const sRight = _fv.set(1, 0, 0).applyQuaternion(fe.from.group.quaternion);
+  const sSide = Math.sign((pp.x - sp.x) * sRight.x + (pp.z - sp.z) * sRight.z) || 1;
+  const off = (fe.from.spec && fe.from.spec.beam ? fe.from.spec.beam / 2 : 4) + 3;
+  fe.a.set(sp.x + sRight.x * sSide * off, 0, sp.z + sRight.z * sSide * off);
+  const pRight = _fv.set(1, 0, 0).applyQuaternion(fe.to.group.quaternion), pFwd = _fw.set(0, 0, 1).applyQuaternion(fe.to.group.quaternion);
+  const pSide = Math.sign((sp.x - pp.x) * pRight.x + (sp.z - pp.z) * pRight.z) || 1;
+  fe.b.set(pp.x + pRight.x * pSide * 4 - pFwd.x * 6.5, 0, pp.z + pRight.z * pSide * 4 - pFwd.z * 6.5);   // at the waist blister, clear of the wing
+}
+function updateFerries(dt) {
+  for (let i = G.ferries.length - 1; i >= 0; i--) {
+    const fe = G.ferries[i];
+    ferryEnds(fe);
+    fe.t += dt;
+    let u;
+    if (fe.phase === 'out') { u = Math.min(1, fe.t / fe.trip); if (u >= 1) { fe.phase = 'alongside'; fe.t = 0; } }
+    else if (fe.phase === 'alongside') { u = 1; if (!fe.to.alive || !fe.to.onWater || fe.to.speed > 3) { fe.phase = 'back'; fe.t = 0; } }
+    else { u = 1 - Math.min(1, fe.t / (fe.trip * 0.8)); if (u <= 0) { scene.remove(fe.g); G.ferries.splice(i, 1); continue; } }
+    const e = u * u * (3 - 2 * u);
+    const x = fe.a.x + (fe.b.x - fe.a.x) * e, z = fe.a.z + (fe.b.z - fe.a.z) * e;
+    const moving = fe.phase !== 'alongside';
+    if (moving) {
+      const want = fe.phase === 'out' ? Math.atan2(fe.b.x - fe.a.x, fe.b.z - fe.a.z) : Math.atan2(fe.a.x - fe.b.x, fe.a.z - fe.b.z);
+      let dh = want - fe.h; while (dh > Math.PI) dh -= Math.PI * 2; while (dh < -Math.PI) dh += Math.PI * 2;
+      fe.h += dh * Math.min(1, dt * 1.5);
+    }
+    fe.g.position.set(x, seaHeight(x, z) * 0.9, z);
+    fe.g.rotation.set(Math.sin(G.time * 1.3) * 0.03, fe.h, Math.sin(G.time * 1.1 + 1) * 0.05);
+    // paddling and rowing while under way, resting alongside
+    const k = moving ? 1 : 0.1;
+    fe.paddles.forEach((p, j) => { const ph = G.time * 3.4 + j * 0.9; p.rotation.z = Math.sin(ph) * 0.6 * k; p.rotation.y = Math.cos(ph) * 0.35 * k; });
+    for (const o of fe.oars) { const s = o.userData.side || 1, ph = G.time * 2.3; o.rotation.y = s * Math.sin(ph) * 0.55 * k; o.rotation.z = s * (0.18 + 0.14 * Math.cos(ph)) * k; }
+    // a man in the water bobs beside the boat
+    for (const p of fe.passengers) if (p.userData.dunked && p.visible) p.position.y = -0.95 + Math.sin(G.time * 2.1) * 0.08;
+  }
+}
 
 // A boat given up by her crew: stopped, men over the side, then down (stern first if so ordered),
 // leaving survivors in the water where she went.
@@ -1001,6 +1068,7 @@ function update(dt) {
     const fr = G.friendlies[i]; fr.update(dt, ctx);
     if (fr.remove) { scene.remove(fr.group); if (fr.tag) fr.tag.remove(); G.friendlies.splice(i, 1); }
   }
+  updateFerries(dt);
   for (const tr of G.triggers) if (!tr.fired && ctx.cond(tr.when)) { tr.fired = true; ctx.acts(tr.acts); }
   for (let i = G.timers.length - 1; i >= 0; i--) {
     const tm = G.timers[i]; tm.t -= dt;
@@ -1307,6 +1375,21 @@ function endMission() {
 document.getElementById('btn-resume').addEventListener('click', () => { G.paused = false; pauseEl.style.display = 'none'; });
 document.getElementById('btn-abandon').addEventListener('click', () => { G.paused = false; endMission(); });
 document.getElementById('btn-view').addEventListener('click', () => { G.view = G.view === 'chase' ? 'cockpit' : 'chase'; });
+
+// ---------- ships in the harbour and the Bay ----------
+// Scenery only: loaded once, riding at their berths and anchors, not on the plot and not targets.
+(async () => {
+  for (const [type, lat, lon, blat, blon] of HARBOUR.ships || []) {
+    try {
+      const v = await spawnVessel(type, { lat, lon, speed: 0 });
+      const a = toWorld(lat, lon), b = toWorld(blat, blon);
+      const g = v.group;
+      g.position.set(a.x, -v.waterline, a.z); g.rotation.y = Math.atan2(b.x - a.x, b.z - a.z);
+      if (v.wake) v.wake.visible = false;
+      world.add(g);
+    } catch (e) { /* a missing model leaves an empty berth */ }
+  }
+})();
 
 // ---------- title scene ----------
 let titleT = 0, titlePlane = null;

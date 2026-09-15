@@ -132,6 +132,14 @@ squadron machine was there.
   she brought Giraud out of France. *Staged* at the eastern edge of the map. A Vichy fighter may
   come out at the Catalina on the water (a 60% chance). **No interception is recorded**; it is a
   play hazard, and the briefing says so.
+- **The transfers themselves** are shown: in the Clark sortie two folding canoes paddle across from
+  Seraph to the Catalina's waist blister, each with a paddler and a passenger, and the passengers
+  climb in; for Giraud a small rowing boat brings the General and two others, he goes into the
+  water beside the aircraft and is hauled aboard. Folding canoes are what Seraph carried for the
+  Clark party; the kind of boat used for Giraud, and the number in each party, are representative.
+  The boats go back to the submarine once the Catalina is under way. The other pilot's radio calls
+  say "landing" rather than "going down", so they cannot be heard as a report of the submarine
+  diving.
 - **8 Jan 1944, U-343** — Wg Cdr G. Harger commanding. Flt Lt John Finch's crew attacked U-343 at
   2300hrs after a 179 Squadron Wellington had already attacked her. Finch took hits to the port
   wing, fuselage and fuel tanks, his flight engineer was wounded, and he dropped his charges and
@@ -180,6 +188,13 @@ submarine model.
   white, as the photograph shows it, with no band. Heights are estimated from the photograph and
   known spot heights; the layout is representative, not a survey, and individual buildings, their
   uses and the roads are not reproduced.
+- **Ships in the harbour and the Bay**: the wartime photographs never show the harbour empty, so it
+  holds destroyers alongside the Detached and South Moles and at buoys, two submarines berthed
+  together, a merchantman at the South Mole, and a convoy at anchor in the north of the Bay with
+  another ship off Rosia. They are scenery (not on the plot, not targets), placed clear of the
+  moorings, the taxi route, the take-off run and the return approach. The ship types are the
+  game's existing destroyer, merchant and submarine models; no capital ships are shown, and the
+  numbers and berths are representative rather than a record of any day.
 - **The Rock's west face and the town shore**: the photographs show pale crag with scrub in
   patches, so the face carries far less scrub and only a few pines (on the Upper Rock, not the
   southern slopes). The town's sea front is the Line Wall, quays and reclaimed ground, and the
