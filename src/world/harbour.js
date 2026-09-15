@@ -153,14 +153,18 @@ export function buildHarbour() {
   const rw = new THREE.Mesh(_box(len, 1.2, 22), tarmac);
   rw.position.set((r0.x + r1.x) / 2, 1.2, (r0.z + r1.z) / 2);
   rw.rotation.y = -Math.atan2(r1.z - r0.z, r1.x - r0.x); g.add(rw);
-  // Europa Point lighthouse (1841; white tower with red band)
+  // Europa Point lighthouse (1841). The wartime photograph of a Catalina over the point shows the
+  // tower plain white, with no band, under a dark lantern and gallery.
   const lp = toWorld(H.europaLighthouse[0], H.europaLighthouse[1]);
   const ly = Math.max(0, terrainHeight(lp.x, lp.z));
   const th = 18;
   const tower = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.8, th, 14), white);
   tower.position.set(lp.x, ly + th / 2, lp.z); tower.castShadow = true; g.add(tower);
-  const band = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 3, 14), new THREE.MeshStandardMaterial({ color: 0xa02a30 }));
-  band.position.set(lp.x, ly + 9, lp.z); g.add(band);
+  const dark = new THREE.MeshStandardMaterial({ color: 0x2e3236, roughness: 0.6, metalness: 0.3 });
+  const gallery = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.0, 0.5, 14), dark);
+  gallery.position.set(lp.x, ly + th + 0.25, lp.z); g.add(gallery);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(1.8, 1.6, 14), dark);
+  cap.position.set(lp.x, ly + th + 3.2, lp.z); g.add(cap);
   const lamp = new THREE.Mesh(new THREE.SphereGeometry(1.4, 10, 8), new THREE.MeshStandardMaterial({ color: 0xfff3c0, emissive: 0xffd060, emissiveIntensity: 2 }));
   lamp.position.set(lp.x, ly + th + 1.2, lp.z); g.add(lamp);
   return g;

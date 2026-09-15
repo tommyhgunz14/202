@@ -298,37 +298,48 @@ function town(b) {
   for (let i = 0; i < 3; i++) shed(b, gw.x + 10, gw.z - 40 + i * 32, 18, 26, 8, Math.PI / 2, 'stone');
 }
 
-// Europa Point and Windmill Hill. The photographs show the southern platform covered: long
-// two-storey barrack blocks in parallel terraces stepping inland from the point, a walled
-// enclosure at the seaward edge and a few heavier works among them. Laid on the axis running
-// inland from the point so the rows follow the ground rather than the compass.
+// Europa Point and Windmill Hill, laid out from the photograph of a Catalina over the point
+// (assets/archive/catalina_europa_point.jpg). At the foot of Windmill Hill's scarp stand rows of
+// long barrack blocks, three storeys with flat roofs, parallel to the scarp; more run north along
+// the shelf on the west side. Long low blocks and huts sit on top of Windmill Hill. The Europa
+// flats beyond are mostly open, with scattered stores and a big bare ground toward the lighthouse,
+// and a pale wall follows the cliff top all round.
 function europaPoint(b) {
-  const c = toWorld(36.1088, -5.3406);          // the point itself
-  const up = toWorld(36.1180, -5.3455);         // inland, toward Windmill Hill
-  const ax = Math.atan2(up.x - c.x, up.z - c.z);
-  const sin = Math.sin(ax), cos = Math.cos(ax);
-  const at = (inland, across) => ({ x: c.x + sin * inland + cos * across, z: c.z + cos * inland - sin * across });
-  // terraced rows of barrack blocks
-  for (let row = 0; row < 8; row++) {
-    const inland = 60 + row * 76;
-    for (let k = -5; k <= 5; k++) {
-      const p = at(inland, k * 62 + (row % 2) * 24);
-      const th = terrainHeight(p.x, p.z);
-      if (th < 1.2 || th > 150) continue;
-      const long = 24 + rnd() * 16, wide = 8.5 + rnd() * 3;
-      house(b, p.x, p.z, long, wide, 2, ax + Math.PI / 2, rnd() < 0.65 ? 'cream' : 'white', { flat: rnd() < 0.4, shutters: true });
+  const P = (lat, lon) => toWorld(lat, lon);
+  const block = (lat, lon, w, d, floors, ry, wall = 'cream') => { const p = P(lat, lon); if (terrainHeight(p.x, p.z) > 8) house(b, p.x, p.z, w, d, floors, ry, wall, { flat: true, shutters: false }); };
+  const RY = 0.1;   // the scarp, and the blocks under it, run a little north of east
+  // barracks under the scarp: three rows
+  for (const [lat, lons] of [[36.11305, [-5.3500, -5.3487, -5.3474]], [36.11265, [-5.3503, -5.3490, -5.3477, -5.3464]], [36.11225, [-5.3496, -5.3483]]]) {
+    for (const lon of lons) block(lat, lon, 44, 10, 3, RY, lon > -5.348 ? 'white' : 'cream');
+  }
+  // along the west shelf toward Camp Bay and Rosia
+  for (const [lat, lon] of [[36.1146, -5.3514], [36.1158, -5.3517], [36.1170, -5.3519], [36.1184, -5.3521], [36.1200, -5.3523]]) block(lat, lon, 40, 9, 2, Math.PI / 2 + 0.15, 'cream');
+  // Windmill Hill: long single-storey blocks and huts on the plateau's western half
+  for (const [lat, lon, w, fl] of [[36.1178, -5.3478, 42, 2], [36.1170, -5.3470, 36, 1], [36.1162, -5.3482, 40, 1], [36.1154, -5.3472, 30, 1], [36.1148, -5.3486, 34, 2]]) block(lat, lon, w, 8, fl, RY + 0.05, 'white');
+  for (let i = 0; i < 6; i++) block(36.1172 - i * 0.0005, -5.3458 + (i % 2) * 0.0006, 16, 6, 1, RY, 'stone');
+  // the flats: stores and quarters scattered toward the point
+  for (const [lat, lon, w, d, fl] of [[36.1118, -5.3478, 22, 10, 2], [36.1116, -5.3466, 18, 9, 1], [36.1112, -5.3486, 26, 11, 2], [36.1108, -5.3474, 14, 8, 1], [36.1120, -5.3452, 20, 9, 1], [36.1104, -5.3466, 16, 10, 1]]) block(lat, lon, w, d, fl, RY, 'stone');
+  // a heavy square work on the southern cliff edge, and the lighthouse keepers' quarters
+  block(36.1103, -5.3486, 14, 14, 2, RY, 'stone');
+  block(36.1095, -5.3468, 16, 9, 1, RY, 'white');
+  // the tall slender white tower that stands west of the lighthouse in the photograph
+  const tw = P(36.1097, -5.3474), th = Math.max(0, terrainHeight(tw.x, tw.z));
+  b.box(1.6, 22, 1.6, 'white', tw.x, th + 11, tw.z, 0);
+  b.box(2.4, 1.2, 2.4, 'stone', tw.x, th + 0.6, tw.z, 0);
+  // the cliff-top wall: wherever the flats' edge drops to the sea
+  const a = P(36.1142, -5.3530), c = P(36.1082, -5.3405);
+  for (let x = Math.min(a.x, c.x); x < Math.max(a.x, c.x); x += 7) {
+    for (let z = Math.min(a.z, c.z); z < Math.max(a.z, c.z); z += 7) {
+      const h = terrainHeight(x, z);
+      if (h < 14 || h > 60) continue;
+      // the downhill direction to the sea, and how far the ground drops within 8 m
+      let best = 0, dir = 0;
+      for (let k = 0; k < 8; k++) { const an = k * Math.PI / 4; const d = h - terrainHeight(x + Math.sin(an) * 8, z + Math.cos(an) * 8); if (d > best) { best = d; dir = an; } }
+      if (best < 12) continue;
+      // on the lip itself, not part-way down the face: the ground behind is as high as here
+      if (Math.abs(terrainHeight(x - Math.sin(dir) * 5, z - Math.cos(dir) * 5) - h) > 1.5) continue;
+      b.box(7.4, 1.8, 0.8, 'stone', x, h + 0.9, z, dir);   // the wall's length runs across the fall, along the edge
     }
-  }
-  // a couple of heavier blocks and stores among them
-  for (const [inl, acr, w, d, fl] of [[170, -190, 34, 14, 2], [280, 175, 30, 13, 2], [400, -110, 28, 12, 1], [120, 260, 30, 12, 2], [330, -300, 26, 12, 1]]) {
-    const p = at(inl, acr); const th = terrainHeight(p.x, p.z);
-    if (th > 1) house(b, p.x, p.z, w, d, fl, ax + Math.PI / 2, 'stone', { flat: true });
-  }
-  // low boundary wall along the seaward edge of the platform
-  for (let k = -10; k <= 10; k++) {
-    const p = at(22, k * 26);
-    const th = terrainHeight(p.x, p.z);
-    if (th > 0.8) b.box(24, 1.5, 0.8, 'stone', p.x, th + 0.75, p.z, ax + Math.PI / 2);
   }
 }
 

@@ -13,12 +13,26 @@ export const PLATES = [
     kind: 'archive',
     title: 'Catalina over Europa Point',
     date: 'c. 1941–43',
-    caption: 'A Consolidated Catalina of Coastal Command over the southern tip of Gibraltar, '
-           + 'turning north-west across the mouth of the Strait. Europa Point is below with the '
-           + 'lighthouse on the shoulder and the barrack terraces cut into the limestone behind; '
-           + 'the Bay of Algeciras opens beyond the point and the Spanish shore runs away to the '
-           + 'north. This is the ground the sorties in this game are flown over.',
-    credit: 'Photographer unknown. Supplied for this project; rights not established.',
+    caption: 'A Consolidated Catalina of Coastal Command over the southern tip of Gibraltar, photographed '
+           + 'from the south-west. Europa Point is below: a limestone platform ending in sheer sea cliffs, '
+           + 'the lighthouse at its tip, long barrack blocks at the foot of the pale scarp of Windmill Hill '
+           + 'and the Rock\'s southern slopes rising at the left. Beyond the point is the Mediterranean, '
+           + 'the Spanish coast faint on the horizon. The game\'s Europa Point and Windmill Hill were '
+           + 'rebuilt against this photograph.',
+    credit: 'Photographer unknown. Supplied for this project; rights not established. Two screen-viewer icons '
+          + 'were removed from the corners of the supplied scan.',
+  },
+  {
+    file: 'assets/archive/catalina_europa_point_colour.jpg',
+    kind: 'archive',
+    title: 'Catalina over Europa Point (colourised)',
+    date: 'c. 1941–43',
+    caption: 'The same print tinted for this project. As with the 1930 photograph, only colour is added: the '
+           + 'lightness of every point is the original\'s, so nothing has been redrawn. The colours are informed '
+           + 'guesses from period references, not a record: the Temperate Sea Scheme of Extra Dark Sea Grey and '
+           + 'Dark Slate Grey, a Type A1 fuselage roundel and red, white and blue fin flash, grey-cream limestone '
+           + 'and whitewashed barracks, grey-olive scrub and a deep Mediterranean blue.',
+    credit: 'Photographer unknown; rights not established. Colourised for this project (tools/colourise-catalina.mjs).',
   },
 
   {

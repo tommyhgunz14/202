@@ -167,12 +167,23 @@ submarine model.
 - **Seaplane jetty**: the flying-boat base moved from the harbour moorings to RAF New Camp, on
   reclaimed land north of the North Mole, in 1942; the jetty and pontoon are a representative
   timber structure, not a survey of the real one.
-- **Europa Point**: rebuilt against a wartime aerial photograph of the southern tip supplied to
-  the project. The platform is limestone running out to a low cliff, so the beach and the scrub
-  the first pass put there are gone, and it carries terraced barrack blocks in parallel rows
-  stepping inland from the point, with a walled seaward edge. The rows are representative of what
-  the photograph shows rather than a survey: individual buildings, their uses and the road layout
-  are not reproduced.
+- **Europa Point and Windmill Hill**: rebuilt a second time against the wartime photograph of a
+  Catalina over the southern tip (now in the archive, with a colourised copy). The south end is
+  two limestone steps, not a ridge tapering to the sea: Windmill Hill Flats, a plateau at about
+  120 m with dry grass and patches of scrub, ends in a pale scarp that drops to the Europa flats
+  at about 40 m, falling to about 22 m at the lighthouse. The flats stop all round in sheer sea
+  cliffs with a ledge of fallen rock here and there, and the water is deep right to their foot.
+  A shelf at the flats' level runs north on the west side toward Rosia. The long three-storey
+  barrack blocks stand in rows at the foot of the scarp, parallel to it, with more along the west
+  shelf, low blocks and huts on Windmill Hill, scattered stores on the open flats, a wall along
+  the cliff top and a tall slender white tower west of the lighthouse. The lighthouse is plain
+  white, as the photograph shows it, with no band. Heights are estimated from the photograph and
+  known spot heights; the layout is representative, not a survey, and individual buildings, their
+  uses and the roads are not reproduced.
+- **The Rock's west face and the town shore**: the photographs show pale crag with scrub in
+  patches, so the face carries far less scrub and only a few pines (on the Upper Rock, not the
+  southern slopes). The town's sea front is the Line Wall, quays and reclaimed ground, and the
+  harbour was dredged, so there is no beach and no turquoise shallows in front of it.
 - **Cockpit**: the enclosed flight decks follow the Catalina arrangement as far as the reference
   allows — side-by-side seats, the big wheels on bent columns, an overhead throttle quadrant on
   the roof between the pilots, a pedestal with trim wheels between the seats, and a low wide dark

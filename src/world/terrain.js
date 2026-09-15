@@ -75,12 +75,9 @@ const CREST = [
   [36.1238, -5.3445, 395, 755, 300, 0],
   [36.1222, -5.3446, 330, 735, 305, 0.05],  // Lord Airey's shelf
   [36.1204, -5.3447, 240, 710, 315, 0.2],
-  [36.1188, -5.3449, 160, 680, 330, 0.4],
-  [36.1170, -5.3451, 125, 650, 340, 0.55],  // Windmill Hill
-  [36.1145, -5.3455, 105, 600, 380, 0.55],
-  [36.1118, -5.3460, 45, 520, 420, 0.5],    // Europa flats
-  [36.1096, -5.3462, 18, 450, 450, 0.45],   // Europa Point lighthouse
-  [36.1086, -5.3464, 0, 380, 380, 0.4],
+  [36.1188, -5.3449, 160, 680, 330, 0.4],   // the foot of the Rock on to Windmill Hill (the south end below is SOUTH_END)
+  [36.1178, -5.3451, 70, 660, 335, 0],
+  [36.1166, -5.3453, 0, 640, 340, 0],
 ];
 const CREST_W = CREST.map(([la, lo, h, w, e, p]) => { const q = toWorld(la, lo); return { x: q.x, z: q.z, h: h * ROCK_V, w: w * GIB_ZOOM.inner, e: e * GIB_ZOOM.inner, p }; });
 // look the two reference summits up by position, so adding crest points never shifts them
@@ -107,10 +104,52 @@ export function rockFrame(x, z) {
 export function rockWestFace(x, z) { const { t, s } = rockFrame(x, z); return t > -0.25 && t < 1.4 && s > -6 && s < 380; }
 // The southern end of the peninsula - Windmill Hill and the Europa flats - is a limestone
 // platform running out to a low cliff. No beach, no pasture, no scrub worth speaking of.
-export function onEuropaFlats(x, z) { const { t, s } = rockFrame(x, z); return t > 1.4 && t < 2.1 && s < 340 && s > -240; }
-function rockHeight(x, z) {
+export function gibTownShore(x, z) { const { t, s } = rockFrame(x, z); return t > -0.6 && t < 1.5 && s > 150 && s < 1400; }
+export function onEuropaFlats(x, z) { return z > SE.zWhN - 40 && Math.abs(crestAt(z).x - x) < 700; }
+
+// The south end, rebuilt against the photograph of a Catalina over Europa Point: not a ridge
+// tapering to the sea but two limestone steps. Windmill Hill Flats, a plateau at about 120 m, ends
+// in a pale scarp dropping to the Europa flats at about 40 m, and the flats run out to the
+// lighthouse and stop all round in sheer sea cliffs with deep water at their foot. West of Windmill
+// Hill a shelf at the flats' level carries the road north along the cliff top toward Rosia.
+const zAt = (lat) => toWorld(lat, -5.345).z;
+const SE = { zShelf: zAt(36.1218), zShelfFull: zAt(36.1194), zWhN: zAt(36.1192), zWhS: zAt(36.1134) };
+const SHELF = [[36.1228, 28], [36.1180, 36], [36.1134, 40], [36.1110, 32], [36.1096, 24], [36.1080, 20]].map(([la, h]) => [zAt(la), h]);
+function shelfLevel(z) {
+  if (z <= SHELF[0][0]) return SHELF[0][1];
+  for (let i = 1; i < SHELF.length; i++) if (z <= SHELF[i][0]) { const [z0, h0] = SHELF[i - 1], [z1, h1] = SHELF[i]; return h0 + (h1 - h0) * (z - z0) / (z1 - z0); }
+  return SHELF[SHELF.length - 1][1];
+}
+const ss01 = (e0, e1, v) => { const t = Math.min(1, Math.max(0, (v - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+export function southEndHeight(x, z, dIn) {
+  if (z < SE.zShelf || dIn <= -2) return 0;
+  const s = crestAt(z).x - x;                       // west of the crest line, world metres
+  const reach = 1 - ss01(700, 900, Math.abs(s));
+  if (reach <= 0) return 0;
+  // sea cliffs: sheer from the water, the lip a little broken
+  // the cliff line wanders in and out of the coastline in small bays and buttresses, leaving a
+  // ledge of fallen rock at sea level where it steps back
+  const lip = dIn - 10 + 50 * (n2(x / 70, z / 70) - 0.5) + 12 * (n2(x / 18, z / 18) - 0.5);
+  const cliff = ss01(0, 4, lip) * (0.9 + 0.1 * ss01(0, 12, lip));
+  // the shelf rises out of the Rosia slope south of South Barracks rather than starting as a step
+  const shelf = shelfLevel(z) * cliff * ss01(SE.zShelf, SE.zShelfFull, z) * reach * (1 + 0.04 * (n2(x / 40, z / 40) - 0.5));
+  // Windmill Hill Flats
+  let plateau = 0;
+  if (z > SE.zWhN - 80 && z < SE.zWhS + 20) {
+    const west = 170 + 30 * (n2(z / 90, 7.3) - 0.5);
+    const lvl = 126 + (114 - 126) * ss01(SE.zWhN, SE.zWhS, z);
+    const southScarp = 1 - ss01(SE.zWhS - 5, SE.zWhS + 7, z + 34 * (n2(x / 70, 3.1) - 0.5) + 8 * (n2(x / 15, 5.7) - 0.5));
+    const north = ss01(SE.zWhN - 80, SE.zWhN, z);           // under the foot of the Rock's slope
+    const westScarp = 1 - ss01(west - 12, west + 26, s + 10 * (n2(z / 20, 1.9) - 0.5));
+    // on the east the hill falls to the sea in a steep broken slope, not one sheer wall
+    plateau = lvl * southScarp * north * westScarp * ss01(-2, 40, lip) ** 0.8 * (1 + 0.03 * (n2(x / 25, z / 25) - 0.5));
+  }
+  return Math.max(shelf, plateau);
+}
+function rockHeight(x, z, dIn = 1) {
+  const se = southEndHeight(x, z, dIn);
   const c = crestAt(z);
-  if (c.k !== 0) return 0;
+  if (c.k !== 0) return se;
   const s = c.x - x;
   let f;
   if (s >= 0) {
@@ -129,7 +168,7 @@ function rockHeight(x, z) {
   }
   // broken ground along the crest
   const rough = 1 + (0.05 * (n2(x / 70, z / 70) - 0.5) + 0.025 * (n2(x / 23, z / 23) - 0.5)) * Math.max(0, 1 - Math.abs(s) / 90);
-  return c.h * f * rough;
+  return Math.max(se, c.h * f * rough);
 }
 
 function landDistance(x, z) {
@@ -146,9 +185,19 @@ function landDistance(x, z) {
 
 export function terrainHeight(x, z) {
   const d = landDistance(x, z);
-  const rock = rockHeight(x, z);
+  const rock = rockHeight(x, z, d);
   // seabed: shelves gently from the beach (about 1 in 70) and then falls away offshore
-  if (d <= 0) { const off = -d; return rock > 0 ? rock : -0.4 - off * 0.014 - Math.min(90, (off / 1500) * (off / 1500) * 25); }
+  if (d <= 0) {
+    const off = -d;
+    if (rock > 0) return rock;
+    let bed = -0.4 - off * 0.014 - Math.min(90, (off / 1500) * (off / 1500) * 25);
+    // under the cliffs of the south end the water is deep right to the rock
+    const deep = ss01(SE.zShelf - 500, SE.zShelf - 100, z) * (1 - ss01(700, 1100, Math.abs(crestAt(z).x - x)));
+    if (deep > 0) bed = Math.min(bed, bed * (1 - deep) + (-6 - off * 0.35) * deep);
+    // and off the town and the dockyard: the harbour and the anchorage were dredged and deep
+    if (gibTownShore(x, z)) bed = Math.min(bed, -5 - off * 0.12);
+    return bed;
+  }
   const coastRise = Math.min(1, d / (2500 * H_SCALE)) ** 0.9 * 60 * V_SCALE;
   let h = coastRise;
   for (const p of PEAKS_W) {
@@ -167,6 +216,7 @@ export function terrainHeight(x, z) {
 const SANDSTONE = new THREE.Color(0x8c7d62), SANDSTONE_DK = new THREE.Color(0x6a5e4a), CORK = new THREE.Color(0x4c5343), MAQUIS = new THREE.Color(0x6b6d5a);
 const WEST_OF_BAY = toWorld(36.10, -5.445).x;   // the Algeciras side and the Tarifa hills
 const LIMESTONE = new THREE.Color(0xb9b09a), LIMESTONE_DK = new THREE.Color(0x8f877a), SCRUB = new THREE.Color(0x6e7248), SCRUB_DRY = new THREE.Color(0xa2946a);
+const ROCK_SCRUB = new THREE.Color(0x5a6043);   // the Rock's macchia: grey-olive, not green
 const SAND = new THREE.Color(0xe6d5a6), SAND_WET = new THREE.Color(0xbfa884), SHORE_ROCK = new THREE.Color(0x6a635a), MEADOW = new THREE.Color(0x8c8a5a);
 const FIELDS = [new THREE.Color(0xc9b478), new THREE.Color(0x9c8f66), new THREE.Color(0x8e9377), new THREE.Color(0xa87f54), new THREE.Color(0xbcaf7e), new THREE.Color(0x6f7a4c), new THREE.Color(0xb08a5e)];
 const fhash = (i, j) => { const s = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return s - Math.floor(s); };
@@ -190,13 +240,33 @@ function shade(h, slope, x = 0, z = 0) {
   if (h < 3.5) {
     // the point runs out to rock at the water, not to sand
     if (onEuropaFlats(x, z)) { c.copy(SHORE_ROCK).lerp(LIMESTONE, 0.3 + 0.35 * n); c.sand = 0; c.userData = 0.7; return c; }
+    // the town's sea front is the Line Wall, quays and reclaimed ground, not a beach
+    if (gibTownShore(x, z)) { c.copy(LIMESTONE_DK).lerp(SHORE_ROCK, 0.35 + 0.3 * n); c.sand = 0; c.userData = 0.5; return c; }
     if (slope > 0.22) return c.copy(SHORE_ROCK).lerp(LIMESTONE_DK, n * 0.5);          // rocky shore
     c.copy(h < 0.7 ? SAND_WET : SAND).lerp(SAND, Math.min(1, h / 3.5)); c.sand = 1 - Math.min(1, Math.max(0, (h - 2.2) / 1.3) * (slope > 0.12 ? 2 : 1));
     if (h > 2.2) c.lerp(MEADOW, (h - 2.2) / 1.3 * 0.5);
     return c;
   }
-  // the platform itself is bare limestone with a little dry scrub in the hollows
-  if (onEuropaFlats(x, z) && h < 90) { c.copy(LIMESTONE).lerp(LIMESTONE_DK, 0.2 + 0.3 * n); c.sand = 0; c.userData = 0.8; return c; }
+  // the south end, as the photograph shows it: pale limestone cliffs and scarps banded and darker
+  // toward their feet, dusty trodden ground on the Europa flats, and dry grass with dark patches of
+  // scrub on top of Windmill Hill
+  if (onEuropaFlats(x, z)) {
+    const n3 = n2(x / 18, z / 18);
+    if (slope > 0.3) {
+      c.copy(LIMESTONE).lerp(LIMESTONE_DK, THREE.MathUtils.clamp(0.15 + 0.5 * (1 - Math.min(1, h / 40)) + 0.25 * (n3 - 0.5), 0, 1));
+      c.lerp(LIMESTONE_DK, 0.2 * (0.5 + 0.5 * Math.sin(h * 0.6 + n * 2)));
+      c.userData = 0.9;
+    } else if (h > 90) {
+      c.copy(SCRUB_DRY).lerp(LIMESTONE, 0.35 + 0.3 * n);
+      if (n3 > 0.6) c.lerp(SCRUB, (n3 - 0.6) * 1.8);
+      c.userData = 0.3;
+    } else {
+      c.copy(LIMESTONE).lerp(SCRUB_DRY, 0.2 + 0.25 * n3).lerp(LIMESTONE_DK, 0.12 * n);
+      c.userData = 0.5;
+    }
+    c.sand = 0;
+    return c;
+  }
   if (h < 12) c.copy(slope < 0.08 ? MEADOW : SCRUB_DRY).lerp(SCRUB, Math.min(1, h / 12) * 0.8 + n * 0.2);
   else c.copy(SCRUB).lerp(SCRUB_DRY, n * 0.35);
   // farmed patchwork on the gentle low ground
@@ -217,7 +287,8 @@ function shade(h, slope, x = 0, z = 0) {
   const rockByHeight = THREE.MathUtils.clamp((h - 90) / 120, 0, 1);
   const rockBySlope = THREE.MathUtils.clamp((slope - 0.18) / 0.22, 0, 1);
   let rock = Math.max(rockByHeight, rockBySlope);
-  if (rock > 0 && rockWestFace(x, z)) { rock *= 0.25 + 0.2 * n; c.copy(SCRUB).lerp(new THREE.Color(0x4d6238), 0.5 + 0.3 * n); }
+  // the west face in the photographs is pale crag with the scrub in patches, not a green hillside
+  if (rock > 0 && rockWestFace(x, z)) { rock *= 0.5 + 0.35 * n2(x / 26, z / 26); c.copy(SCRUB).lerp(ROCK_SCRUB, 0.5 + 0.3 * n); }
   const face = LIMESTONE.clone().lerp(LIMESTONE_DK, THREE.MathUtils.clamp((slope - 0.22) / 0.3, 0, 1) * 0.45);
   c.lerp(face, Math.min(1, rock * (0.72 + 0.28 * n)));
   // at full rock the lerp saturates and the colour goes flat, so put the grain back by hand
@@ -291,7 +362,9 @@ export function buildDepthTexture(size = 384) {
   const data = new Uint8Array(size * size * 4);
   for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) {
     const x = -WORLD_HALF + (i + 0.5) / size * WORLD_HALF * 2, z = -WORLD_HALF + (j + 0.5) / size * WORLD_HALF * 2;
-    const h = terrainHeight(x, z);
+    // land is stored as barely above the water: the texels are ~80 m, and a cliff-top height would
+    // smear a false band of shallows out from every cliffed shore
+    const h = Math.min(1.5, terrainHeight(x, z));
     const v = Math.round(THREE.MathUtils.clamp((h + 60) / 120, 0, 1) * 255);
     const k = (j * size + i) * 4; data[k] = v; data[k + 1] = v; data[k + 2] = v; data[k + 3] = 255;
   }
