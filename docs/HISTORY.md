@@ -26,6 +26,7 @@ Operations Record Book entry in his name.
 | Catalina **AH544 "AX-H"** photographed leaving Gibraltar on patrol | IWM |
 | RAF New Camp (slipway and hangar on reclaimed land by Montagu Bastion) and North Front runway extended into the Bay, 1942 | RAF Gibraltar histories |
 | Italian human-torpedo and frogman attacks from the *Olterra* at Algeciras (Jul and Dec 1942) — background only | Decima MAS histories |
+| Squadron badge on the title screen: a mallard alighting, with the motto *Semper Vigilate*, "Be always vigilant" (Latin *semper*, always; *vigilate*, keep watch, a plural command addressed to all). The image was supplied to the project. It shows the St Edward's crown used on RAF badges from 1953; badges of the war years carried the Tudor (King's) crown, so the crown is later than the period the game covers. | Supplied image; RAF heraldry conventions |
 
 ## Representative or abridged
 

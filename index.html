@@ -15,7 +15,14 @@
   /* menus */
   #ui { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(8,20,32,0.25), rgba(4,10,18,0.7)); overflow: auto; padding: 20px; }
   .title-card { text-align: center; max-width: 720px; }
-  .crest { display: inline-block; width: 92px; height: 92px; border-radius: 50%; border: 4px solid var(--brass); line-height: 84px; font-size: 34px; font-weight: 700; color: var(--brass); letter-spacing: 2px; background: rgba(0,0,0,0.35); margin-bottom: 10px; }
+  /* the squadron badge, with its motto and what it means */
+  .badge { margin: 0 auto 8px; padding: 10px 40px 6px; display: flex; flex-direction: column; align-items: center; background: radial-gradient(closest-side, rgba(8, 12, 16, 0.5), rgba(8, 12, 16, 0)); }
+  .badge img { height: min(250px, 30vh); width: auto; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.55)); animation: badge-in 1.6s ease-out both; }
+  .badge figcaption { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); margin-top: 6px; display: flex; flex-direction: column; align-items: center; gap: 1px; animation: badge-in 1.6s ease-out 0.5s both; }
+  .badge .motto { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 17px; letter-spacing: 3px; color: var(--brass); }
+  .badge .gloss { font-size: 12.5px; letter-spacing: 1.5px; color: #c9c2ac; }
+  @keyframes badge-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (max-height: 640px) { .badge figcaption { flex-direction: row; gap: 10px; } }
   h1 { font-size: 44px; margin: 4px 0; letter-spacing: 1px; font-weight: 600; }
   h2 { font-size: 18px; font-weight: 400; margin: 2px 0 12px; color: #c9c2ac; letter-spacing: 2px; text-transform: uppercase; }
   h3 { margin: 14px 0 6px; font-weight: 600; color: var(--brass); font-size: 15px; letter-spacing: 1px; text-transform: uppercase; }
