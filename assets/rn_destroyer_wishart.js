@@ -245,7 +245,7 @@ export default function (THREE) {
     const rows = FONT[ch]; const cell = size / 7;
     for (let r = 0; r < 7; r++) { const row = rows[r]; let c = 0;
       while (c < 5) { if (row[c] === '1') { let e = c; while (e < 5 && row[e] === '1') e++;
-        box(thick, cell, (e - c) * cell, BOOT, x, y + (6 - r + 0.5) * cell - size / 2, z - side * ((c + (e - c) / 2) * cell - size * 5 / 14), undefined);
+        box(thick, cell, (e - c) * cell, BOOT, x, y + (6 - r + 0.5) * cell - size / 2, z - side * ((c + (e - c) / 2) * cell - size * 5 / 14), undefined).name = 'pennant';   // named, so ships standing in for other destroyers can hide Wishart's number
         c = e; } else c++; } }
   };
   { const size = 1.5, letters = ['D', '6', '7'], pitch = size * 1.0;

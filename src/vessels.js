@@ -360,7 +360,10 @@ function addEnsign(g) {
   x.fillStyle = '#c8102e'; x.fillRect(20, 0, 4, 20); x.fillRect(0, 8.5, 44, 3);
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
   const bridge = findNamed(g, 'bridge');
+  g.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(bridge || g);
+  // the bridge is often an empty marker node with no size of its own: stand the staff on its point
+  if (box.isEmpty() && bridge) box.setFromCenterAndSize(bridge.getWorldPosition(new THREE.Vector3()), new THREE.Vector3(1, 0, 4));
   const top = g.worldToLocal(new THREE.Vector3((box.min.x + box.max.x) / 2, box.max.y, box.min.z + (box.max.z - box.min.z) * 0.15));
   const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 2.4, 6), new THREE.MeshStandardMaterial({ color: 0x3a3a3a }));
   staff.position.copy(top).add(new THREE.Vector3(0, 1.2, 0));

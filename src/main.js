@@ -1386,6 +1386,7 @@ document.getElementById('btn-view').addEventListener('click', () => { G.view = G
       const g = v.group;
       g.position.set(a.x, -v.waterline, a.z); g.rotation.y = Math.atan2(b.x - a.x, b.z - a.z);
       if (v.wake) v.wake.visible = false;
+      for (const p of findAllNamed(g, 'pennant')) p.visible = false;   // the destroyer model is Wishart: her number is not repeated on every ship
       world.add(g);
     } catch (e) { /* a missing model leaves an empty berth */ }
   }

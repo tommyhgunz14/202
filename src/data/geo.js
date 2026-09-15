@@ -94,9 +94,9 @@ export const HARBOUR = {
   // kept clear of the moorings, the line from the jetty to the north entrance, the take-off run
   // west into the Bay and the approach the returning aircraft use south of the harbour.
   ships: [
-    ['wishart', 36.1368, -5.3757, 36.1400, -5.3757],     // alongside the Detached Mole, inside
-    ['wishart', 36.1349, -5.3757, 36.1381, -5.3757],
-    ['wishart', 36.1330, -5.3757, 36.1362, -5.3757],
+    ['wishart', 36.1375, -5.3757, 36.1400, -5.3757],     // alongside the Detached Mole, inside
+    ['wishart', 36.1351, -5.3757, 36.1381, -5.3757],
+    ['wishart', 36.1327, -5.3757, 36.1362, -5.3757],
     ['merchant', 36.1239, -5.3702, 36.1239, -5.3750],    // alongside the South Mole, inside
     ['wishart', 36.1239, -5.3662, 36.1239, -5.3630],
     ['rnsub', 36.1240, -5.3634, 36.1240, -5.3610],       // two boats of the flotilla, berthed together

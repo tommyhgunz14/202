@@ -195,7 +195,11 @@ submarine model.
   another ship off Rosia. They are scenery (not on the plot, not targets), placed clear of the
   moorings, the taxi route, the take-off run and the return approach. The ship types are the
   game's existing destroyer, merchant and submarine models; no capital ships are shown, and the
-  numbers and berths are representative rather than a record of any day.
+  numbers and berths are representative rather than a record of any day. Every ship and aircraft model is
+  built at its true size (a W-class destroyer 95.1 m, the merchantman 118 m, an S-class submarine
+  66 m, against the Catalina's 19.5 m length and 31.7 m span); only the land is drawn at the
+  Gibraltar zoom. The destroyers standing in for the harbour's other destroyers do not carry
+  Wishart's pennant number D67.
 - **The Rock's west face and the town shore**: the photographs show pale crag with scrub in
   patches, so the face carries far less scrub and only a few pines (on the Upper Rock, not the
   southern slopes). The town's sea front is the Line Wall, quays and reclaimed ground, and the
