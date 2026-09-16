@@ -21,6 +21,8 @@ import { Audio } from './audio.js';
 import { UI } from './ui.js';
 import { buildCockpitInterior, buildGunnerOverlay } from './cockpitModel.js';
 import { spawnBandit } from './bandits.js';
+import { initTouch } from './touch.js';
+import { Collisions } from './collide.js';
 import { runIntro } from './intro.js';
 import { startWalkout } from './walkout.js';
 import { findCrewShots, startCrewCinematic } from './crewCinematic.js';
@@ -68,6 +70,10 @@ const depthTex = buildDepthTexture(384);
 const harbour = buildHarbour(); world.add(harbour);
 const town = buildTown(); world.add(town);
 const vegetation = buildVegetation(); world.add(vegetation);
+// solid things the aircraft can strike, besides the terrain and the sea
+const collisions = new Collisions();
+collisions.addStatic(harbour, 'the harbour works');
+collisions.addList(town.userData.colliders, 'a building');
 // foam left by the flying boat: a V of two wake streaks astern, a turbulent centre trail, and two
 // wash sheets thrown off the chines while she is up on the step
 const planeWake = {
@@ -254,7 +260,7 @@ async function startMission(mission, spec, roleId) {
   const plan = PLANS[mission.id] || DEFAULT_PLAN;
   const role = plan.roles ? (plan.roles.find((r) => r.id === roleId) || plan.roles[0]) : null;
   G.plan = plan; G.role = role;
-  G.mission = mission; G.spec = spec; G.running = false; G.paused = false;
+  G.mission = mission; G.spec = spec; G.running = false; G.paused = false; G.probes = null;
   G.time = 0; G.park = null; G.endTimer = -1; G.result = null; G.landedMsg = false; G.score = 0; G.penalties = 0; G.tookOff = false; G.idCount = 0; G.identifiedTargets.clear();
   G.clock = { dawn: 6 * 3600 + 10 * 60, morning: 8 * 3600 + 30 * 60, afternoon: 14 * 3600 + 20 * 60, dusk: 18 * 3600 + 40 * 60, night: 22 * 3600 + 20 * 60 }[mission.sky] || 8 * 3600;
   if (mission.clock) { const [hh, mm] = mission.clock.split(':').map(Number); G.clock = hh * 3600 + mm * 60; }
@@ -382,14 +388,15 @@ ui.onStart = (mission, spec, role) => startMission(mission, spec, role);
 ui.hide();
 const intro = runIntro(document.body, input, { onMusic: startMenuMusic, onDone: () => { if (G.quick) return; ui.show(); if (audio.ctx) audio.music.setMood('menu'); } });
 // Quick sortie: one tap from the opening cards straight to a Catalina on the practice range
+const touch = initTouch(input);
 const startb = document.getElementById('startb');
 startb.addEventListener('click', (e) => {
   e.stopPropagation();
   if (G.running || G.quick) return;
-  G.quick = true; startb.remove();
+  G.quick = true; startb.parentNode.remove();
   intro.skip(); ui.hide();
   const m = MISSIONS.find((x) => x.id === 'range');
-  startMission(m, AIRCRAFT.catalina).then(() => { finishWalkout(); G.quick = false; });
+  startMission(m, AIRCRAFT.catalina).then(() => { finishWalkout(); input.throttle = 0.3; G.quick = false; });
 });
 window.__READY__ = true;
 
@@ -854,6 +861,25 @@ let radarT = 0, plotT = 0;
 
 function fmtClock(s) { const h = Math.floor(s / 3600) % 24, m = Math.floor(s / 60) % 60; return `${String(h).padStart(2, '0')}${String(m).padStart(2, '0')}`; }
 
+// Striking a ship, another aircraft, a mole or a building wrecks her. Alongside at a walking pace
+// on the water it is only a bump: she stops against it.
+function obstacles() {
+  const out = [];
+  for (const v of G.vessels) out.push(v);
+  for (const b of G.bandits) out.push(b);
+  for (const fr of G.friendlies) out.push(fr);
+  for (const pk of G.parked) out.push(pk.o || (pk.o = { group: pk.g, name: 'a moored aircraft' }));
+  return out;
+}
+function checkContact(f, prevPos) {
+  if (!G.probes) { G.probes = Collisions.probes(G.plane); collisions.begin(G.plane, G.probes, obstacles()); }
+  const hit = collisions.test(G.plane, G.probes, obstacles(), f.altitude < 150);
+  if (!hit) return;
+  if (f.onWater && f.speed < 4) { f.obj.position.copy(prevPos); f.speed = 0; return; }
+  const what = hit.label || (hit.name ? hit.name : 'another aircraft');
+  f.crash('collided with ' + what);
+}
+
 function update(dt) {
   const f = G.flight, p = f.obj.position;
   if (G.cine) {
@@ -888,7 +914,9 @@ function update(dt) {
   if (ctl.radarRange && radar.fitted) hud.log(`ASV range scale ${radar.cycleRange()} miles.`);
   if (ctl.report) sightingReport();
 
+  const prevPos = _v3.copy(p);
   f.update(dt, flightCtl);
+  if (!f.crashed && !G.park) checkContact(f, prevPos);
   // aircraft at their buoys ride the harbour's small lop
   for (const pk of G.parked) { pk.g.position.y = pk.y0 + Math.sin(G.time * 0.8 + pk.ph) * 0.07; pk.g.rotation.set(Math.sin(G.time * 0.6 + pk.ph) * 0.008, pk.h + Math.sin(G.time * 0.05 + pk.ph) * 0.03, Math.sin(G.time * 0.5 + pk.ph) * 0.012); }
   // brought in alongside: the last few seconds warp her gently into the berth, parallel to the
@@ -1205,7 +1233,8 @@ function update(dt) {
     if (camera.near !== 1.8) { camera.near = 1.8; camera.updateProjectionMatrix(); }
   } else {
     if (camera.near !== 0.5) { camera.near = 0.5; camera.updateProjectionMatrix(); }
-    const d = Math.max(35, G.spec ? G.plane.userData.span * 1.6 : 50);
+    // on a phone the camera stands further back, so the aircraft does not fill the small screen
+    const d = Math.max(35, G.spec ? G.plane.userData.span * 1.6 : 50) * (document.body.classList.contains('touch') ? 1.8 : 1);
     const fwd = f.forward(_v1);
     const desired = _v2.copy(p).addScaledVector(fwd, -d).add(new THREE.Vector3(0, d * 0.32, 0));
     if (desired.y < 2.5) desired.y = 2.5;
@@ -1223,6 +1252,7 @@ function update(dt) {
   if (radar.fitted) radar.sampleLand(f, G.time);
   if (radarT > 0.08) { radarT = 0; radar.drawASV(f, G.vessels, G.time); }
   if (plotT > 0.25) { plotT = 0; radar.drawPlot(f, G.vessels, BASE, G.mission, G.time, JETTY); }
+  touch.setDepth(weapons.depthSetting);
   const st = { throttle: ctl.throttle, stores: G.stores, ammo: G.ammo, time: fmtClock(G.clock), padName: input.padName };
   if (f.onWater && G.tookOff) {
     const B = { x: G.berth.x, z: G.berth.hullZ };
@@ -1463,6 +1493,7 @@ document.getElementById('btn-view').addEventListener('click', () => { G.view = G
       if (v.wake) v.wake.visible = false;
       for (const p of findAllNamed(g, 'pennant')) p.visible = false;   // the destroyer model is Wishart: her number is not repeated on every ship
       world.add(g);
+      collisions.addStatic(g, 'a ship at anchor');
     } catch (e) { /* a missing model leaves an empty berth */ }
   }
 })();
@@ -1495,8 +1526,8 @@ const GAME = window.__GAME__ = { fps: 0, draws: 0, tris: 0, pos: [0, 0], speed: 
 function gameStats(ms) {
   if (ms > 0 && ms < 1000) GAME.fps = GAME.fps ? GAME.fps * 0.9 + 100 / ms : 1000 / ms;
   GAME.draws = renderer.info.render.calls; GAME.tris = renderer.info.render.triangles;
-  const p = G.flight ? G.flight.obj.position : camera.position;
-  GAME.pos = [p.x, p.z]; GAME.speed = G.flight ? G.flight.speed : 0;
+  // the aircraft only: before a sortie the title camera's orbit is not the player moving
+  if (G.flight) { const p = G.flight.obj.position; GAME.pos = [p.x, p.z]; GAME.speed = G.flight.speed; }
 }
 let lastFrame = 0;
 function frame() {

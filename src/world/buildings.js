@@ -1,3 +1,4 @@
+import { partBox } from '../collide.js';
 import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { toWorld, H_SCALE, V_SCALE, GIB_ZOOM } from '../config.js';
@@ -34,8 +35,10 @@ let seed = 11;
 const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 
 class Builder {
-  constructor() { this.parts = {}; }
+  constructor() { this.parts = {}; this.colliders = []; }
   add(geo, matKey, matrix) {
+    const c = partBox(geo, matrix || new THREE.Matrix4());   // the block as an obstacle, before it is merged
+    if (c) this.colliders.push(c);
     const g = geo.index ? geo.toNonIndexed() : geo;
     if (matrix) g.applyMatrix4(matrix);
     (this.parts[matKey] ||= []).push(g);
@@ -65,6 +68,7 @@ class Builder {
       mesh.castShadow = true; mesh.receiveShadow = true;
       g.add(mesh);
     }
+    g.userData.colliders = this.colliders;
     return g;
   }
 }

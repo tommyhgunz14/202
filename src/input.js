@@ -18,6 +18,7 @@ export class Input {
     this.deadzone = 0.12;
     this.throttle = 0.0;
     this.invertPitch = false;
+    this.touch = null;           // on-screen controls (touch.js), when present
     this.state = { pitch: 0, roll: 0, yaw: 0, throttle: 0, fire: false, drop: false, report: false, camera: false, depth: false, radarRange: false, pause: false, map: false, brake: false };
     window.addEventListener('keydown', (e) => {
       if (e.repeat) return;
@@ -53,6 +54,11 @@ export class Input {
     let pause = this.pressed.has('Escape') || this.pressed.has('KeyP');
     let map = this.pressed.has('KeyM');
     let brake = k.has('KeyX');
+    const tc = this.touch;
+    if (tc) {
+      if (tc.pitch || tc.roll) { pitch = tc.pitch; roll = tc.roll; }
+      fire = fire || tc.fire;
+    }
     if (this.pressed.has('KeyI')) this.invertToggle = true;
 
     // gamepad

@@ -12,16 +12,30 @@ export class Hud {
       warn: root.querySelector('#hud-warn'),
       reticle: root.querySelector('#reticle'),
       guide: document.getElementById('hud-guide'),
+      ticker: document.getElementById('hud-ticker'),
       knob: document.getElementById('lever-knob'), ias: document.getElementById('ias-bar'), stall: document.getElementById('ias-stall'), lval: document.getElementById('lever-val'),
     };
     this.lines = [];
+    this.tick = { queue: [], until: 0 };   // phones: the log one line at a time
   }
   log(text, cls = '') {
     this.lines.push({ text, cls, t: performance.now() });
     if (this.lines.length > 7) this.lines.shift();
     this.el.log.innerHTML = this.lines.map((l) => `<div class="${l.cls}">${l.text}</div>`).join('');
+    this.tick.queue.push({ text, cls });
+    if (this.tick.queue.length > 6) this.tick.queue.shift();
+  }
+  // each line holds for a few seconds (less when more are waiting), then fades
+  updateTicker() {
+    const t = this.tick, now = performance.now(), el = this.el.ticker;
+    if (!el || now < t.until) return;
+    const next = t.queue.shift();
+    if (!next) { el.classList.remove('on'); return; }
+    el.className = 'on ' + next.cls; el.textContent = next.text;
+    t.until = now + Math.min(6500, Math.max(t.queue.length ? 2200 : 3500, next.text.length * 45));
   }
   update(flight, spec, weapons, state, objectives, contact, view) {
+    this.updateTicker();
     const mph = flight.speed * MPH, alt = Math.max(0, flight.altitude) * FT;
     this.el.top.innerHTML =
       `<span><b>${spec.name}</b> ${spec.code} · ${spec.serial}</span>` +
@@ -34,7 +48,7 @@ export class Hud {
       `<span>FUEL <b>${(flight.fuel * 100).toFixed(0)}</b>%</span>` +
       `<span class="${flight.damage > 0.5 ? 'bad' : ''}">DMG <b>${(flight.damage * 100).toFixed(0)}</b>%</span>` +
       `<span>${state.time}</span>` +
-      `<span>${view === 'cockpit' ? 'COCKPIT' : view.startsWith('gun:') ? 'GUNNER ' + view.slice(8).toUpperCase() : view === 'bombsight' ? 'BOMB AIMER' : 'CHASE'} · ${state.padName ? '🎮 ' + state.padName.slice(0, 22) : 'keyboard'}</span>`;
+      `<span>${view === 'cockpit' ? 'COCKPIT' : view.startsWith('gun:') ? 'GUNNER ' + view.slice(8).toUpperCase() : view === 'bombsight' ? 'BOMB AIMER' : 'CHASE'} · ${state.padName ? '🎮 ' + state.padName.slice(0, 22) : document.body.classList.contains('touch') ? 'touch' : 'keyboard'}</span>`;
     this.el.obj.innerHTML = objectives.map((o) => `<div class="${o.done ? 'done' : o.failed ? 'failed' : ''}">${o.done ? '☑' : o.failed ? '☒' : '☐'} ${o.text}</div>`).join('');
     if (contact) {
       const d = contact.dist / H_SCALE / 1852;
