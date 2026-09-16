@@ -324,7 +324,7 @@ export default function (THREE) {
   // Vichy recognition markings: bands of red and yellow painted across the forecastle
   for (let i = 0; i < 6; i++) {
     const z = L / 2 - 3.5 - i * 1.7;
-    box(g, hb(z) * 1.72, 0.05, 1.3, i % 2 ? N.yellow : N.red, 0, deckY(z) + 0.08, z);
+    box(g, hb(z) * 1.72, 0.05, 1.3, i % 2 ? N.yellow : N.red, 0, deckY(z) + 0.08, z).name = 'vichyBands';
   }
   rails(g, edgePts(1, hb, deckY, L / 2 - bowLen - 1, L / 2 - 3, 2), 0.9, N.gris);
   rails(g, edgePts(-1, hb, deckY, L / 2 - bowLen - 1, L / 2 - 3, 2), 0.9, N.gris);

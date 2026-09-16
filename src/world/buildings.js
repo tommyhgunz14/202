@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { toWorld, H_SCALE, V_SCALE, GIB_ZOOM } from '../config.js';
-import { terrainHeight } from './terrain.js';
+import { terrainHeight, rockFrame } from './terrain.js';
+import { FRENCH_HARBOUR } from '../data/geo.js';
 import { planarUVs, texture } from './textures.js';
 
 // which generated texture dresses each material key, and the tile size in metres
@@ -25,7 +26,7 @@ const MATS = {
   window: new THREE.MeshStandardMaterial({ color: 0x1f262c, roughness: 0.4 }),
   shutter: new THREE.MeshStandardMaterial({ color: 0x3f6b4c, roughness: 0.85 }),
   rail: new THREE.MeshStandardMaterial({ color: 0x24262a, roughness: 0.6, metalness: 0.4 }),
-  catchment: new THREE.MeshStandardMaterial({ color: 0xb8bcc0, roughness: 0.55, metalness: 0.35 }),
+  catchment: new THREE.MeshStandardMaterial({ color: 0xc9ced1, roughness: 0.7, metalness: 0.08 }),   // weathered galvanised sheet, pale in the sun
   concrete: new THREE.MeshStandardMaterial({ color: 0xbdb8ad, roughness: 0.9 }),
 };
 
@@ -209,29 +210,35 @@ function rockHotel(b) {
 }
 
 function catchments(b) {
-  // The great east-face water catchments: corrugated sheets laid over the sand slope between
-  // Catalan Bay and the ridge, from about 1903 until they were removed in the 1960s–90s.
-  const n = toWorld(36.1500, -5.3415), s = toWorld(36.1360, -5.3405);
-  const rows = 18, cols = 7;
+  // The great east-face water catchments: corrugated iron sheets laid over the sand slope between
+  // Catalan Bay and the foot of the cliffs, from about 1903 until they were taken up in the
+  // 1960s-90s. The sheet covers only the slope itself: for each line across it, from where the
+  // sand leaves the beach to where it meets the sheer rock, so it never climbs the cliff.
+  const n = toWorld(36.1490, -5.3415), s = toWorld(36.1370, -5.3405);
+  const rows = 40, cols = 16;
   const geo = new THREE.PlaneGeometry(1, 1, cols, rows);
   const pos = geo.attributes.position;
+  const band = [];
+  for (let r = 0; r <= rows; r++) {
+    const v = r / rows;
+    const z = n.z + (s.z - n.z) * v, xs = n.x + (s.x - n.x) * v + 260;   // start well out to sea, east of the shore
+    let lo = null, hi = null;
+    for (let x = xs; x > xs - 900; x -= 3) {
+      const h = terrainHeight(x, z);
+      if (lo === null && h > 4) lo = x;
+      if (lo !== null && h > 95) { hi = x; break; }
+    }
+    band.push(lo !== null && hi !== null && lo - hi > 20 ? [lo - 4, hi + 6] : null);
+  }
   for (let i = 0; i < pos.count; i++) {
-    const u = pos.getX(i) + 0.5, v = 0.5 - pos.getY(i);          // u across (0 west/upslope .. 1 east/shore), v along N-S
-    const x0 = n.x + (s.x - n.x) * v, z0 = n.z + (s.z - n.z) * v;
-    const x = x0 - 30 + u * 150, z = z0;                          // 150 m wide band down the slope
-    pos.setXYZ(i, x, terrainHeight(x, z) + 0.8, z);
+    const u = pos.getX(i) + 0.5, v = 0.5 - pos.getY(i);
+    const r = Math.round(v * rows), z = n.z + (s.z - n.z) * v;
+    const bnd = band[r] || band.find((x) => x) || [n.x, n.x - 1];
+    const x = bnd[0] + (bnd[1] - bnd[0]) * u;
+    pos.setXYZ(i, x, terrainHeight(x, z) + (band[r] ? 1.6 : -40), z);   // rows with no slope are sunk out of sight
   }
   geo.computeVertexNormals();
   b.add(geo, 'catchment', null);
-  // corrugation lines
-  for (let i = 0; i < 12; i++) {
-    const v = i / 11;
-    const x0 = n.x + (s.x - n.x) * v, z0 = n.z + (s.z - n.z) * v;
-    for (let j = 0; j < 6; j++) {
-      const x = x0 - 25 + j * 25, z = z0;
-      b.box(22, 0.3, 0.6, 'iron', x, terrainHeight(x, z) + 1.0, z, 0);
-    }
-  }
 }
 
 function town(b) {
@@ -250,7 +257,8 @@ function town(b) {
       const w = 9 + rnd() * 9, gap = rnd() < 0.15 ? 6 + rnd() * 10 : 0.3;
       const cx = n.x + ux * (along + w / 2) + off + (rnd() - 0.5) * 3, cz = n.z + uz * (along + w / 2);
       const th = terrainHeight(cx, cz);
-      if (th > 0.5 && th < 120) {
+      // the town stops at the ridge: the top terraces must not run over on to the east cliffs
+      if (th > 0.5 && th < 120 && rockFrame(cx, cz).s > 60) {
         const floors = 2 + (rnd() < 0.55 ? 1 : 0) + (off < 50 && rnd() < 0.4 ? 1 : 0);
         house(b, cx, cz, w, 8 + rnd() * 4, floors, Math.atan2(ux, uz) + Math.PI / 2, wallKeys[Math.floor(rnd() * wallKeys.length)], { balcony: rnd() < 0.6, flat: rnd() < 0.2 });
       }
@@ -343,6 +351,51 @@ function europaPoint(b) {
   }
 }
 
+// The French naval harbour across the Strait (FRENCH_HARBOUR in data/geo.js): a stone mole with a
+// return arm and a light at its head, a quay with warehouses and cranes along the shore, a town of
+// flat-roofed white houses stepping up the slope, and the old fort on the point above it.
+function frenchHarbour(b) {
+  const FH = FRENCH_HARBOUR;
+  const seg = (a, c, w, h) => {
+    const p = toWorld(a[0], a[1]), q = toWorld(c[0], c[1]);
+    const len = Math.hypot(q.x - p.x, q.z - p.z), ry = -Math.atan2(q.z - p.z, q.x - p.x);
+    b.box(len + w, h, w, 'stone', (p.x + q.x) / 2, h / 2 - 3, (p.z + q.z) / 2, ry);
+    b.box(len + w, 1.2, 1.2, 'stone', (p.x + q.x) / 2 + Math.sin(ry) * (w / 2 - 0.6), h - 3 + 0.6, (p.z + q.z) / 2 + Math.cos(ry) * (w / 2 - 0.6), ry);   // parapet on the seaward side
+  };
+  for (let i = 1; i < FH.mole.length; i++) seg(FH.mole[i - 1], FH.mole[i], 16, 9);
+  // light at the mole head
+  const lh = toWorld(FH.light[0], FH.light[1]);
+  b.box(4, 11, 4, 'white', lh.x, 6 + 5.5, lh.z, 0); b.box(5, 1, 5, 'stone', lh.x, 17.5, lh.z, 0);
+  // quay along the shore, with warehouses and cranes behind it
+  const q0 = toWorld(FH.quay[0][0], FH.quay[0][1]), q1 = toWorld(FH.quay[1][0], FH.quay[1][1]);
+  const qlen = Math.hypot(q1.x - q0.x, q1.z - q0.z), qry = -Math.atan2(q1.z - q0.z, q1.x - q0.x);
+  b.box(qlen, 6, 14, 'stone', (q0.x + q1.x) / 2, 0, (q0.z + q1.z) / 2, qry);
+  for (let i = 0; i < 7; i++) {
+    const t = (i + 0.5) / 7, x = q0.x + (q1.x - q0.x) * t - 40, z = q0.z + (q1.z - q0.z) * t;
+    shed(b, x, z, 44, 20, 9, Math.PI / 2 + 0.02, i % 2 ? 'stone' : 'cream');
+    if (i % 2 === 0) crane(b, x + 30, z + 12, Math.PI, 16, 18);
+  }
+  // the town: flat-roofed white houses in terraces up the slope, a few larger blocks among them
+  const T = FH.town;
+  let k = 0;
+  for (let la = T.lat0; la < T.lat1; la += 0.0021) {
+    for (let lo = T.lon0; lo < T.lon1; lo += 0.0019) {
+      k++;
+      if (rnd() < 0.22) continue;   // lanes, yards and open ground between the blocks
+      const p = toWorld(la + (rnd() - 0.5) * 0.0016, lo + (rnd() - 0.5) * 0.0016);
+      const th = terrainHeight(p.x, p.z);
+      if (th < 3) continue;
+      const big = k % 11 === 0;
+      house(b, p.x, p.z, big ? 30 : 12 + rnd() * 10, big ? 16 : 9 + rnd() * 4, big ? 3 : 1 + (rnd() < 0.5 ? 1 : 0), Math.PI / 2 + (rnd() < 0.3 ? Math.PI / 2 : 0) + (rnd() - 0.5) * 0.35, rnd() < 0.82 ? 'white' : 'cream', { flat: true, shutters: rnd() < 0.5 });
+    }
+  }
+  // the fort on the point
+  const f = toWorld(FH.fort[0], FH.fort[1]);
+  const fy = Math.max(0, terrainHeight(f.x, f.z));
+  b.box(90, 14, 60, 'stone', f.x, fy + 4, f.z, 0.3);
+  for (const [dx, dz] of [[-45, -30], [45, -30], [-45, 30], [45, 30]]) b.box(16, 18, 16, 'stone', f.x + dx * 0.95 + dz * 0.3, fy + 6, f.z + dz * 0.95 - dx * 0.3, 0.3);
+}
+
 function spanishTown(b, lat, lon, count, spread, withTower = false) {
   const c = toWorld(lat, lon);
   for (let i = 0; i < count; i++) {
@@ -369,6 +422,7 @@ export function buildTown() {
   spanishTown(b, 36.168, -5.348, 60, 500);         // La Línea
   spanishTown(b, 36.013, -5.605, 40, 400, true);   // Tarifa
   spanishTown(b, 35.889, -5.316, 60, 500, true);   // Ceuta
+  frenchHarbour(b);                                // the French naval harbour south of Ceuta
   spanishTown(b, 35.785, -5.810, 60, 600, true);   // Tangier
   return b.build();
 }

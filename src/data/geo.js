@@ -116,6 +116,19 @@ export const HARBOUR = {
   ],
 };
 
+// A French naval harbour on the North African coast south of Ceuta, standing in for Mers-el-Kébir
+// in the reconnaissance sortie of 2 July 1940 (the real anchorage is some 450 km east, off the
+// map). A dredged basin behind a mole with a return arm, a quay along the shore, the town climbing
+// the slope behind it and an old fort on the point.
+export const FRENCH_HARBOUR = {
+  basin: { lat0: 35.782, lat1: 35.827, lon0: -5.285, lon1: -5.249, depth: -18 },
+  mole: [[35.8265, -5.2705], [35.8265, -5.2520], [35.7900, -5.2520]],
+  quay: [[35.7885, -5.2862], [35.8230, -5.2885]],
+  town: { lat0: 35.786, lat1: 35.824, lon0: -5.312, lon1: -5.2915 },
+  fort: [35.8285, -5.3020],
+  light: [35.7900, -5.2520],
+};
+
 // Point-in-polygon and distance-to-polygon in world coordinates.
 export function pointInPoly(x, z, poly) {
   let inside = false;

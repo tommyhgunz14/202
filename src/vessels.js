@@ -19,6 +19,10 @@ export const VESSEL_TYPES = {
   merchant: { asset: 'assets/german_freighter.js', length: 118, beam: 16, kind: 'merchant', faction: 'allied', label: 'Allied merchantman', hp: 3, surfSpeed: 10, recolour: 0x5a6068 },
   // HMS Seraph (P219), an S-class boat: no model of her own, so the Type VIIC hull stands in with a
   // White Ensign on the bridge. She never dives on a friendly aircraft and carries no flak here.
+  dunkerque: { asset: 'assets/french_battleship_dunkerque.js', length: 215, beam: 31, kind: 'warship', faction: 'vichy', label: 'French battleship (Dunkerque class)', hp: 10, surfSpeed: 29, flak: true, noRef: true },
+  bretagne: { asset: 'assets/french_battleship_bretagne.js', length: 166, beam: 27, kind: 'warship', faction: 'vichy', label: 'French battleship (Bretagne class)', hp: 9, surfSpeed: 20, flak: true, noRef: true },
+  frsub: { asset: 'assets/italian_sub_brin.js', length: 72.5, beam: 6.9, kind: 'submarine', faction: 'vichy', label: 'French submarine', hp: 1.0, surfSpeed: 15, subSpeed: 8, noRef: true },
+  frtug: { asset: 'assets/spanish_coaster.js', length: 48, beam: 8, kind: 'warship', faction: 'vichy', label: 'French naval tug', hp: 1.5, surfSpeed: 10, recolour: 0x5e666e, noRef: true },
   rnsub: { asset: 'assets/uboat_viic.js', length: 66.1, beam: 7.2, kind: 'submarine', faction: 'rn', label: 'British submarine (S class)', hp: 1.0, surfSpeed: 14, subSpeed: 9, ensign: true, noRef: true },
   // men in the water after a boat is abandoned: Carley floats, men in life-jackets, wreckage
   // a ditched flying boat: floating wreckage, fuel sheen and her crew in the dinghy
@@ -144,8 +148,8 @@ export class Vessel {
         else { this.waypoints.reverse(); this.wpIdx = Math.min(1, this.waypoints.length - 1); }   // steam the route back
       }
     }
-    // lookahead: turn away from shoal water and the shore
-    {
+    // lookahead: turn away from shoal water and the shore (not for a ship lying at her moorings)
+    if (!this.stopped) {
       const look = 400 + speed * 40;
       const ax = g.position.x + Math.sin(this.heading) * look, az = g.position.z + Math.cos(this.heading) * look;
       if (terrainHeight(ax, az) > -9) {
@@ -157,7 +161,7 @@ export class Vessel {
     g.position.x += Math.sin(this.heading) * speed * dt;
     g.position.z += Math.cos(this.heading) * speed * dt;
     // never sit on the land: slide back to water
-    if (terrainHeight(g.position.x, g.position.z) > -5) { const w = findWater(g.position.x, g.position.z, -8); g.position.x = w.x; g.position.z = w.z; }
+    if (!this.stopped && terrainHeight(g.position.x, g.position.z) > -5) { const w = findWater(g.position.x, g.position.z, -8); g.position.x = w.x; g.position.z = w.z; }
     g.rotation.y = this.heading;
     // submarine depth logic
     if (this.kind === 'submarine') {

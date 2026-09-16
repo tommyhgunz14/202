@@ -319,6 +319,7 @@ async function startMission(mission, spec, roleId) {
     const v = await spawnVessel(e.type, e);
     v.tag = e.tag || null;
     if (e.set) Object.assign(v, e.set);
+    if (e.hideNodes) for (const n of e.hideNodes) for (const o of findAllNamed(v.group, n)) o.visible = false;
     v.heading = Math.PI - (e.heading || 0) * Math.PI / 180; v.group.rotation.y = v.heading;
     scene.add(v.group); G.vessels.push(v); byName[v.name] = v;
   }
@@ -815,9 +816,11 @@ function sightingReport() {
   audio.morse('o o o');
   if (!best) { hud.log('W/T to Gibraltar: nothing to report — identify a contact within 2 miles first.'); return; }
   best.reported = true;
+  // a report on a ship lying at anchor covers the whole anchorage: every identified ship moored near her
+  if (best.stopped) for (const v of G.vessels) if (v !== best && v.stopped && v.identified && v.faction === best.faction && v.group.position.distanceTo(best.group.position) < 2500) v.reported = true;
   const ll = { lat: 0, lon: 0 };
   radar.reports.push({ x: best.group.position.x, z: best.group.position.z, text: best.name });
-  ctx.log(`W/T: "${best.kind === 'submarine' ? 'SUBMARINE' : best.faction === 'german' ? 'ENEMY MERCHANT' : best.label.toUpperCase()} SIGHTED ${best.name.toUpperCase()} COURSE ${((180 - best.heading * 180 / Math.PI + 360) % 360).toFixed(0)} SPEED ${best.speedKt.toFixed(0)}" — Gibraltar: "${CALLSIGN}, received."`, 'ok');
+  ctx.log(`W/T: "${best.kind === 'submarine' ? 'SUBMARINE' : best.faction === 'german' ? 'ENEMY MERCHANT' : best.label.toUpperCase()} SIGHTED ${best.name.toUpperCase()} ${best.stopped ? (best.kind === 'submarine' ? 'STOPPED' : 'AT ANCHOR') : `COURSE ${((180 - best.heading * 180 / Math.PI + 360) % 360).toFixed(0)} SPEED ${best.speedKt.toFixed(0)}`}" — Gibraltar: "${CALLSIGN}, received."`, 'ok');
   G.score += 30;
   setTimeout(() => G.running && audio.say('voice_wt', 15), 1800);
   // responders
@@ -1334,7 +1337,7 @@ function evaluateObjectives(dt) {
         break;
       case 'shadow':
         if (t && t.identified && t.group.position.distanceTo(p) < 3000 && !f.onWater) { o.progress += dt; if (o.progress >= o.seconds) { o.done = true; G.score += 60; } }
-        if (t && t.stopped) o.done = true;
+        if (t && t.stopped && !o.overMoored) o.done = true;   // an intercepted ship stopping ends the shadow; ships already at their moorings do not
         break;
       case 'protect': {
         const members = G.vessels.filter((v) => v.tag === o.tag);

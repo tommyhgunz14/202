@@ -268,6 +268,29 @@ from a written brief for each (`quality_text_to_image`, 16:9). They are labelled
 wherever they are shown. Anything they contain — hull numbers, aircraft details, the look of a
 particular ship — is the generator's invention and should not be read as evidence.
 
+- **The French fleet (2 July 1940)**: the reconnaissance sortie now finds the fleet in harbour, not
+  as two ships at sea. Mers-el-Kébir lies about 450 km east of Gibraltar, beyond the map, so a
+  French naval harbour on the North African coast south of Ceuta stands in for it: a dredged basin
+  behind a mole with a light at its head, a quay with warehouses and cranes, a town of flat-roofed
+  white houses on the slope and an old fort on the point. The ships are those at Mers-el-Kébir on
+  3 July 1940 — the battleships *Dunkerque*, *Strasbourg*, *Provence* and *Bretagne*, and the
+  contre-torpilleurs *Mogador*, *Volta*, *Le Terrible*, *Kersaint*, *Tigre* and *Lynx* — with two
+  submarines and a tug. The *Commandant Teste* and the ships at Oran itself are not shown. The
+  battleships are new models built for the sortie (Dunkerque class: two quadruple turrets forward,
+  the tower bridge, one funnel, the hangar aft; Bretagne class: five twin turrets, two funnels, a
+  tripod foremast and casemate guns). The six destroyers use the Le Fantasque model, standing in for
+  the Mogador and Le Fantasque classes, and are shown without the red and yellow Vichy recognition
+  bands, which were not painted until after this date. Their moorings in two lines inside the mole
+  are representative.
+- **The Rock's east face**: a row of houses from the top terrace of the town ran over the ridge on
+  to the east cliffs, and the catchment sheet, placed before the Rock was moved to its surveyed
+  position, lay as a dark slab against the cliff. The town now stops at the ridge. The catchments
+  are laid only on a sand slope between the beach and the cliffs; the game's east face has no such
+  slope where they stood, so they do not show.
+- **Saro London photographs**: three generated pictures (the Casablanca plan photograph and two
+  crew stills) showed a single engine or a single fin. They were made again, each with the two
+  engines side by side between the wings and the twin fins and rudders.
+
 ## Checking the models against references
 
 The 3D models were cross-referenced (16 Sep 2026) against reference plates and recognition notes

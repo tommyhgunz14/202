@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { COAST, PEAKS, RIDGES, pointInPoly, distToPoly } from '../data/geo.js';
+import { COAST, PEAKS, RIDGES, pointInPoly, distToPoly, FRENCH_HARBOUR } from '../data/geo.js';
 import { toWorld, H_SCALE, V_SCALE, WORLD_HALF, GIB_ZOOM } from '../config.js';
 import { loadTex, terrainDetail } from './textures.js';
 
@@ -113,6 +113,7 @@ export function onEuropaFlats(x, z) { return z > SE.zWhN - 40 && Math.abs(crestA
 // lighthouse and stop all round in sheer sea cliffs with deep water at their foot. West of Windmill
 // Hill a shelf at the flats' level carries the road north along the cliff top toward Rosia.
 const zAt = (lat) => toWorld(lat, -5.345).z;
+const FB = (() => { const b = FRENCH_HARBOUR.basin, a = toWorld(b.lat1, b.lon0), c = toWorld(b.lat0, b.lon1); return { x0: Math.min(a.x, c.x), x1: Math.max(a.x, c.x), z0: Math.min(a.z, c.z), z1: Math.max(a.z, c.z) }; })();
 const SE = { zShelf: zAt(36.1218), zShelfFull: zAt(36.1194), zWhN: zAt(36.1192), zWhS: zAt(36.1134) };
 const SHELF = [[36.1228, 28], [36.1180, 36], [36.1134, 40], [36.1110, 32], [36.1096, 24], [36.1080, 20]].map(([la, h]) => [zAt(la), h]);
 function shelfLevel(z) {
@@ -191,6 +192,12 @@ export function terrainHeight(x, z) {
     const off = -d;
     if (rock > 0) return rock;
     let bed = -0.4 - off * 0.014 - Math.min(90, (off / 1500) * (off / 1500) * 25);
+    // the French naval basin across the Strait: dredged for heavy ships right up to the quay
+    if (x > FB.x0 - 60 && x < FB.x1 + 60 && z > FB.z0 - 60 && z < FB.z1 + 60) {
+      const e = Math.min(x - FB.x0, FB.x1 - x, z - FB.z0, FB.z1 - z);
+      const w = ss01(-60, 40, e) * ss01(0, 25, off);
+      bed = Math.min(bed, bed * (1 - w) + FRENCH_HARBOUR.basin.depth * w);
+    }
     // under the cliffs of the south end the water is deep right to the rock
     const deep = ss01(SE.zShelf - 500, SE.zShelf - 100, z) * (1 - ss01(700, 1100, Math.abs(crestAt(z).x - x)));
     if (deep > 0) bed = Math.min(bed, bed * (1 - deep) + (-6 - off * 0.35) * deep);
