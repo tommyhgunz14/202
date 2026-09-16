@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guardians of the Rock — 202 Squadron, Gibraltar</title>
-<script type="importmap">{ "imports": { "three": "./vendor/three.module.js", "three/addons/utils/BufferGeometryUtils.js": "./vendor/BufferGeometryUtils.js", "three/addons/loaders/GLTFLoader.js": "./vendor/GLTFLoader.js" } }</script>
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.js", "three/addons/utils/BufferGeometryUtils.js": "./vendor/BufferGeometryUtils.js" } }</script>
 <style>
   :root { --paper: #e7dfc8; --ink: #1c1a16; --blue: #1f3468; --red: #a02a30; --brass: #b08d3e; --ok: #4fa36a; --bad: #d84a3a; }
   * { box-sizing: border-box; }
@@ -151,6 +151,9 @@
 <style>
   /* launch intro */
   #intro { position: fixed; inset: 0; z-index: 50; background: #000; color: #f1e8d2; overflow: hidden; transition: background 1.6s ease, opacity 1.4s ease; }
+  #startb { position: fixed; z-index: 60; left: 50%; bottom: max(22px, env(safe-area-inset-bottom)); transform: translateX(-50%); padding: 12px 26px; font: 600 15px/1 Georgia, serif; letter-spacing: .08em; text-transform: uppercase; color: #f1e8d2; background: rgba(20,24,20,.72); border: 1px solid rgba(241,232,210,.55); border-radius: 3px; cursor: pointer; touch-action: manipulation; }
+  #startb:hover { background: rgba(60,64,52,.85); }
+  body.flying #startb { display: none; }
   #intro.clear { background: rgba(0, 0, 0, 0.38); }
   #intro.out { opacity: 0; pointer-events: none; }
   #intro .icard { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 1.5s ease; text-align: center; padding: 0 12vw; }
@@ -263,6 +266,7 @@
 <div id="dc-cam"><div class="bar"><b id="dc-cam-title">Depth charges</b><span id="dc-cam-state"></span></div><div class="frame" id="dc-cam-frame"></div></div>
 <div id="gun-cam"><div class="bar"><b id="gun-cam-title">Tail gunner</b><span id="gun-cam-state"></span></div><div class="frame" id="gun-cam-frame"></div></div>
 <div id="ui"></div>
+<button id="startb" type="button">Quick sortie &#9656;</button>
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>

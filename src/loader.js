@@ -1,11 +1,10 @@
 import * as THREE from 'three';
-import { loadModel } from './models.js';
 
 // Loads a 404-contract asset module (default export: function(THREE) -> Group), keeping the
 // hierarchy so named nodes (props, guns, cockpit) stay addressable. Prototypes are cached and
-// cloned; geometry and materials are shared between clones.
+// cloned; geometry and materials are shared between clones. Every 3D object in the game comes
+// through here and is built by code: there is no mesh file loader.
 const cache = new Map();
-const modelCache = new Map();
 
 export async function loadAsset(url) {
   if (!cache.has(url)) {
@@ -19,13 +18,8 @@ export async function loadAsset(url) {
     })());
   }
   const proto = await cache.get(url);
-  // a generated GLB of the same name replaces the code asset when present (see models.js)
-  const name = url.split('/').pop().replace(/.js$/, '');
-  if (!modelCache.has(name)) modelCache.set(name, loadModel(name, proto, proto.userData.type === 'aircraft' ? 'aircraft' : 'vessel').catch(() => null));
-  const model = await modelCache.get(name);
-  const src = model || proto;
-  const inst = src.clone(true);
-  inst.userData = { ...src.userData };
+  const inst = proto.clone(true);
+  inst.userData = { ...proto.userData };
   return inst;
 }
 

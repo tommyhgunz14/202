@@ -380,7 +380,18 @@ async function startMission(mission, spec, roleId) {
 ui.onStart = (mission, spec, role) => startMission(mission, spec, role);
 // launch intro: shown once per page load, before the title menu (skippable)
 ui.hide();
-runIntro(document.body, input, { onMusic: startMenuMusic, onDone: () => { ui.show(); if (audio.ctx) audio.music.setMood('menu'); } });
+const intro = runIntro(document.body, input, { onMusic: startMenuMusic, onDone: () => { if (G.quick) return; ui.show(); if (audio.ctx) audio.music.setMood('menu'); } });
+// Quick sortie: one tap from the opening cards straight to a Catalina on the practice range
+const startb = document.getElementById('startb');
+startb.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (G.running || G.quick) return;
+  G.quick = true; startb.remove();
+  intro.skip(); ui.hide();
+  const m = MISSIONS.find((x) => x.id === 'range');
+  startMission(m, AIRCRAFT.catalina).then(() => { finishWalkout(); G.quick = false; });
+});
+window.__READY__ = true;
 
 // crew aboard: engines started, HUD shown, briefing on the log (also reached by skipping)
 function finishWalkout() {
@@ -1476,11 +1487,24 @@ function titleCamera(dt) {
 }
 
 // ---------- loop ----------
+// Figures read by the 404 game-jam gate: frame rate, draw calls and triangles for the whole
+// frame (every pass, so the renderer's per-render reset is turned off), and the aircraft's
+// ground position and speed.
+renderer.info.autoReset = false;
+const GAME = window.__GAME__ = { fps: 0, draws: 0, tris: 0, pos: [0, 0], speed: 0 };
+function gameStats(ms) {
+  if (ms > 0 && ms < 1000) GAME.fps = GAME.fps ? GAME.fps * 0.9 + 100 / ms : 1000 / ms;
+  GAME.draws = renderer.info.render.calls; GAME.tris = renderer.info.render.triangles;
+  const p = G.flight ? G.flight.obj.position : camera.position;
+  GAME.pos = [p.x, p.z]; GAME.speed = G.flight ? G.flight.speed : 0;
+}
 let lastFrame = 0;
 function frame() {
   const now = performance.now();
   if (now - lastFrame < 8) return;
+  gameStats(now - lastFrame);
   lastFrame = now;
+  renderer.info.reset();
   const dt = Math.min(0.05, clock.getDelta());
   SEA.t += dt; if (sea) sea.material.uniforms.uTime.value = SEA.t;
   if (G.running) update(dt); else { ui.poll(); titleCamera(dt); }
