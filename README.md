@@ -38,6 +38,8 @@ with a vendored `three.module.js`.)
     while the boats come across. The plan screen says whose it was on the day, and the debrief
     records which part you flew.
   - Sorties with no second aircraft show the same plan and photograph, with the whole of it yours.
+  - Each sortie has its own photograph, generated for it (Atlas) in the style of a period colour
+    photograph and labelled *reconstruction* on the screen.
 - **Choose your aircraft** from those the squadron had on that date. Each type shows its
   performance and eight scores (speed, endurance, climb, agility, payload, defence, detection,
   toughness) which also drive the flight model:

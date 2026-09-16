@@ -178,7 +178,7 @@ export class UI {
       const role = this.currentRole();
       const objectives = (role && role.objectives) || m.objectives;
       html = `<div class="card wide plan">
-        <div class="plan-photo" style="background-image:url(${plan.photo})"><span>${plan.caption || ''}</span></div>
+        <div class="plan-photo" style="background-image:url(${plan.photo})"><span>${plan.caption || ''}<i>reconstruction</i></span></div>
         <h2>Mission plan · ${m.date}</h2>
         <h1>${m.title}</h1>
         <p class="sub">${m.subtitle} · flying the ${a.name}</p>

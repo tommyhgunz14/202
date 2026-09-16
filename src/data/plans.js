@@ -6,77 +6,77 @@
 // objectives, the other aircraft's script, the entity settings and the mission's triggers; anything
 // it leaves out comes from the mission itself (src/data/missions.js).
 //
-// The photographs are the generated period pictures already in the game (see docs/HISTORY.md:
-// they are reconstructions, not documents), except the Catalina over Europa Point, which is a real
-// photograph supplied to the project.
+// The photographs are generated for this game, one per sortie (Atlas, see docs/HISTORY.md). They
+// are reconstructions in the style of period colour photographs, not documents, and the plan
+// screen labels them as such.
 
 // everything that happens once the player is down on the water beside the submarine
 const onceDown = (acts) => [{ when: { flag: 'player-down' }, acts }];
 
 export const PLANS = {
   range: {
-    photo: 'assets/intro/photo_swordfish_slip.jpg',
-    caption: 'The slipway at the seaplane base',
+    photo: 'assets/plan/range.jpg',
+    caption: 'Practice bombs beside the target rafts off Europa Point',
     aim: 'A morning on the practice range four miles south-east of Europa Point: depth charges against the moored rafts, then the guns against the condemned coaster.',
   },
   'first-patrol': {
-    photo: 'assets/intro/photo_london_gunwharf.jpg',
-    caption: 'A London of the squadron at the Gun Wharf',
+    photo: 'assets/plan/first-patrol.jpg',
+    caption: 'A London on dawn patrol over the Strait',
     aim: 'The squadron\'s first patrol from the Rock. A German merchantman is reported in the Strait: find her, make sure of what she is, and get a sighting report back to Gibraltar.',
   },
   gluckauf: {
-    photo: 'assets/intro/photo_destroyer.jpg',
-    caption: 'A destroyer of the Gibraltar force at speed',
+    photo: 'assets/plan/gluckauf.jpg',
+    caption: 'A German steamer under way, a destroyer on the horizon',
     aim: 'Contraband control. Find the German freighter, order her to stop with a low pass across her bows, report her for HMS Wishart and shadow her until the destroyer is up.',
   },
   'oran-recce': {
-    photo: 'assets/intro/photo_briefing.jpg',
-    caption: 'Briefing on the North Mole',
+    photo: 'assets/plan/oran-recce.jpg',
+    caption: 'The French fleet behind the breakwater at Mers-el-Kébir',
     aim: 'A look at the French fleet at Mers-el-Kébir, with orders not to provoke them: photograph what is there, count the heavy ships and come away.',
   },
   durbo: {
-    photo: 'assets/intro/photo_uboat_air.jpg',
-    caption: 'A submarine under attack from the air',
+    photo: 'assets/plan/durbo.jpg',
+    caption: 'Oil and bubbles, with the destroyers converging',
     aim: 'Oil and bubbles off Alborán. Find the trail, bomb the position, call in Firedrake and Wrestler, and stay with them until the submarine is finished.',
   },
   casablanca: {
-    photo: 'assets/cine/crew_london_1.jpg',
-    caption: 'A London crew walking out',
+    photo: 'assets/plan/casablanca.jpg',
+    caption: 'A London low along the Moroccan shore, fighters above',
     aim: 'A long reconnaissance down the Moroccan coast in a Saro London. Vichy fighters are up from Casablanca; the flying boat has to take what comes and bring the photographs home.',
   },
   'straits-dawn': {
-    photo: 'assets/cine/crew_swordfish_2.jpg',
-    caption: 'Boarding the Swordfish floatplane',
+    photo: 'assets/plan/straits-dawn.jpg',
+    caption: 'A Swordfish floatplane and a surfaced boat at dawn',
     aim: 'A dawn sweep of the Strait. An Italian submarine is working the narrows on the surface: identify her, attack before she dives, and report the contact.',
   },
   'velella-brin': {
-    photo: 'assets/intro/photo_uboat_air.jpg',
-    caption: 'A boat caught on the surface',
+    photo: 'assets/plan/velella-brin.jpg',
+    caption: 'An Italian submarine on the surface, her gun manned',
     aim: 'Two Italian boats in two days. Strafe and bomb the first, then find the second, which will shoot back.',
   },
   w8407: {
-    photo: 'assets/intro/photo_crew_dusk.jpg',
-    caption: 'Aircrew on the jetty at dusk',
+    photo: 'assets/plan/w8407.jpg',
+    caption: 'Wreckage and a dinghy on the open sea',
     aim: 'A missing Catalina. Search the reported area, find the wreckage and the dinghy, mark it for the launch and stand by while the Swordfish takes the crew off.',
   },
   u74: {
-    photo: 'assets/intro/photo_destroyer.jpg',
-    caption: 'HMS Wishart working up',
+    photo: 'assets/plan/u74.jpg',
+    caption: 'A Catalina over the destroyers as the charges go down',
     aim: 'A submarine hunt east of Cartagena with Wishart and Wrestler. Hold the contact, attack her when she shows, and keep the destroyers on her.',
   },
   veniero: {
-    photo: 'assets/intro/photo_uboat_air.jpg',
-    caption: 'Charges going down beside a boat',
+    photo: 'assets/plan/veniero.jpg',
+    caption: 'A boat crash-diving under the aircraft',
     aim: 'A boat reported west of Gibraltar. Find her, attack, and see it through to the end.',
   },
   harpoon: {
-    photo: 'assets/intro/photo_sunderland_moor.jpg',
-    caption: 'A Sunderland at her buoy',
+    photo: 'assets/plan/harpoon.jpg',
+    caption: 'The convoy from a Sunderland\'s waist blister',
     aim: 'Close escort for the Harpoon convoy through the Strait. Keep station over the ships, put down any boat that tries to work into an attacking position, and stay until they are clear.',
   },
   alabastro: {
-    photo: 'assets/intro/photo_sunderland_moor.jpg',
-    caption: 'A Sunderland of the squadron',
+    photo: 'assets/plan/alabastro.jpg',
+    caption: 'A Sunderland attacking from astern, charges falling',
     aim: 'A surfaced Italian submarine north-west of Bougie. Flt Lt Walshe in W6002/AX-R has the attack; the Alabastro\'s gunners fight back, and her crew go over the side before she sinks.',
     roles: [
       { id: 'cover', name: 'Second aircraft — cover Walshe', historic: true,
@@ -121,8 +121,8 @@ export const PLANS = {
     ],
   },
   clark: {
-    photo: 'assets/archive/catalina_europa_point_colour.jpg',
-    caption: 'A Catalina over Europa Point',
+    photo: 'assets/plan/clark.jpg',
+    caption: 'A Catalina alongside a submarine, the canoes crossing',
     aim: 'A submarine is waiting at sea with General Mark Clark aboard, back from his clandestine trip to Algeria. One Catalina puts down beside her and takes the party off; the other keeps watch overhead while she is on the water.',
     roles: [
       { id: 'cover', name: 'Second aircraft — keep watch overhead', historic: true,
@@ -155,8 +155,8 @@ export const PLANS = {
     ],
   },
   giraud: {
-    photo: 'assets/intro/ac_catalina.jpg',
-    caption: 'A Catalina of Coastal Command',
+    photo: 'assets/plan/giraud.jpg',
+    caption: 'The party coming aboard at the waist blister',
     aim: 'General Giraud has been smuggled out of France by submarine and must be in Gibraltar before the Torch landings. One Catalina alights beside the boat and takes him off; a Vichy fighter may come out while she is on the water.',
     roles: [
       { id: 'cover', name: 'Second aircraft — guard the aircraft on the water', historic: true,
@@ -191,18 +191,18 @@ export const PLANS = {
     ],
   },
   torch: {
-    photo: 'assets/intro/photo_briefing.jpg',
-    caption: 'Crews briefed for the landings',
+    photo: 'assets/plan/torch.jpg',
+    caption: 'The invasion convoy passing the Rock',
     aim: 'The morning of the Torch landings. Cover the invasion shipping coming through the Strait and keep the U-boats down and away from it.',
   },
   u620: {
-    photo: 'assets/intro/photo_uboat_air.jpg',
-    caption: 'A night attack with the landing lights',
+    photo: 'assets/plan/u620.jpg',
+    caption: 'A U-boat held in the landing light',
     aim: 'Off Cape St Vincent by night. Hold the ASV contact, light her up on the run in and put your charges across her.',
   },
   u343: {
-    photo: 'assets/intro/photo_uboat_air.jpg',
-    caption: 'A boat on the surface at night',
+    photo: 'assets/plan/u343.jpg',
+    caption: 'Flak coming up at the aircraft in the dark',
     aim: 'U-343 is on the surface in the dark after a Wellington\'s attack. Flt Lt Finch is out after her with you: find her on the ASV, get eyes on her and put out the report he can home on. Her flak is heavy and it hurt Finch\'s aircraft badly.',
     roles: [
       { id: 'cover', name: 'Second aircraft — find her and draw her fire', historic: true,
@@ -238,8 +238,8 @@ export const PLANS = {
     ],
   },
   u761: {
-    photo: 'assets/intro/photo_destroyer.jpg',
-    caption: 'Destroyers hunting in the Strait',
+    photo: 'assets/plan/u761.jpg',
+    caption: 'The boat down by the stern, destroyers closing',
     aim: 'The squadron\'s last action. U-761 is trying to get through the Strait with HMS Anthony and HMS Wishart tracking her and US Navy aircraft attacking. When she is forced up, Flt Lt Finch goes in after her; the destroyers hunt her down and her crew abandon her.',
     roles: [
       { id: 'cover', name: 'Second aircraft — join the hunt with Finch', historic: true,
@@ -285,8 +285,8 @@ export const PLANS = {
     ],
   },
   free: {
-    photo: 'assets/intro/photo_crew_dusk.jpg',
-    caption: 'After a patrol',
+    photo: 'assets/plan/free.jpg',
+    caption: 'A lone Catalina over the Strait',
     aim: 'An open sweep of the Strait with whatever is serviceable. What you meet is placed at random: neutrals, a submarine or two, perhaps a blockade-runner.',
   },
 };

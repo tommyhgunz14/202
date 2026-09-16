@@ -116,9 +116,13 @@ put down beside the submarine and take the General off. The plan screen names wh
 on the day, and the Operations Record Book entry in the debrief records the part flown. Nothing in
 the *Lead* variant is offered as history; the mission text and these notes keep the record.
 
-The plan screen shows a photograph for every sortie. They are the generated period pictures
-already in the game (reconstructions, see below), except the Catalina over Europa Point, which is
-a real photograph supplied to the project.
+The plan screen shows a photograph for every sortie, one made for that sortie: the practice rafts
+off Europa Point, the German steamer with a destroyer on the horizon, the French fleet behind the
+Mers-el-Kébir breakwater, the dinghy beside the wreckage of W8407, the canoes crossing to the
+Catalina for General Clark, flak coming up in the dark at U-343, and so on. They are generated
+(Atlas) in the style of period colour photographs and are **reconstructions, not documents** —
+each is labelled *reconstruction* on the screen itself. The real photograph of a Catalina over
+Europa Point is in the photograph archive, where it is labelled as an archive plate.
 
 Five actions in the article were flown by other crews of the squadron. They are in the game as
 sorties where you fly a second aircraft alongside the crew the record names. That crew's aircraft
@@ -253,6 +257,11 @@ their own terms; none are bundled in this repository.
 Skies, surface textures and sound clips were generated with the Atlas platform from written
 briefs (see README). They are photographic in style but not photographs of Gibraltar; the crew
 voice lines are synthetic speech in a period RAF manner and the wording is the game's own.
+
+The twenty mission-plan photographs in `assets/plan` were generated the same way, one per sortie,
+from a written brief for each (`quality_text_to_image`, 16:9). They are labelled *reconstruction*
+wherever they are shown. Anything they contain — hull numbers, aircraft details, the look of a
+particular ship — is the generator's invention and should not be read as evidence.
 
 ## Command of the squadron
 
