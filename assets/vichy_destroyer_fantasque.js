@@ -278,13 +278,14 @@ export default function (THREE) {
   };
   const named = (parent, name, x, y, z) => { const o = new THREE.Object3D(); o.name = name; o.position.set(x, y, z); parent.add(o); return o; };
   // ===== Le Fantasque-class contre-torpilleur (Vichy, 1940-42), 132.4 x 12.0 m =====
-  const C2 = { gris: 0x5c6872, deck: 0x4f5a64, black: 0x141517, brass: 0xb08d3e, canvas: 0xb9b09a, alu: 0xc6c8c7, glass: 0x1f3468 };
+  const C2 = { gris: 0x8a929a, deck: 0x4f5a64, black: 0x141517, brass: 0xb08d3e, canvas: 0xb9b09a, alu: 0xc6c8c7, glass: 0x1f3468 };
   const _m2 = {};
   const mat2 = (hex, name = 'metal', rough = 0.85, extra = {}) => { const k = 'd' + hex + name + rough; if (!_m2[k]) _m2[k] = new THREE.MeshStandardMaterial(Object.assign({ color: hex, roughness: rough, metalness: name === 'metal' ? 0.15 : 0.0, name, side: THREE.DoubleSide }, extra)); return _m2[k]; };
   const N = {
     gris: mat2(C2.gris), deck: mat2(C2.deck), black: mat2(C2.black), brass: mat2(C2.brass, 'metal', 0.45),
     canvas: mat2(C2.canvas, 'canvas', 0.95), alu: mat2(C2.alu, 'metal', 0.45),
     glass: mat2(C2.glass, 'glass', 0.15, { transparent: true, opacity: 0.55 }),
+    red: mat2(0xa8262b), yellow: mat2(0xd9b23a),
   };
 
   const L = 132.4, B = 12.0, D = 8.0, WL = 4.3;
@@ -320,6 +321,11 @@ export default function (THREE) {
   H.bulwark(hullGrp, -L / 2 + sternLen + 1, L / 2 - bowLen - 1, 1.0, N.gris);
 
   // ---- deck fittings: railings along the exposed deck edges fore & aft of the bulwark run ----
+  // Vichy recognition markings: bands of red and yellow painted across the forecastle
+  for (let i = 0; i < 6; i++) {
+    const z = L / 2 - 3.5 - i * 1.7;
+    box(g, hb(z) * 1.72, 0.05, 1.3, i % 2 ? N.yellow : N.red, 0, deckY(z) + 0.08, z);
+  }
   rails(g, edgePts(1, hb, deckY, L / 2 - bowLen - 1, L / 2 - 3, 2), 0.9, N.gris);
   rails(g, edgePts(-1, hb, deckY, L / 2 - bowLen - 1, L / 2 - 3, 2), 0.9, N.gris);
   rails(g, edgePts(1, hb, deckY, -L / 2 + 3, -L / 2 + sternLen + 1, 2), 0.9, N.gris);

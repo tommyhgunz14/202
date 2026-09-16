@@ -196,6 +196,9 @@ export default function (THREE) {
     const prof = [[0.70, -0.2], [0.74, -0.27], [0.82, -0.2], [0.86, 0.02], [0.82, 0.22], [0.74, 0.28], [0.70, 0.22], [0.70, -0.2]].map((p) => new THREE.Vector2(p[0], p[1]));
     const ring = new THREE.Mesh(new THREE.LatheGeometry(prof, 32), mA);
     ring.rotation.x = Math.PI / 2; ring.position.z = ZF; e.add(ring);
+    // the exhaust collector ring standing proud of the cowling front
+    const coll = new THREE.Mesh(new THREE.TorusGeometry(0.66, 0.055, 6, 28), mBlk);
+    coll.position.z = ZF - 0.22; e.add(coll);
     // Pegasus: crankcase with the reduction-gear nose, nine finned cylinders with heads, rocker
     // boxes and pushrod tubes, the ignition harness ring in front, the exhaust collector behind
     const ccProf = [[0.0, 0.62], [0.16, 0.6], [0.24, 0.5], [0.3, 0.3], [0.32, 0.05], [0.3, -0.25], [0.0, -0.25]].map((p) => new THREE.Vector2(p[0], p[1]));

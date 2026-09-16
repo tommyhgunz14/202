@@ -135,15 +135,15 @@ export default function (THREE) {
     else empty('flak_l', 0, 0.9, 1.5, f);
   }
 
-  // ---------------- 100 mm/47 deck gun, AFT of the tower ----------------
-  { const ZG = -14, d = new THREE.Group(); d.position.set(0, yDeck(ZG), ZG); g.add(d);
+  // ---------------- 100 mm/47 deck gun, forward of the tower ----------------
+  { const ZG = 7, d = new THREE.Group(); d.position.set(0, yDeck(ZG), ZG); g.add(d);
     cylY(0.62, 0.68, 0.14, DECKC, 0, 0.07, 0, 14, d); cylY(0.4, 0.46, 0.5, GRIGIO, 0, 0.46, 0, 12, d);
     box(0.9, 0.55, 0.75, GRIGIO, 0, 1.0, 0, d); box(0.36, 0.38, 0.95, BLACK, 0, 1.1, -0.35, d);
     cylZ(0.06, 0.1, 4.0, BLACK, 0, 1.1, 1.95, 10, d); cylZ(0.1, 0.1, 0.9, BLACK, 0, 0.94, 0.65, 8, d);
     cylX(0.3, 0.06, BLACK, 0.55, 1.0, -0.1, 12, d); cylX(0.3, 0.06, BLACK, -0.55, 1.0, -0.1, 12, d);
     box(1.0, 0.05, 0.4, GRIGIO, 0, 0.75, 0.4, d);
     empty('gun', 0, 1.1, 3.95, d); }
-  cylY(0.32, 0.32, 0.5, GRIGIO, 1.2, YD + 0.25, -12, 10); cylY(0.32, 0.32, 0.5, GRIGIO, -1.2, YD + 0.25, -12, 10); // ready ammo lockers
+  cylY(0.32, 0.32, 0.5, GRIGIO, 1.2, YD + 0.25, 12, 10); cylY(0.32, 0.32, 0.5, GRIGIO, -1.2, YD + 0.25, 12, 10); // ready ammo lockers by the gun
 
   // ---------------- deck fittings ----------------
   const hatch = (z, r = 0.48) => cylY(r, r, 0.18, DECKC, 0, yDeck(z) + 0.09, z, 12);

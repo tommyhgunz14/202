@@ -162,8 +162,8 @@ export default function (THREE) {
   }
 
   // ---------------- funnels, searchlight platform ----------------
-  const fun = (z) => { cylY(0.8, 0.85, 5, GREY, 0, MDY0 + 2.5, z, 16); cylY(0.83, 0.83, 0.25, BLACK, 0, MDY0 + 4.9, z, 16); };
-  fun(2); fun(-9.5);
+  const fun = (z, r, h) => { cylY(r, r + 0.05, h, GREY, 0, MDY0 + h / 2, z, 16); cylY(r + 0.03, r + 0.03, 0.25, BLACK, 0, MDY0 + h - 0.1, z, 16); };
+  fun(2, 0.72, 5.6); fun(-9.5, 0.92, 4.6);   // the fore funnel taller and slimmer, the after one shorter and fatter
   box(2.6, 0.1, 1.8, GREY, 0, MDY0 + 2.6, -3.7);                          // searchlight platform between funnels
   for (const s of [1, -1]) rod(V(s * 1.2, MDY0 + 2.6, -3.7), V(s * 1.2, MDY0, -3.7), 0.05, GREY);
   cylY(0.35, 0.4, 0.5, BLACK, 0, MDY0 + 2.9, -3.7, 10);                   // searchlight

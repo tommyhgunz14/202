@@ -263,6 +263,30 @@ from a written brief for each (`quality_text_to_image`, 16:9). They are labelled
 wherever they are shown. Anything they contain — hull numbers, aircraft details, the look of a
 particular ship — is the generator's invention and should not be read as evidence.
 
+## Checking the models against references
+
+The 3D models were cross-referenced (16 Sep 2026) against reference plates and recognition notes
+obtained through Atlas: a three-view general arrangement and, for six of them, a close detail
+photograph, kept in `assets/refs/plates` with a README saying what they are worth. The plates are
+generated images, not documents; they were used as a sketch of each type, with the written
+recognition notes as the better guide. What the pass changed:
+
+- **Gluckberg**: her name was painted GLUCKSBURG on the hull while the sortie called her Gluckberg.
+- **HMS Wishart**: the two funnels were identical. On the V and W classes the forward funnel is the
+  taller and slimmer of the pair, so it now is.
+- **Le Fantasque**: she wore no recognition markings and a dark Atlantic grey. Vichy ships carried
+  red and yellow bands, and she is now in the lighter French grey with the bands across her
+  forecastle.
+- **Brin**: her 100 mm gun stood aft of the conning tower; on the Brin class it was forward of it.
+  This follows the reference notes rather than a photograph, and is the least certain of the four.
+- **Saro London**: the exhaust collector ring round the front of each Townend cowling was missing.
+
+Checked and left alone: the Catalina and Sunderland uppers are Extra Dark Sea Grey and Dark Slate
+Grey, which is right for Coastal Command; the London does have twin fins and rudders; the Catalina
+has no undercarriage; the Sunderland has no dorsal turret; the U-boat has her 8.8 cm gun forward
+and a single 2 cm on the Wintergarten; Le Fantasque has five guns in the right positions. Noted
+but not done: Admiralty disruptive camouflage on Wishart (she is plain grey), and finer detail on
+the U-boat casing.
 ## Command of the squadron
 
 The full text of Andrew Thomas, "Guardians from the Rock" (*Britain at War* / Key Military) was

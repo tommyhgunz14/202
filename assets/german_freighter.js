@@ -277,7 +277,7 @@ export default function (THREE) {
     }
   };
   const named = (parent, name, x, y, z) => { const o = new THREE.Object3D(); o.name = name; o.position.set(x, y, z); parent.add(o); return o; };
-  // ===== German tramp freighter GLUCKSBURG, 118 x 16 m, candidate A: lofted hull =====
+  // ===== German tramp freighter GLUCKBERG, 118 x 16 m, candidate A: lofted hull =====
   const L = 118, B = 16, D = 9.6, WL = 6.5;
   const deckY = (z) => D + (z > 0 ? 1.7 : 0.9) * Math.pow(z / 59, 2);
   const keelY = (z) => {
@@ -417,11 +417,11 @@ export default function (THREE) {
   propeller(g, 2.1, 0, 3.2, pz, 3);
   box(g, 0.35, 5.4, 3.0, M.boot, 0, 4.3, pz - 2.2); cyl(g, 0.22, 0.22, 4.4, M.boot, 0, 6.5, pz - 2.9, 8);
   // hull name on both bows and the stern
-  hullText(g, H, 'GLUCKSBURG', 49.5, 8.6, 1.0, M.white, 1);
-  hullText(g, H, 'GLUCKSBURG', 49.5, 8.6, 1.0, M.white, -1);
+  hullText(g, H, 'GLUCKBERG', 49.5, 8.6, 1.0, M.white, 1);
+  hullText(g, H, 'GLUCKBERG', 49.5, 8.6, 1.0, M.white, -1);
   {
     const y0 = 8.9, y1 = 9.7; const za = H.zAt(y0, -59, -48), zb = H.zAt(y1, -59, -48);
-    const t = text('GLUCKSBURG', 0.7, M.white, 0.05); t.rotation.y = Math.PI; t.rotation.x = Math.atan2(za - zb, y1 - y0) * -1;
+    const t = text('GLUCKBERG', 0.7, M.white, 0.05); t.rotation.y = Math.PI; t.rotation.x = Math.atan2(za - zb, y1 - y0) * -1;
     const piv = new THREE.Group(); piv.add(t); piv.position.set(0, (y0 + y1) / 2, (za + zb) / 2 - 0.05); piv.rotation.x = Math.atan2(zb - za, y1 - y0); t.rotation.x = 0; g.add(piv);
   }
   g.userData = { length: 118, beam: 16, waterline: 6.5, kind: 'merchant', name: 'German freighter' };
