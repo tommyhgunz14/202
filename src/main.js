@@ -519,11 +519,36 @@ function updateDcCam(dt) {
   if (dcEl.state.textContent !== label) { dcEl.state.textContent = label; dcEl.state.className = cls; }
 }
 
+// ---------- callsign ----------
+// Radio traffic to this aircraft opens with her captain's callsign: Wg Cdr T. Q. Horner was
+// 'Jackie'. Anything a squadron aircraft or its pilot says to you ("FP164/L: "...", "Finch: "...")
+// becomes "Jackie, ...", and Gibraltar answers a W/T report the same way. The crew on the intercom
+// still call him skipper, and the US Navy aircraft, who are not talking to him, are left alone.
+const CALLSIGN = 'Jackie';
+// words that keep their capital when "Jackie, " is put in front of them
+const KEEP_CAP = /^(I\b|I'|HMS\b|US\b|U-\d|[A-Z]{2,}|Seraph|Gibraltar|General|Finch|Walshe|Case|Louw|Clark|Giraud|Wishart|Anthony|Tangier|Alabastro|Americans|Italian|German|French|Vichy|Rock\b)/;
+function withCallsign(text) {
+  if (typeof text !== 'string' || !text.includes('"')) return text;
+  const speakers = new Set();
+  for (const fr of [...(G.friendlies || []), ...(G.pendingFriendlies || [])]) {
+    if (fr.faction === 'usn' || (fr.opts && fr.opts.faction === 'usn')) continue;
+    if (fr.short) speakers.add(fr.short);
+    const pilot = fr.pilot || (fr.opts && fr.opts.pilot);
+    if (pilot) speakers.add(pilot.split(' ').pop());
+  }
+  if (!speakers.size) return text;
+  return text.replace(/(^|\s)([A-Za-z0-9/-]+): "([^"]*)"/g, (m, pre, who, said) => {
+    if (!speakers.has(who) || said.startsWith(CALLSIGN)) return m;
+    const rest = KEEP_CAP.test(said) ? said : said.charAt(0).toLowerCase() + said.slice(1);
+    return `${pre}${who}: "${CALLSIGN}, ${rest}"`;
+  });
+}
+
 // ---------- helpers used by vessel AI ----------
 const ctx = {
   get player() { return G.flight; }, get vessels() { return G.vessels; }, get time() { return G.time; },
   weapons, audio, scene,
-  log: (t, c) => { hud.log(t, c); G.events.push({ t: G.time, text: t }); },
+  log: (t, c) => { t = withCallsign(t); hud.log(t, c); G.events.push({ t: G.time, text: t }); },
   enemyFire(v, p) {
     const from = new THREE.Vector3(); (findNamed(v.group, 'flak') || findNamed(v.group, 'bridge') || v.group).getWorldPosition(from);
     from.y = Math.max(from.y, 2);
@@ -792,7 +817,7 @@ function sightingReport() {
   best.reported = true;
   const ll = { lat: 0, lon: 0 };
   radar.reports.push({ x: best.group.position.x, z: best.group.position.z, text: best.name });
-  ctx.log(`W/T: "${best.kind === 'submarine' ? 'SUBMARINE' : best.faction === 'german' ? 'ENEMY MERCHANT' : best.label.toUpperCase()} SIGHTED ${best.name.toUpperCase()} COURSE ${((180 - best.heading * 180 / Math.PI + 360) % 360).toFixed(0)} SPEED ${best.speedKt.toFixed(0)}" — Gibraltar acknowledges.`, 'ok');
+  ctx.log(`W/T: "${best.kind === 'submarine' ? 'SUBMARINE' : best.faction === 'german' ? 'ENEMY MERCHANT' : best.label.toUpperCase()} SIGHTED ${best.name.toUpperCase()} COURSE ${((180 - best.heading * 180 / Math.PI + 360) % 360).toFixed(0)} SPEED ${best.speedKt.toFixed(0)}" — Gibraltar: "${CALLSIGN}, received."`, 'ok');
   G.score += 30;
   setTimeout(() => G.running && audio.say('voice_wt', 15), 1800);
   // responders

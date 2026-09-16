@@ -524,7 +524,7 @@ export const MISSIONS = [
           { do: 'leave', lat: 35.2, lon: -6.4, alt: 500, log: 'The US Navy aircraft turn south-west for home.' },
         ] },
       { type: 'friendly', aircraft: 'catalina', name: 'Catalina (Flt Lt Finch)', short: 'Finch', pilot: 'Flt Lt J. Finch', lat: 36.02, lon: -5.62, alt: 400, delay: 20,
-        hello: 'Finch is on patrol ahead of you: "The Americans are onto something north of Tangier. We\'ll follow them in."',
+        hello: 'Finch is on patrol ahead of you. Finch: "The Americans are onto something north of Tangier. We\'ll follow them in."',
         script: [
           { do: 'orbit', at: 'U-761', radius: 2500, alt: 350, until: { flag: 'u761-up' } },
           { do: 'attack', at: 'U-761', charges: 4, depth: 25, attackAlt: 50, leave: 0.45,

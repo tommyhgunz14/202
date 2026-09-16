@@ -10,20 +10,20 @@ const ARCHIVE = ['photo_london_gunwharf', 'photo_briefing', 'photo_crew_dusk'];
 const FINALE = 'passing_out_1930';
 const PICS = [...ARCHIVE, ...STILLS, FINALE];
 
-const STORY = `Gibraltar, 1941. German U-Boats and Italian submarines are using the Gibraltar Strait to prey on
-the convoys supplying Allied nations in the Mediterranean Ocean. Known commonly as 'The Rock', Gibraltar
-stations a fearsome Allied force of Royal Air Force Flying Boats - Squadron 202, its fleet of Saro Londons,
-Catalinas and Sunderlands would strike fear into any enemy submarine crew caught in their cross-hairs. Led by
-Wing Commander Thomas Q. Horner callsign 'Jackie' these dedicated airmen were tasked to locate and destroy the
-enemy subs before they were able to reach the Atlantic and unleash their reign of terror on the critical
-Allied supply convoys.`;
+// the second card: a heading and four paragraphs, worded as supplied for the project
+const STORY_HEAD = 'Gibraltar, 1941';
+const STORY = [
+  'German U-Boats and Italian submarines are using the Gibraltar Strait to prey on the convoys supplying Allied nations in the Mediterranean Ocean. Known commonly as \'The Rock\', Gibraltar stations a fearsome Allied force of Royal Air Force Flying Boats - Squadron 202.',
+  'This fleet of Saro Londons, Catalinas and Sunderlands would come to strike fear across the enemy submarine fleets attempting to unleash their reign of terror across the critical Allied supply convoys.',
+  'Led by Wing Commander Thomas Q. Horner - callsign \'Jackie\' - these dedicated airmen were tasked to locate and destroy the enemy subs, protect the supply convoys and help win the war for the Allies in the Mediterranean Ocean.',
+];
 
 export function runIntro(root, input, { onDone, onTitle, onMusic } = {}) {
   const el = document.createElement('div');
   el.id = 'intro';
   el.innerHTML = `
     <div class="icard" id="intro-true"><p class="true">A True Story</p></div>
-    <div class="icard" id="intro-story"><p class="story">${STORY.replace(/\n/g, ' ')}</p></div>
+    <div class="icard" id="intro-story"><div class="story-block"><p class="story-head">${STORY_HEAD}</p>${STORY.map((p) => `<p class="story">${p}</p>`).join('')}</div></div>
     <div class="icard title" id="intro-title"><div class="photos">${PICS.map((n) => `<div class="ph${n === FINALE ? ' finale' : ''}" style="background-image:url(assets/intro/${n}.jpg)"></div>`).join('')}</div><div class="tt"><h1>Guardians of the Rock</h1><p class="sub">No. 202 Squadron &middot; Gibraltar &middot; 1939&ndash;1944</p></div></div>
     <p class="fcap">Passing-out term, winter 1930 &middot; T. Q. Horner, seated second from left</p>
     <div class="bars"><i></i><i></i></div>
@@ -64,7 +64,7 @@ export function runIntro(root, input, { onDone, onTitle, onMusic } = {}) {
   (async () => {
     await wait(900);
     show('intro-true', true); await wait(3200); show('intro-true', false); await wait(1400);
-    show('intro-story', true); await wait(23000); show('intro-story', false); await wait(1400);
+    show('intro-story', true); await wait(34000); show('intro-story', false); await wait(1400);
     onTitle && onTitle();
     // the title and subtitle hold over the whole picture sequence - the archive photographs
     // first, then the crew walking out and boarding - and only leave with the last of them
