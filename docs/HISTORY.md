@@ -109,6 +109,17 @@ in this repository.
 
 ## Sorties flown by other crews
 
+Each of these can be flown either way, chosen on the mission plan screen before take-off.
+**As flown** is the record: the named crew do what they did and you fly the second aircraft in
+support. **Lead** gives their job to you and sends them up as cover — you make the attack, or you
+put down beside the submarine and take the General off. The plan screen names whose the action was
+on the day, and the Operations Record Book entry in the debrief records the part flown. Nothing in
+the *Lead* variant is offered as history; the mission text and these notes keep the record.
+
+The plan screen shows a photograph for every sortie. They are the generated period pictures
+already in the game (reconstructions, see below), except the Catalina over Europa Point, which is
+a real photograph supplied to the project.
+
 Five actions in the article were flown by other crews of the squadron. They are in the game as
 sorties where you fly a second aircraft alongside the crew the record names. That crew's aircraft
 is flown by the game and does what the record says it did; your objectives support it. **The

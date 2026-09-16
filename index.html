@@ -16,6 +16,21 @@
   #ui { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(8,20,32,0.25), rgba(4,10,18,0.7)); overflow: auto; padding: 20px; }
   .title-card { text-align: center; max-width: 720px; }
   /* the squadron badge, with its motto and what it means */
+  /* the mission plan: the sortie's photograph, the plan and the choice of part */
+  .plan { max-width: 1040px; }
+  .plan-photo { height: min(260px, 30vh); margin: -18px -18px 12px; background-size: cover; background-position: center; position: relative; border-radius: 6px 6px 0 0; box-shadow: inset 0 -80px 90px -30px rgba(10, 12, 14, 0.95); }
+  .plan-photo span { position: absolute; left: 14px; bottom: 8px; font-size: 11.5px; letter-spacing: 1.5px; text-transform: uppercase; color: #cfc8b2; text-shadow: 0 1px 4px #000; }
+  .plan-cols { display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; align-items: start; }
+  .plan .aim { margin: 0 0 10px; color: #ded7c2; }
+  .plan-list { margin: 0; padding-left: 20px; color: #c9c2ac; }
+  .plan-list li { margin: 3px 0; }
+  .plan .role { display: block; width: 100%; text-align: left; margin: 0 0 8px; padding: 9px 12px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(200, 178, 122, 0.35); border-radius: 4px; color: inherit; font: inherit; cursor: pointer; }
+  .plan .role.sel { border-color: var(--brass); background: rgba(200, 178, 122, 0.16); }
+  .plan .role b { display: block; color: var(--brass); font-size: 15px; letter-spacing: 0.5px; }
+  .plan .role b em { font-style: normal; font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: #9fb6c8; border: 1px solid rgba(159, 182, 200, 0.5); border-radius: 3px; padding: 1px 5px; margin-left: 8px; vertical-align: 2px; }
+  .plan .role span { display: block; margin-top: 3px; font-size: 13px; color: #b9b2a0; }
+  .plan .only { color: #b9b2a0; font-size: 13.5px; }
+  @media (max-width: 860px) { .plan-cols { grid-template-columns: 1fr; } }
   .badge { margin: 0 auto 8px; padding: 10px 40px 6px; display: flex; flex-direction: column; align-items: center; background: radial-gradient(closest-side, rgba(8, 12, 16, 0.5), rgba(8, 12, 16, 0)); }
   .badge img { height: min(250px, 30vh); width: auto; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.55)); animation: badge-in 1.6s ease-out both; }
   .badge figcaption { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); margin-top: 6px; display: flex; flex-direction: column; align-items: center; gap: 1px; animation: badge-in 1.6s ease-out 0.5s both; }

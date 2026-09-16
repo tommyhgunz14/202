@@ -27,6 +27,7 @@ import { findCrewShots, startCrewCinematic } from './crewCinematic.js';
 import { showPromotion } from './promotion.js';
 import { MISSIONS, SKIES, PILOT } from './data/missions.js';
 import { AIRCRAFT, availableOn } from './data/aircraft.js';
+import { PLANS, DEFAULT_PLAN } from './data/plans.js';
 import { HARBOUR } from './data/geo.js';
 
 // ---------- renderer & scene ----------
@@ -247,8 +248,12 @@ function randomEntities(m) {
   return out;
 }
 
-async function startMission(mission, spec) {
+async function startMission(mission, spec, roleId) {
   clearMission();
+  // the part the player takes: the first role is the sortie as the record has it
+  const plan = PLANS[mission.id] || DEFAULT_PLAN;
+  const role = plan.roles ? (plan.roles.find((r) => r.id === roleId) || plan.roles[0]) : null;
+  G.plan = plan; G.role = role;
   G.mission = mission; G.spec = spec; G.running = false; G.paused = false;
   G.time = 0; G.park = null; G.endTimer = -1; G.result = null; G.landedMsg = false; G.score = 0; G.penalties = 0; G.tookOff = false; G.idCount = 0; G.identifiedTargets.clear();
   G.clock = { dawn: 6 * 3600 + 10 * 60, morning: 8 * 3600 + 30 * 60, afternoon: 14 * 3600 + 20 * 60, dusk: 18 * 3600 + 40 * 60, night: 22 * 3600 + 20 * 60 }[mission.sky] || 8 * 3600;
@@ -297,7 +302,16 @@ async function startMission(mission, spec) {
   G.stores = spec.stores.count; G.ammo = spec.guns[0].rounds;
   radar.fitted = !!spec.asv;
   // vessels
-  const ents = mission.entities === 'random' ? randomEntities(mission) : mission.entities;
+  let ents = mission.entities === 'random' ? randomEntities(mission) : mission.entities;
+  if (role) ents = ents.map((e) => {
+    const set = role.entitySet && (role.entitySet[e.name] || role.entitySet[e.short]);
+    const script = role.scripts && (role.scripts[e.name] || role.scripts[e.short]);
+    if (!set && !script) return e;
+    const out = { ...e };
+    if (set) { out.set = { ...(e.set || {}), ...set }; for (const k of Object.keys(out.set)) if (out.set[k] === null) delete out.set[k]; }
+    if (script) out.script = script;
+    return out;
+  });
   const byName = {};
   for (const e of ents) {
     if (e.type === 'bandit') { if (Math.random() <= (e.chance == null ? 1 : e.chance)) G.pendingBandits.push({ ...e, timer: e.delay || 180 }); continue; }
@@ -315,8 +329,8 @@ async function startMission(mission, spec) {
     G.slick = new THREE.Vector3(p.x, 0, p.z);
   } else G.slick = null;
   mission.datums = [];
-  G.objectives = mission.objectives.map((o) => ({ ...o, done: false, failed: false, progress: 0, near: 0, elapsed: 0, baseText: o.text }));
-  G.triggers = (mission.triggers || []).map((t) => ({ ...t, fired: false }));
+  G.objectives = ((role && role.objectives) || mission.objectives).map((o) => ({ ...o, done: false, failed: false, progress: 0, near: 0, elapsed: 0, baseText: o.text }));
+  G.triggers = ((role && role.triggers) || mission.triggers || []).map((t) => ({ ...t, fired: false }));
   G.range = { hits: 0, rounds: 0, dcScore: 0, drops: 0 };
   // views: chase, cockpit, then every manned gun position the type has
   G.views = ['chase', 'cockpit', 'bombsight', ...spec.guns.filter((g) => G.gunNodes[g.node] && !g.fixed).map((g) => 'gun:' + g.node)];
@@ -362,7 +376,7 @@ async function startMission(mission, spec) {
   if (titlePlane) titlePlane.visible = false;
   G.running = true;
 }
-ui.onStart = startMission;
+ui.onStart = (mission, spec, role) => startMission(mission, spec, role);
 // launch intro: shown once per page load, before the title menu (skippable)
 ui.hide();
 runIntro(document.body, input, { onMusic: startMenuMusic, onDone: () => { ui.show(); if (audio.ctx) audio.music.setMood('menu'); } });
@@ -559,7 +573,10 @@ const ctx = {
 
   // ---- mission scripting: friendlies' steps and the mission's triggers speak this ----
   get friendlies() { return G.friendlies; },
-  named(n) { return G.vessels.find((v) => v.name === n) || G.friendlies.find((a) => a.name === n || a.short === n) || null; },
+  named(n) {
+    if (n === 'You' || n === 'you') return PLAYER_REF;
+    return G.vessels.find((v) => v.name === n) || G.friendlies.find((a) => a.name === n || a.short === n) || null;
+  },
   flag(name) { if (!G.flags.has(name)) { G.flags.add(name); G.flagTimes[name] = G.time; } },
   cond(c, self) {
     if (!c) return false;
@@ -613,6 +630,9 @@ const ctx = {
 //   { ferryDo: { to, board: true } }  the passengers climb aboard, one after another
 //   { ferryDo: { to, dunk: true } }   one of them misses his footing and goes into the water
 const _fv = new THREE.Vector3(), _fw = new THREE.Vector3();
+// the player's own aircraft as a party a boat can come alongside
+const PLAYER_REF = { name: 'You', short: 'you', alive: true, spec: null,
+  get group() { return G.flight.obj; }, get onWater() { return G.flight.onWater; }, get speed() { return G.flight.speed; } };
 async function startFerry(f) {
   const from = ctx.named(f.from), to = ctx.named(f.to);
   if (!from || !to) return;
@@ -1332,6 +1352,21 @@ function evaluateObjectives(dt) {
         }
         break;
       }
+      case 'pickup': {
+        // down on the water beside her while her boats bring the passengers across
+        const tv = t;
+        if (!tv) break;
+        const near = hd(tv.group.position, p) < (o.radius || 400);
+        if (f.onWater && near && f.speed < 6) {
+          if (!o.started) { o.started = true; ctx.log(o.log || `Down beside ${tv.name}.`, 'ok'); if (o.downFlag) ctx.flag(o.downFlag); }
+          o.progress += dt;
+          o.text = `${o.baseText} — ${Math.min(o.seconds, o.progress).toFixed(0)}/${o.seconds} s on the water`;
+          if (o.progress >= o.seconds) { o.done = true; G.score += 150; ctx.log(o.doneLog || 'Passengers aboard.', 'ok'); }
+        } else if (o.started && !f.onWater) {
+          o.failed = true; ctx.log('You took off with the transfer unfinished.', 'bad');
+        }
+        break;
+      }
       case 'return': {
         const others = G.objectives.filter((x) => x !== o);
         const dj = Math.hypot(p.x - G.berth.x, p.z - G.berth.hullZ);
@@ -1367,7 +1402,8 @@ function endMission() {
   const partial = objs.filter((o) => o.done).length;
   const score = Math.max(0, G.score - G.penalties);
   const events = G.events.map((e) => `${fmtClock(G.clock - G.time + e.t)}  ${e.text}`).join('\n');
-  const orb = `Date: ${G.mission.date}   Unit: No. 202 Squadron   Base: Gibraltar\nAircraft: ${G.spec.name} ${G.spec.code} (${G.spec.serial})\nCrew: ${PILOT.rank1} ${PILOT.name} (captain) and crew of ${G.spec.crew}\nDuty: ${G.mission.title}\nTime up: ${fmtClock(G.clock - G.time)}   Time down: ${fmtClock(G.clock)}\nDetails of sortie or flight:\n${events}\nResult: ${success ? 'Duty completed.' : G.flight.crashed ? 'Aircraft failed to return.' : `${partial} of ${objs.length} objectives.`}${G.penalties ? `\nRemarks: fire opened on neutral or friendly shipping — penalty ${G.penalties}.` : ''}`;
+  const part = G.role ? `   Part: ${G.role.name}` : '';
+  const orb = `Date: ${G.mission.date}   Unit: No. 202 Squadron   Base: Gibraltar${part}\nAircraft: ${G.spec.name} ${G.spec.code} (${G.spec.serial})\nCrew: ${PILOT.rank1} ${PILOT.name} (captain) and crew of ${G.spec.crew}\nDuty: ${G.mission.title}\nTime up: ${fmtClock(G.clock - G.time)}   Time down: ${fmtClock(G.clock)}\nDetails of sortie or flight:\n${events}\nResult: ${success ? 'Duty completed.' : G.flight.crashed ? 'Aircraft failed to return.' : `${partial} of ${objs.length} objectives.`}${G.penalties ? `\nRemarks: fire opened on neutral or friendly shipping — penalty ${G.penalties}.` : ''}`;
   ui.debrief({ mission: G.mission, aircraft: G.spec, success, crashed: G.flight.crashed, objectives: objs, score, orb,
     summary: success ? 'All objectives met.' : `${partial}/${objs.length} objectives${G.flight.crashed ? ' · aircraft lost' : ''}` });
 }
@@ -1458,7 +1494,7 @@ function frame() {
 function loop() { requestAnimationFrame(loop); frame(); }
 window.DBG.frame = frame;
 // test hooks: start a sortie by id without the menus, and reach the mission scripting
-window.DBG.start = (id, ac, keepWalkout) => { const m = MISSIONS.find((x) => x.id === id); ui.hide(); return startMission(m, AIRCRAFT[ac || m.aircraft[0]]).then(() => { if (!keepWalkout) finishWalkout(); }); };
+window.DBG.start = (id, ac, keepWalkout, role) => { const m = MISSIONS.find((x) => x.id === id); ui.hide(); return startMission(m, AIRCRAFT[ac || m.aircraft[0]], role).then(() => { if (!keepWalkout) finishWalkout(); }); };
 window.DBG.ctx = ctx; window.DBG.dcCam = dcCam;
 window.DBG.step = (seconds, dt = 0.05) => { for (let t = 0; t < seconds && G.running; t += dt) update(dt); };
 loop();

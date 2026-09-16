@@ -1,5 +1,6 @@
 import { AIRCRAFT, SCORE_LABELS, availableOn } from './data/aircraft.js';
 import { MISSIONS, PILOT } from './data/missions.js';
+import { PLANS, DEFAULT_PLAN } from './data/plans.js';
 import { PLATES } from './data/archive.js';
 
 // period photographs (Atlas, RAF official style) shown at the start of a sortie
@@ -7,12 +8,12 @@ const PHOTOS = ['photo_london_gunwharf.jpg', 'photo_briefing.jpg', 'photo_swordf
 // a period photograph of each type, for the right-hand panel of the sortie screen
 const AIRCRAFT_PHOTO = { london: 'ac_saro_london.jpg', catalina: 'ac_catalina.jpg', sunderland: 'ac_sunderland.jpg', swordfish: 'ac_swordfish.jpg' };
 
-// Menu flow: title → briefing (pilot) → mission list → aircraft select → fly → debrief.
+// Menu flow: title → briefing (pilot) → mission list → aircraft select → mission plan → fly → debrief.
 export class UI {
   constructor(root, input) {
     this.root = root; this.input = input;
     this.screen = 'title';
-    this.missionIdx = 0; this.aircraftIdx = 0;
+    this.missionIdx = 0; this.aircraftIdx = 0; this.roleIdx = 0;
     this.onStart = null;
     this.el = root;
     this.render();
@@ -32,9 +33,12 @@ export class UI {
     else if (action === 'archive') { this.screen = 'archive'; this.plateIdx = -1; }
     else if (action === 'plate') this.plateIdx = +data.idx;
     else if (action === 'plateclose') this.plateIdx = -1;
-    else if (action === 'mission') { this.missionIdx = +data.idx; this.aircraftIdx = 0; this.screen = 'aircraft'; }
+    else if (action === 'mission') { this.missionIdx = +data.idx; this.aircraftIdx = 0; this.roleIdx = 0; this.screen = 'aircraft'; }
     else if (action === 'aircraft') { this.aircraftIdx = +data.idx; }
-    else if (action === 'fly') { this.hide(); this.onStart && this.onStart(MISSIONS[this.missionIdx], this.currentAircraft()); return; }
+    else if (action === 'ac-screen') this.screen = 'aircraft';
+    else if (action === 'plan') { this.roleIdx = 0; this.screen = 'plan'; }
+    else if (action === 'role') this.roleIdx = +data.idx;
+    else if (action === 'fly') { this.hide(); this.onStart && this.onStart(MISSIONS[this.missionIdx], this.currentAircraft(), this.currentRoleId()); return; }
     this.render();
   }
 
@@ -49,6 +53,10 @@ export class UI {
     return '<div class="cine">' + shots.map((s, i) => `<div class="cslide" style="background-image:url(${s});animation-delay:${i * 5}s"></div>`).join('') + '<i></i></div>';
   }
 
+  // the plan for this sortie, and the part the player has chosen in it
+  currentPlan() { return PLANS[MISSIONS[this.missionIdx].id] || DEFAULT_PLAN; }
+  currentRole() { const r = this.currentPlan().roles; return r ? r[Math.min(this.roleIdx, r.length - 1)] : null; }
+  currentRoleId() { const r = this.currentRole(); return r ? r.id : null; }
   currentAircraft() {
     const m = MISSIONS[this.missionIdx];
     const list = this.aircraftList(m);
@@ -77,8 +85,14 @@ export class UI {
       const n = this.aircraftList(MISSIONS[this.missionIdx]).length;
       if (m.left || m.up) { this.aircraftIdx = (this.aircraftIdx + n - 1) % n; this.render(); }
       if (m.right || m.down) { this.aircraftIdx = (this.aircraftIdx + 1) % n; this.render(); }
-      if (m.accept) this.act('fly');
+      if (m.accept) this.act('plan');
       if (m.back) this.act('missions');
+    } else if (this.screen === 'plan') {
+      const roles = this.currentPlan().roles;
+      if (roles && (m.up || m.left)) { this.roleIdx = (this.roleIdx + roles.length - 1) % roles.length; this.render(); }
+      if (roles && (m.down || m.right)) { this.roleIdx = (this.roleIdx + 1) % roles.length; this.render(); }
+      if (m.accept) this.act('fly');
+      if (m.back) this.act('ac-screen');
     } else if (this.screen === 'debrief' && (m.accept || m.back)) this.act('missions');
     else if (this.screen === 'archive' && m.back) { if (this.plateIdx >= 0) this.act('plateclose'); else this.act('title'); }
     else if ((this.screen === 'controls' || this.screen === 'history') && (m.accept || m.back)) this.act('title');
@@ -153,7 +167,35 @@ export class UI {
             <div class="score total"><span>Overall</span><i><b style="width:${total / 80 * 100}%"></b></i><em>${total}/80</em></div>
           </div>
         </div>
-        <div class="menu"><button class="primary" data-action="fly">Take off</button>${nav('missions')}</div>
+        <div class="menu"><button class="primary" data-action="plan">The plan</button>${nav('missions')}</div>
+      </div>`;
+    } else if (s === 'plan') {
+      // the plan laid over the sortie's photograph, and the choice of part where there is one
+      const m = MISSIONS[this.missionIdx];
+      const a = this.currentAircraft();
+      const plan = this.currentPlan();
+      const roles = plan.roles;
+      const role = this.currentRole();
+      const objectives = (role && role.objectives) || m.objectives;
+      html = `<div class="card wide plan">
+        <div class="plan-photo" style="background-image:url(${plan.photo})"><span>${plan.caption || ''}</span></div>
+        <h2>Mission plan · ${m.date}</h2>
+        <h1>${m.title}</h1>
+        <p class="sub">${m.subtitle} · flying the ${a.name}</p>
+        <div class="plan-cols">
+          <div>
+            ${plan.aim ? `<p class="aim">${plan.aim}</p>` : ''}
+            <h3>The plan</h3>
+            <ol class="plan-list">${objectives.map((o) => `<li>${o.text}</li>`).join('')}</ol>
+          </div>
+          <div>
+            <h3>Your part</h3>
+            ${roles ? roles.map((r, i) => `<button class="role ${i === this.roleIdx ? 'sel' : ''}" data-action="role" data-idx="${i}">
+                <b>${r.name}${r.historic ? '<em>as flown</em>' : ''}</b><span>${r.blurb}</span></button>`).join('')
+              : `<p class="only">No other aircraft of the squadron is on this sortie: the whole of it is yours.</p>`}
+          </div>
+        </div>
+        <div class="menu"><button class="primary" data-action="fly">Take off</button>${nav('ac-screen')}</div>
       </div>`;
     } else if (s === 'controls') {
       html = `<div class="card wide"><h2>Controls</h2>

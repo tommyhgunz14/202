@@ -24,12 +24,20 @@ with a vendored `three.module.js`.)
   on real dates from the squadron's Gibraltar record, in the order they were flown, plus a
   practice range and a free patrol.
 - Five of them were flown by other crews: Walshe and the Alabastro, Case collecting General Clark,
-  Louw collecting General Giraud, and Finch against U-343 and U-761. In those you fly the second
-  aircraft, and your job is to support theirs. The other machine flies its part of the record on
-  its own: it forms up, attacks, alights beside a submarine, takes off and goes home. A label over
-  it shows who it is and how far away. Your objectives are the supporting ones: form up, look the
-  boat over, draw the flak, signal the position, keep watch while she is on the water, see her
-  home.
+  Louw collecting General Giraud, and Finch against U-343 and U-761. In those a second aircraft of
+  the squadron flies with you. The other machine flies its part on its own: it forms up, attacks,
+  alights beside a submarine, takes off and goes home. A label over it shows who it is and how far
+  away.
+- **The mission plan** comes after the aircraft, on a period photograph of the sortie: what it is
+  for, the plan in order, and — where another crew is flying with you — which part you take.
+  - *As flown*: the other crew do what the record says they did, and yours is the supporting
+    part — form up, look the boat over, draw the flak, signal the position, keep watch while she
+    is on the water, see her home.
+  - *Lead*: their job becomes yours and they fly cover. You make the attack on the Alabastro,
+    U-343 or U-761, or you put down beside the submarine yourself and take the General aboard
+    while the boats come across. The plan screen says whose it was on the day, and the debrief
+    records which part you flew.
+  - Sorties with no second aircraft show the same plan and photograph, with the whole of it yours.
 - **Choose your aircraft** from those the squadron had on that date. Each type shows its
   performance and eight scores (speed, endurance, climb, agility, payload, defence, detection,
   toughness) which also drive the flight model:
