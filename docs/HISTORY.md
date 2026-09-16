@@ -11,7 +11,7 @@ is placed in the captain's seat for sorties that are documented, and the debrief
 Operations Record Book entry in his name.
 
 His callsign, **Jackie**, was supplied to the project by his family and is not from the published
-sources. Radio traffic to his aircraft opens with it ("FP164/L: "Jackie, that is Seraph..."", and
+sources. Radio traffic to his aircraft opens with it (FP164/L: "Jackie, that is Seraph...", and
 Gibraltar's answer to a W/T report); his own crew on the intercom call him skipper. The wording of
 the second card of the opening sequence was also supplied for the project and is used as given.
 
