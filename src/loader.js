@@ -7,6 +7,7 @@ import { Collisions } from './collide.js';
 // cloned; geometry and materials are shared between clones. Every 3D object in the game comes
 // through here and is built by code: there is no mesh file loader.
 const cache = new Map();
+const DEBUG = (() => { try { return new URLSearchParams(location.search).get('debug') === '1'; } catch (_) { return false; } })();
 
 export async function loadAsset(url) {
   if (!cache.has(url)) {
@@ -43,23 +44,26 @@ export function mergeStatic(root) {
         let geo = c.geometry.index ? c.geometry.toNonIndexed() : c.geometry.clone();
         geo.clearGroups();   // box and cylinder faces carry groups; with one material they mean nothing
         geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, c.matrixWorld));
-        if (c.matrixWorld.determinant() < 0) { const p = geo.attributes.position; for (let i = 0; i < p.count; i += 3) { for (const a of Object.values(geo.attributes)) { for (let k = 0; k < a.itemSize; k++) { const t = a.getComponent(i, k); a.setComponent(i, k, a.getComponent(i + 2, k)); a.setComponent(i + 2, k, t); } } } }
+        if (c.matrixWorld.determinant() < 0) flipWinding(geo);   // a mirrored part would render inside out once baked
         const key = c.material.uuid + '|' + Object.keys(geo.attributes).sort().join(',') + '|' + c.castShadow + c.receiveShadow + '|' + c.renderOrder;
         if (!buckets.has(key)) buckets.set(key, { mat: c.material, geos: [], cast: c.castShadow, recv: c.receiveShadow, order: c.renderOrder });
         buckets.get(key).geos.push(geo);
-        taken.push(c);
+        taken.push({ part: c, key });
       }
       visit(c);
     }
   };
   visit(root);
   if (taken.length < 2) return;
-  for (const b of buckets.values()) {
+  // Merge every bucket before touching the model. A bucket whose parts will not merge (attribute
+  // layouts that differ) is dropped here, and its parts are left exactly as modelled below; nothing
+  // is removed from the model unless its merged replacement already exists.
+  for (const [key, b] of buckets) {
     const geo = b.geos.length === 1 ? b.geos[0] : mergeGeometries(b.geos, false);
-    if (!geo) return;   // attribute layouts that will not merge: leave the model as modelled
-    b.geo = geo;
+    if (geo) b.geo = geo; else buckets.delete(key);
   }
-  for (const c of taken) {
+  for (const { part: c, key } of taken) {
+    if (!buckets.has(key)) continue;
     // a part with children keeps its place as an empty node so the children stay where they are
     if (c.children.length) { const o = new THREE.Object3D(); o.position.copy(c.position); o.quaternion.copy(c.quaternion); o.scale.copy(c.scale); for (const k of [...c.children]) o.add(k); c.parent.add(o); }
     c.parent.remove(c);
@@ -69,6 +73,21 @@ export function mergeStatic(root) {
     m.castShadow = b.cast; m.receiveShadow = b.recv; m.renderOrder = b.order;
     m.matrixAutoUpdate = true;
     root.add(m);
+  }
+}
+
+// Reverse the order of each triangle's vertices (non-indexed geometry), so faces point outwards
+// again after a transform with a negative scale has been baked into the positions.
+function flipWinding(geo) {
+  const count = geo.attributes.position.count;
+  for (const attr of Object.values(geo.attributes)) {
+    for (let i = 0; i < count; i += 3) {
+      for (let k = 0; k < attr.itemSize; k++) {
+        const first = attr.getComponent(i, k);
+        attr.setComponent(i, k, attr.getComponent(i + 2, k));
+        attr.setComponent(i + 2, k, first);
+      }
+    }
   }
 }
 
@@ -112,7 +131,10 @@ export async function loadOrPlaceholder(url, length, span, kind) {
   try {
     return await loadAsset(url);
   } catch (e) {
-    console.warn('asset failed, using placeholder:', url, e);
+    // with ?debug=1 in the address a broken model is an error, not a quiet grey box (an error only
+    // in debug: the jam gate fails a page on any console error)
+    if (DEBUG) console.error('asset failed to build:', url, e);
+    else console.warn('asset failed, using placeholder:', url, e);
     return placeholder(length, span, kind);
   }
 }

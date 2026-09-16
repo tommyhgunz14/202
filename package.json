@@ -1,17 +1,13 @@
 {
   "name": "guardians-of-the-rock",
   "version": "1.0.0",
-  "description": "202 Squadron RAF at Gibraltar 1939-43: flying-boat anti-submarine game",
-  "main": "index.js",
+  "description": "202 Squadron at Gibraltar 1939-43: a flying-boat anti-submarine game in Three.js",
   "scripts": {
     "start": "node serve.mjs",
-    "test": "node tools/geo-test.mjs"
+    "test": "node tools/geo-test.mjs && node tools/asset-test.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
-  "dependencies": {
-    "three": "^0.170.0"
-  }
+  "type": "module"
 }

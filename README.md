@@ -275,16 +275,14 @@ shell splashes, explosions, hits, Morse, and ten crew intercom lines (contact, c
 straddle, fighter astern, she is diving, neutral, W/T sent, down, alongside). Delete any file and
 the synth stands in.
 
-## Reference art and 3D models (Atlas)
+## Reference art (Atlas) and the 3D models (code)
 
 Studio-style reference pictures of every vessel and aircraft, generated in their correct schemes,
 appear as recognition cards in the contact panel once a vessel is identified and on the aircraft
-selection screen (`assets/refs/`). Generated GLB meshes are supported too: drop
-`assets/models/<asset>.glb` next to a code asset and `src/models.js` normalises it (length, ground
-level, bow forward, named nodes carried across); `tools/viewer.html?name=<asset>` checks it from
-four sides, and `assets/models/models.json` holds per-model overrides. The Atlas image-to-3D
-backends were not available at this workspace's access level, so the game ships with the code
-assets and the pipeline ready for when they are.
+selection screen (`assets/refs/`). They are pictures only. Every 3D object in the game, aircraft,
+ships, harbour and town, is built by Three.js code in `assets/*.js` and `src/world/` (a module's
+default export takes THREE and returns a Group); the game has no mesh file loader and ships no
+mesh files.
 
 ## Tracking a dived boat
 

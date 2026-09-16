@@ -71,6 +71,35 @@ const terrain = buildTerrain(); world.add(terrain);
 const depthTex = buildDepthTexture(384);
 const harbour = buildHarbour(); world.add(harbour);
 const town = buildTown(); world.add(town);
+
+// ---------- draw distance (light build) ----------
+// Seen from the far end of the Strait, the harbour's fittings, the ships at anchor and the towns
+// across the water are a few pixels each on a phone, but every one is a draw call: flying back
+// towards the Rock that came to over a thousand. The light build stops drawing them beyond a
+// range; the moles, the Rock, the sea and anything taking part in the sortie always draw.
+const FAR = [];
+const _farBox = new THREE.Box3(), _farSphere = new THREE.Sphere();
+function drawOnlyWithin(obj, range) {
+  obj.updateMatrixWorld(true);
+  _farBox.setFromObject(obj).getBoundingSphere(_farSphere);
+  if (!isFinite(_farSphere.radius)) return;
+  FAR.push({ obj, c: _farSphere.center.clone(), r: _farSphere.radius, range });
+}
+let farT = 0;
+function updateDrawDistance(dt) {
+  if (!LITE || (farT -= dt) > 0) return;
+  farT = 0.25;
+  const cp = camera.position;
+  for (const f of FAR) f.obj.visible = cp.distanceTo(f.c) - f.r < f.range;
+}
+if (LITE) {
+  // harbour: the small pieces (huts, cranes, boats, buoys, figures) go; the long moles stay
+  for (const c of harbour.children) {
+    _farBox.setFromObject(c).getBoundingSphere(_farSphere);
+    if (_farSphere.radius < 120) drawOnlyWithin(c, 5000);
+  }
+  for (const t of town.children) drawOnlyWithin(t, 9000);
+}
 const vegetation = buildVegetation(); world.add(vegetation);
 // the light build: the small inset views (gunner, depth charges) leave out the trees and the towns
 const DETAIL_LAYER = 1;
@@ -271,7 +300,7 @@ async function startMission(mission, spec, roleId, opts = {}) {
   G.clock = { dawn: 6 * 3600 + 10 * 60, morning: 8 * 3600 + 30 * 60, afternoon: 14 * 3600 + 20 * 60, dusk: 18 * 3600 + 40 * 60, night: 22 * 3600 + 20 * 60 }[mission.sky] || 8 * 3600;
   if (mission.clock) { const [hh, mm] = mission.clock.split(':').map(Number); G.clock = hh * 3600 + mm * 60; }
   const pal = applySky(mission.sky);
-  clouds = buildClouds(mission.clouds || 25, 14000, 900 + Math.random() * 400, pal.horizon); scene.add(clouds);
+  clouds = buildClouds(Math.round((mission.clouds || 25) * (LITE ? 0.5 : 1)), 14000, 900 + Math.random() * 400, pal.horizon); scene.add(clouds);
   // aircraft
   const plane = await loadOrPlaceholder(spec.asset, 20, 30, 'aircraft');
   scene.add(plane); G.plane = plane;
@@ -1654,6 +1683,7 @@ document.getElementById('btn-view').addEventListener('click', () => { G.view = G
       for (const p of findAllNamed(g, 'pennant')) p.visible = false;   // the destroyer model is Wishart: her number is not repeated on every ship
       world.add(g);
       collisions.addStatic(g, 'a ship at anchor');
+      if (LITE) drawOnlyWithin(g, 6000);
     } catch (e) { /* a missing model leaves an empty berth */ }
   }
 })();
@@ -1700,6 +1730,7 @@ function frame() {
   SEA.t += dt; if (sea) sea.material.uniforms.uTime.value = SEA.t;
   if (G.running) { const n = G.ff ? QUICK.FF : 1; for (let i = 0; i < n && G.running; i++) update(dt); } else { ui.poll(); titleCamera(dt); }
   if (sea && sea.follow) sea.follow(camera.position.x, camera.position.z);
+  updateDrawDistance(dt);
   renderer.clear();
   renderer.render(scene, camera);
   if (G.running && ((G.view === 'cockpit' && G.interior) || (G.view.startsWith('gun:') && G.gunOverlay))) {
