@@ -311,8 +311,8 @@ function town(b) {
   for (let i = 0; i < 3; i++) shed(b, gw.x + 10, gw.z - 40 + i * 32, 18, 26, 8, Math.PI / 2, 'stone');
 }
 
-// Europa Point and Windmill Hill, laid out from the photograph of a Catalina over the point
-// (assets/archive/catalina_europa_point.jpg). At the foot of Windmill Hill's scarp stand rows of
+// Europa Point and Windmill Hill, laid out from a wartime aerial photograph of the point (not
+// included in this repository, as its rights are not established). At the foot of Windmill Hill's scarp stand rows of
 // long barrack blocks, three storeys with flat roofs, parallel to the scarp; more run north along
 // the shelf on the west side. Long low blocks and huts sit on top of Windmill Hill. The Europa
 // flats beyond are mostly open, with scattered stores and a big bare ground toward the lighthouse,

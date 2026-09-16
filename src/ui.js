@@ -115,7 +115,7 @@ export class UI {
     if (s === 'title') {
       html = `<div class="title-card">
         <figure class="badge">
-          <img src="assets/ui/badge_202.webp" alt="A No. 202 Squadron badge: a Short Sunderland flying boat in a ring reading British Air Force, 202 Squadron, under the crown, with the motto Semper Vigilate">
+          <img src="assets/ui/badge_202.webp" alt="A No. 202 Squadron badge: a Short Sunderland flying boat in a ring reading British Air Force, 202 Squadron, under a simple gold crown, with the motto Semper Vigilate">
           <figcaption><span class="gloss"><i lang="la">Semper Vigilate</i> · “Be always vigilant”</span></figcaption>
         </figure>
         <h1>Guardians of the Rock</h1>

@@ -31,7 +31,7 @@ the second card of the opening sequence was also supplied for the project and is
 | Catalina **AH544 "AX-H"** photographed leaving Gibraltar on patrol | IWM |
 | RAF New Camp (slipway and hangar on reclaimed land by Montagu Bastion) and North Front runway extended into the Bay, 1942 | RAF Gibraltar histories |
 | Italian human-torpedo and frogman attacks from the *Olterra* at Algeciras (Jul and Dec 1942) — background only | Decima MAS histories |
-| Badge on the title screen, with the motto *Semper Vigilate*, "Be always vigilant" (Latin *semper*, always; *vigilate*, keep watch, a plural command addressed to all). The artwork was supplied to the project and cut out from its dark background for the title screen; its ring was re-lettered "British Air Force" in place of "Royal Air Force", a deliberate departure so the service's name is not used as a mark. It is a tribute rather than the official badge: the squadron's approved device is a mallard alighting, where this one shows a Short Sunderland, the type the squadron flew from the Rock alongside its Catalinas; and its crown is the St Edward's crown used on RAF badges from 1953, where badges of the war years carried the Tudor (King's) crown. | Supplied artwork; RAF heraldry conventions |
+| Badge on the title screen, with the motto *Semper Vigilate*, "Be always vigilant" (Latin *semper*, always; *vigilate*, keep watch, a plural command addressed to all). The artwork was supplied to the project and cut out from its dark background for the title screen; its ring was re-lettered "British Air Force" in place of "Royal Air Force", a deliberate departure so the service's name is not used as a mark, and its crown was redrawn as a simple gold coronet of five points on a jewelled band, in place of the St Edward's crown, so that no royal crown is reproduced. It is a tribute rather than the official badge: the squadron's approved device is a mallard alighting, where this one shows a Short Sunderland, the type the squadron flew from the Rock alongside its Catalinas; and its crown is the St Edward's crown used on RAF badges from 1953, where badges of the war years carried the Tudor (King's) crown. | Supplied artwork; RAF heraldry conventions |
 
 ## Representative or abridged
 
@@ -126,8 +126,8 @@ off Europa Point, the German steamer with a destroyer on the horizon, the French
 Mers-el-Kébir breakwater, the dinghy beside the wreckage of W8407, the canoes crossing to the
 Catalina for General Clark, flak coming up in the dark at U-343, and so on. They are generated
 (Atlas) in the style of period colour photographs and are **reconstructions, not documents** —
-each is labelled *reconstruction* on the screen itself. The real photograph of a Catalina over
-Europa Point is in the photograph archive, where it is labelled as an archive plate.
+each is labelled *reconstruction* on the screen itself. Real photographs are kept to the
+photograph archive, where they are labelled as archive plates.
 
 Five actions in the article were flown by other crews of the squadron. They are in the game as
 sorties where you fly a second aircraft alongside the crew the record names. That crew's aircraft
@@ -197,7 +197,8 @@ submarine model.
   reclaimed land north of the North Mole, in 1942; the jetty and pontoon are a representative
   timber structure, not a survey of the real one.
 - **Europa Point and Windmill Hill**: rebuilt a second time against the wartime photograph of a
-  Catalina over the southern tip (now in the archive, with a colourised copy). The south end is
+  Catalina over the southern tip (the photograph is not included in this repository, as its rights
+  are not established). The south end is
   two limestone steps, not a ridge tapering to the sea: Windmill Hill Flats, a plateau at about
   120 m with dry grass and patches of scrub, ends in a pale scarp that drops to the Europa flats
   at about 40 m, falling to about 22 m at the lighthouse. The flats stop all round in sheer sea
