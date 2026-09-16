@@ -13,7 +13,7 @@ const PICS = [...ARCHIVE, ...STILLS, FINALE];
 // the second card: a heading and four paragraphs, worded as supplied for the project
 const STORY_HEAD = 'Gibraltar, 1941';
 const STORY = [
-  'German U-Boats and Italian submarines are using the Gibraltar Strait to prey on the convoys supplying Allied nations in the Mediterranean Ocean. Known commonly as \'The Rock\', Gibraltar stations a fearsome Allied force of Royal Air Force Flying Boats - Squadron 202.',
+  'German U-Boats and Italian submarines are using the Gibraltar Strait to prey on the convoys supplying Allied nations in the Mediterranean Ocean. Known commonly as \'The Rock\', Gibraltar stations a fearsome Allied force of Royal Air Force Flying Boats - Squadron 202.',
   'This fleet of Saro Londons, Catalinas and Sunderlands would come to strike fear across the enemy submarine fleets attempting to unleash their reign of terror across the critical Allied supply convoys.',
   'Led by Wing Commander Thomas Q. Horner - callsign \'Jackie\' - these dedicated airmen were tasked to locate and destroy the enemy subs, protect the supply convoys and help win the war for the Allies in the Mediterranean Ocean.',
 ];
