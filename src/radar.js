@@ -1,6 +1,6 @@
-import { terrainHeight } from './world/terrain.js';
-import { H_SCALE, toWorld } from './config.js';
-import { COAST, PLACES } from './data/geo.js';
+import { terrainHeight } from './world/terrain.js?v=202609161601';
+import { H_SCALE, toWorld } from './config.js?v=202609161601';
+import { COAST, PLACES } from './data/geo.js?v=202609161601';
 
 // Two instruments drawn on canvases:
 //  1. ASV Mk II — the 1.5 m air-to-surface-vessel set carried by the Catalinas and Sunderlands.

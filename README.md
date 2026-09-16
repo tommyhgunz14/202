@@ -26,6 +26,9 @@ npm start
 then open <http://localhost:8202>. (Any static file server works; the game is plain ES modules
 with a vendored `three.module.js`.)
 
+Before publishing a new version, run `npm test`, then stamp the module imports with the 404 recipe
+(`node harness/ship.mjs <this folder> --stamp`) so a cached old module is never served with a new page.
+
 ## Play
 
 - **Main menu → Mission Briefings** gives the pilot's page, then the **Operations Record Book**: eighteen sorties

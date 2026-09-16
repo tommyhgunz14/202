@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { terrainHeight } from './world/terrain.js';
-import { seaHeight } from './world/sea.js';
-import { MPH } from './config.js';
+import { terrainHeight } from './world/terrain.js?v=202609161601';
+import { seaHeight } from './world/sea.js?v=202609161601';
+import { MPH } from './config.js?v=202609161601';
 
 const G = 9.81;
 const _f = new THREE.Vector3(), _u = new THREE.Vector3(), _r = new THREE.Vector3();

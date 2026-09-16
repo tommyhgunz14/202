@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { WORLD_HALF } from '../config.js';
-import { terrainHeight } from './terrain.js';
-import { LITE } from '../tier.js';
+import { WORLD_HALF } from '../config.js?v=202609161601';
+import { terrainHeight } from './terrain.js?v=202609161601';
+import { LITE } from '../tier.js?v=202609161601';
 
 // Sea surface. Vertex: seven directional waves of different lengths, headings and phases summed
 // (no two share a direction, so the swell never reads as a grid). Fragment: the analytic slope of

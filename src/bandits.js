@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { loadOrPlaceholder, findAllNamed, findNamed } from './loader.js';
-import { toWorld } from './config.js';
+import { loadOrPlaceholder, findAllNamed, findNamed } from './loader.js?v=202609161601';
+import { toWorld } from './config.js?v=202609161601';
 
 // Vichy fighters. Curtiss H-75s of GC I/5 flew from Rabat and Casablanca and were the aircraft
 // most likely to be met over the Moroccan side of the Strait; the squadron record notes attacks

@@ -1,6 +1,6 @@
 // Simulates a full-throttle take-off run for each type and reports time to lift-off.
-import { Flight } from '../src/flight.js';
-import { AIRCRAFT } from '../src/data/aircraft.js';
+import { Flight } from '../src/flight.js?v=202609161601';
+import { AIRCRAFT } from '../src/data/aircraft.js?v=202609161601';
 import * as THREE from 'three';
 for (const spec of Object.values(AIRCRAFT)) {
   const obj = new THREE.Object3D();

@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { buildFigure, animateFigure } from './crew.js';
-import { HARBOUR, PLACES } from '../data/geo.js';
-import { toWorld } from '../config.js';
-import { terrainHeight } from './terrain.js';
-import { planarUVs, texture } from './textures.js';
+import { buildFigure, animateFigure } from './crew.js?v=202609161601';
+import { HARBOUR, PLACES } from '../data/geo.js?v=202609161601';
+import { toWorld } from '../config.js?v=202609161601';
+import { terrainHeight } from './terrain.js?v=202609161601';
+import { planarUVs, texture } from './textures.js?v=202609161601';
 
 const stone = new THREE.MeshStandardMaterial({ color: 0xa8a294, roughness: 0.95 });
 const concrete = new THREE.MeshStandardMaterial({ color: 0xbdb8ad, roughness: 0.9 });

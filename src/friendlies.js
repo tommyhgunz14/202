@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { loadOrPlaceholder, findAllNamed } from './loader.js';
-import { toWorld, KT, MPH } from './config.js';
-import { AIRCRAFT } from './data/aircraft.js';
-import { terrainHeight } from './world/terrain.js';
+import { loadOrPlaceholder, findAllNamed } from './loader.js?v=202609161601';
+import { toWorld, KT, MPH } from './config.js?v=202609161601';
+import { AIRCRAFT } from './data/aircraft.js?v=202609161601';
+import { terrainHeight } from './world/terrain.js?v=202609161601';
 
 // Other aircraft on your side: the squadron machine whose sortie it really was, or the US Navy
 // Catalinas working the Strait in 1944. They fly a script written into the mission, one step at a
