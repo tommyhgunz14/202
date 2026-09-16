@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 450" role="img" aria-labelledby="t">
+  <title id="t">Guardians of the Rock emblem: a mallard alighting over the water, No. 202 Squadron, Gibraltar, with the motto Semper Vigilate</title>
+  <!-- An original emblem drawn for the game. It is not the official squadron badge: no crown,
+       no official frame, and the mallard is this game's own drawing. -->
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="38%" r="65%">
+      <stop offset="0" stop-color="#f3ead2"/>
+      <stop offset="0.55" stop-color="#d9cfb0"/>
+      <stop offset="1" stop-color="#b9ab86"/>
+    </radialGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5d7f8e"/>
+      <stop offset="1" stop-color="#2c4a5a"/>
+    </linearGradient>
+    <linearGradient id="ribbon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#efe3c2"/>
+      <stop offset="1" stop-color="#cdb98a"/>
+    </linearGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e2c77a"/>
+      <stop offset="0.5" stop-color="#b8923e"/>
+      <stop offset="1" stop-color="#8c6a25"/>
+    </linearGradient>
+    <clipPath id="field"><circle cx="200" cy="200" r="122"/></clipPath>
+    <path id="arcTop" d="M 62 200 A 138 138 0 0 1 338 200"/>
+    <path id="arcBottom" d="M 52 200 A 148 148 0 0 0 348 200"/>
+    <path id="scrollText" d="M 52 388 Q 200 436 348 388"/>
+  </defs>
+
+  <!-- ring -->
+  <circle cx="200" cy="200" r="178" fill="url(#brass)"/>
+  <circle cx="200" cy="200" r="171" fill="#1c2b3f"/>
+  <circle cx="200" cy="200" r="129" fill="url(#brass)"/>
+  <text font-family="Georgia, 'Times New Roman', serif" font-size="27" font-weight="bold" letter-spacing="4" fill="#e6cf8e">
+    <textPath href="#arcTop" startOffset="50%" text-anchor="middle">No. 202 SQUADRON</textPath>
+  </text>
+  <text font-family="Georgia, 'Times New Roman', serif" font-size="25" font-weight="bold" letter-spacing="7" fill="#e6cf8e" dy="0">
+    <textPath href="#arcBottom" startOffset="50%" text-anchor="middle" dominant-baseline="hanging">GIBRALTAR</textPath>
+  </text>
+  <circle cx="44" cy="200" r="5" fill="#e6cf8e"/>
+  <circle cx="356" cy="200" r="5" fill="#e6cf8e"/>
+
+  <!-- field: evening sky over the Bay, the Rock low on the horizon, the sea below -->
+  <g clip-path="url(#field)">
+    <rect x="70" y="70" width="260" height="260" fill="url(#sky)"/>
+    <path d="M 70 262 L 118 262 L 146 228 L 168 214 L 186 218 L 204 236 L 226 246 L 258 254 L 330 256 L 330 270 L 70 270 Z" fill="#8f8a78" opacity="0.55"/>
+    <rect x="70" y="262" width="260" height="70" fill="url(#sea)"/>
+    <g stroke="#b9cbd0" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.8">
+      <path d="M 104 284 q 12 -5 24 0 t 24 0"/>
+      <path d="M 214 300 q 12 -5 24 0 t 24 0 t 24 0"/>
+      <path d="M 132 316 q 12 -5 24 0 t 24 0"/>
+      <path d="M 250 280 q 10 -4 20 0"/>
+    </g>
+  </g>
+
+  <!-- the mallard, alighting: wings raised, body tilted back, feet reaching for the water -->
+  <g stroke="#1b1a17" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+    <!-- far wing, raised behind -->
+    <path d="M 198 216 C 186 188 172 162 152 138 C 140 124 124 110 104 100 L 116 120 L 100 122 L 118 138 L 104 144 L 126 156 L 116 164 L 146 174 C 166 186 184 200 198 216 Z" fill="#6f6658"/>
+    <!-- tail -->
+    <path d="M 150 236 C 136 232 124 236 114 244 C 128 246 140 248 152 250 Z" fill="#e9e3d4"/>
+    <path d="M 152 238 C 144 228 146 220 154 218 C 152 226 156 232 160 236 Z" fill="#1b1a17"/>
+    <!-- body -->
+    <path d="M 150 232 C 164 212 196 204 228 210 C 250 214 262 228 262 244 C 262 262 244 274 218 274 C 190 274 164 262 150 248 Z" fill="#a39c90"/>
+    <path d="M 162 252 C 184 266 210 272 236 268 C 222 276 190 276 170 264 Z" fill="#d6d1c6" stroke="none"/>
+    <!-- breast -->
+    <path d="M 232 214 C 252 214 266 228 266 246 C 266 262 254 272 238 272 C 246 256 246 232 232 214 Z" fill="#6b3b24"/>
+    <!-- neck and head -->
+    <path d="M 238 218 C 244 204 250 194 258 186 L 274 196 C 268 204 262 214 256 226 Z" fill="#1f6a4c"/>
+    <path d="M 238 220 C 244 222 250 224 256 226" stroke="#f4f1ea" stroke-width="4"/>
+    <path d="M 252 182 C 256 170 270 166 280 172 C 288 178 288 190 280 196 C 272 200 262 198 256 192 Z" fill="#1f6a4c"/>
+    <path d="M 282 178 C 294 178 304 182 310 188 C 300 190 290 190 283 190 Z" fill="#d9b43c"/>
+    <circle cx="272" cy="180" r="2.6" fill="#1b1a17" stroke="none"/>
+    <!-- near wing, raised high, primaries spread, the blue speculum edged in white along its base -->
+    <path d="M 206 224 C 216 198 230 174 240 150 C 238 126 226 102 208 78 L 196 96 L 184 88 L 178 110 L 164 100 L 166 126 L 152 124 L 160 148 L 170 166 C 184 186 196 206 206 224 Z" fill="#8c8474"/>
+    <path d="M 180 176 L 188 172 C 194 186 202 200 211 212 L 206 220 C 198 206 188 190 180 176 Z" fill="#2f55a4" stroke="none"/>
+    <path d="M 180 176 C 188 190 198 206 206 220" stroke="#f4f1ea" stroke-width="2" fill="none"/>
+    <path d="M 188 172 C 194 186 202 200 211 212" stroke="#f4f1ea" stroke-width="2" fill="none"/>
+    <g fill="none" stroke="#5a5347" stroke-width="1.6">
+      <path d="M 236 146 C 222 136 206 124 190 110"/>
+      <path d="M 232 128 C 220 120 208 110 198 100"/>
+      <path d="M 238 156 C 222 150 206 142 186 138"/>
+    </g>
+    <!-- feet reaching forward -->
+    <path d="M 214 270 L 234 292" stroke="#d97a2b" stroke-width="4" fill="none"/>
+    <path d="M 226 268 L 250 288" stroke="#d97a2b" stroke-width="4" fill="none"/>
+    <path d="M 230 290 L 244 302 L 240 290 L 250 296 Z" fill="#e0843a" stroke="#8a4a18" stroke-width="1.4"/>
+    <path d="M 246 286 L 262 296 L 256 284 L 266 288 Z" fill="#e0843a" stroke="#8a4a18" stroke-width="1.4"/>
+  </g>
+
+  <!-- motto scroll -->
+  <g stroke="#6b5220" stroke-width="2.4" stroke-linejoin="round">
+    <path d="M 38 380 L 70 372 L 64 396 L 76 420 L 30 414 L 46 398 Z" fill="#b9a36f"/>
+    <path d="M 362 380 L 330 372 L 336 396 L 324 420 L 370 414 L 354 398 Z" fill="#b9a36f"/>
+    <path d="M 64 368 Q 200 412 336 368 L 336 408 Q 200 452 64 408 Z" fill="url(#ribbon)"/>
+  </g>
+  <text font-family="Georgia, 'Times New Roman', serif" font-size="23" font-style="italic" font-weight="bold" letter-spacing="2" fill="#1c2b3f">
+    <textPath href="#scrollText" startOffset="50%" text-anchor="middle">SEMPER VIGILATE</textPath>
+  </text>
+</svg>

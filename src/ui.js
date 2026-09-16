@@ -115,8 +115,8 @@ export class UI {
     if (s === 'title') {
       html = `<div class="title-card">
         <figure class="badge">
-          <img src="assets/ui/badge_202.png" alt="The badge of No. 202 Squadron: a mallard alighting, under the crown, with the motto Semper Vigilate">
-          <figcaption><span class="motto" lang="la">Semper Vigilate</span><span class="gloss">“Be always vigilant”</span></figcaption>
+          <img src="assets/ui/emblem_202.svg" alt="The game's emblem for No. 202 Squadron at Gibraltar: a mallard alighting over the water, with the motto Semper Vigilate">
+          <figcaption><span class="gloss"><i lang="la">Semper Vigilate</i> · “Be always vigilant”</span></figcaption>
         </figure>
         <h1>Guardians of the Rock</h1>
         <h2>No. 202 Squadron RAF · Gibraltar 1939–1943</h2>
