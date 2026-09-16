@@ -31,7 +31,7 @@ the second card of the opening sequence was also supplied for the project and is
 | Catalina **AH544 "AX-H"** photographed leaving Gibraltar on patrol | IWM |
 | RAF New Camp (slipway and hangar on reclaimed land by Montagu Bastion) and North Front runway extended into the Bay, 1942 | RAF Gibraltar histories |
 | Italian human-torpedo and frogman attacks from the *Olterra* at Algeciras (Jul and Dec 1942) — background only | Decima MAS histories |
-| Emblem on the title screen: the squadron's device, a mallard alighting, with its motto *Semper Vigilate*, "Be always vigilant" (Latin *semper*, always; *vigilate*, keep watch, a plural command addressed to all). This is an original drawing for the game (assets/ui/emblem_202.svg), not the official badge: it has no crown and not the badge's frame, so that no Crown or RAF insignia is reproduced. The official badge carries the crown above a ring naming the squadron, the mallard in the centre and the motto on a scroll below. | Squadron device and motto; the emblem is the game's own |
+| Badge on the title screen, with the motto *Semper Vigilate*, "Be always vigilant" (Latin *semper*, always; *vigilate*, keep watch, a plural command addressed to all). The artwork was supplied to the project and cut out from its dark background for the title screen. It is a tribute rather than the official badge: the squadron's approved device is a mallard alighting, where this one shows a Short Sunderland, the type the squadron flew from the Rock alongside its Catalinas; and its crown is the St Edward's crown used on RAF badges from 1953, where badges of the war years carried the Tudor (King's) crown. | Supplied artwork; RAF heraldry conventions |
 
 ## Representative or abridged
 
