@@ -1,3 +1,4 @@
+import { LITE } from './tier.js';
 import * as THREE from 'three';
 import { toWorld, toLatLon, H_SCALE, FT, MPH, KT } from './config.js';
 import { buildTerrain, terrainHeight, buildDepthTexture } from './world/terrain.js';
@@ -142,7 +143,7 @@ function applySky(name) {
   // a preset without a panorama (night) sets the water's colours itself
   if (p.sea) { const u = sea.material.uniforms; u.uDeep.value.setHex(p.sea.deep); u.uShallow.value.setHex(p.sea.shallow); u.uSky.value.setHex(p.sea.sky); if (u.uShallowCol) u.uShallowCol.value.setHex(p.sea.shallowCol); }
   const gen = ++skyGen;
-  (p.sea ? Promise.resolve(null) : (panoramas[name] ||= loadPanorama(`assets/sky/${name}.jpg`).catch(() => null))).then((tex) => {
+  (p.sea ? Promise.resolve(null) : (panoramas[name] ||= loadPanorama(`assets/sky/${LITE ? 'lite/' : ''}${name}.jpg`).catch(() => null))).then((tex) => {
     if (!tex || gen !== skyGen) return;
     const pano = buildPanoramaSky(tex, dir);
     scene.remove(sky); sky = pano; scene.add(sky);

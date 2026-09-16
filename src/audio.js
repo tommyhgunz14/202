@@ -313,7 +313,11 @@ class Music {
   }
   stopTracks() { if (!this.tracks || !this.a.ctx) return; const t = this.a.ctx.currentTime; for (const k of Object.keys(this.tracks)) this.tracks[k].gain.gain.setTargetAtTime(0, t, 1.5); }
   setMood(m) {
-    if (m === this.mood || !this.a.ctx) return;
+    if (!this.a.ctx) return;
+    const name = this.trackFor(m);
+    // fetch the recorded cue for this mood; when it arrives, it takes over from the pad
+    if (name && !this.a.samples.has(name)) this.a.samples.want(name, () => this.mood === m, () => { this.mood = null; this.setMood(m); });
+    if (m === this.mood) return;
     this.mood = m;
     if (m === 'off') this.stopTracks(); else if (this.useTracks(m)) return;
     this.stopTracks();

@@ -83,6 +83,15 @@ USB controller (Gamepad API, standard mapping — Xbox, PlayStation and most gen
 Keyboard: arrows/WASD pitch & roll, Q/E rudder, Shift/Ctrl throttle, Space guns, B drop,
 R report, V view, F depth setting, T ASV range, X brake, Esc pause.
 
+Phones and tablets: a stick at the bottom left (push up = nose down), the throttle lever at the
+side dragged directly, and Fire, Drop, Report, Depth and View buttons; II pauses. **Quick sortie**
+on the opening cards goes straight to a Catalina on the practice range.
+
+Phones, low-memory devices and slow connections get a light build (half-size textures without
+normal or roughness maps, a half-size sky, mono sound at a lower bit rate); everything else gets
+full definition. Add `?quality=lite` or `?quality=hd` to the address to choose, or
+`?quality=auto` to go back to the guess. Music is fetched one cue at a time as it is needed.
+
 ## On the water
 
 The hull floats at its draft and rises on to the step as speed builds, with bow wash and a wake

@@ -1,3 +1,4 @@
+import { LITE } from '../tier.js';
 import * as THREE from 'three';
 
 // Surface textures generated with Atlas live in assets/tex/<name>.jpg with optional
@@ -11,10 +12,12 @@ const cache = new Map();
 export function loadTex(name, opts = {}) {
   const key = name + JSON.stringify(opts);
   if (cache.has(key)) return cache.get(key);
+  // the light build has half-size colour maps in tex/lite and no normal or roughness maps
+  if (LITE && /_(normal|rough)$/.test(name)) { const none = Promise.resolve(null); cache.set(key, none); return none; }
   const p = new Promise((resolve) => {
-    loader.load(`assets/tex/${name}.jpg`, (t) => {
+    loader.load(`assets/tex/${LITE ? 'lite/' : ''}${name}.jpg`, (t) => {
       t.colorSpace = opts.linear ? THREE.NoColorSpace : THREE.SRGBColorSpace;
-      t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8;
+      t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = LITE ? 4 : 8;
       resolve(t);
     }, undefined, () => resolve(null));
   });

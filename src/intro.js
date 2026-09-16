@@ -24,14 +24,16 @@ export function runIntro(root, input, { onDone, onTitle, onMusic } = {}) {
   el.innerHTML = `
     <div class="icard" id="intro-true"><p class="true">A True Story</p></div>
     <div class="icard" id="intro-story"><div class="story-block"><p class="story-head">${STORY_HEAD}</p>${STORY.map((p) => `<p class="story">${p}</p>`).join('')}</div></div>
-    <div class="icard title" id="intro-title"><div class="photos">${PICS.map((n) => `<div class="ph${n === FINALE ? ' finale' : ''}" style="background-image:url(assets/intro/${n}.jpg)"></div>`).join('')}</div><div class="tt"><h1>Guardians of the Rock</h1><p class="sub">No. 202 Squadron &middot; Gibraltar &middot; 1939&ndash;1944</p></div></div>
+    <div class="icard title" id="intro-title"><div class="photos">${PICS.map((n) => `<div class="ph${n === FINALE ? ' finale' : ''}" data-pic="${n}"></div>`).join('')}</div><div class="tt"><h1>Guardians of the Rock</h1><p class="sub">No. 202 Squadron &middot; Gibraltar &middot; 1939&ndash;1944</p></div></div>
     <p class="fcap">Passing-out term, winter 1930 &middot; T. Q. Horner, seated second from left</p>
     <div class="bars"><i></i><i></i></div>
     <div class="grain"></div>
     <div class="skip">Esc &middot; skip</div>`;
   root.appendChild(el);
-  // preload every picture; any that is missing is dropped from the run
-  const ready = Promise.all(PICS.map((n) => new Promise((res) => { const i = new Image(); i.onload = () => res(true); i.onerror = () => res(false); i.src = `assets/intro/${n}.jpg`; })));
+  // preload every picture; any that is missing is dropped from the run. Not at once: a player who
+  // skips straight to a sortie should not wait on several megabytes of photographs.
+  let ready = null;
+  const preload = () => (ready ||= Promise.all(PICS.map((n) => new Promise((res) => { const i = new Image(); i.onload = () => res(true); i.onerror = () => res(false); i.src = `assets/intro/${n}.jpg`; }))).then((have) => { for (const d of el.querySelectorAll('.ph[data-pic]')) d.style.backgroundImage = `url(assets/intro/${d.dataset.pic}.jpg)`; return have; }));
 
   let done = false, timer = 0, cancel = [];
   const wait = (ms) => new Promise((r) => { const t = setTimeout(r, ms); cancel.push(() => clearTimeout(t)); });
@@ -64,12 +66,12 @@ export function runIntro(root, input, { onDone, onTitle, onMusic } = {}) {
   (async () => {
     await wait(900);
     show('intro-true', true); await wait(3200); show('intro-true', false); await wait(1400);
-    show('intro-story', true); await wait(34000); show('intro-story', false); await wait(1400);
+    show('intro-story', true); await wait(14000); if (!done) preload(); await wait(20000); show('intro-story', false); await wait(1400);
     onTitle && onTitle();
     // the title and subtitle hold over the whole picture sequence - the archive photographs
     // first, then the crew walking out and boarding - and only leave with the last of them
     show('intro-title', true);
-    const have = await ready;
+    const have = await preload();
     const phs = [...el.querySelectorAll('#intro-title .ph')].filter((_, i) => have[i]);
     const n = Math.max(1, phs.filter((p) => !p.classList.contains('finale')).length);   // the grade runs over the stills; the photograph has its own
     const grade = (el2, g) => { el2.style.filter = `grayscale(${g.toFixed(2)}) sepia(${(0.3 * g).toFixed(2)}) contrast(${(1.06 + 0.06 * g).toFixed(2)}) brightness(${(0.52 + 0.06 * (1 - g)).toFixed(2)})`; };
