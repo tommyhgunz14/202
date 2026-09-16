@@ -1,3 +1,11 @@
+# Our Story
+
+We were the last generation to know them.  Most of us just knew them as our Grandparents, and they for the most part appeared as just ordinary people.  But earlier on in their path through life these same ordinary people had received a calling that led them to lead extraordinary lives, prevailing over extraordinary challenges where many made the ultimate sacrifice.   
+They would tell you that **'we wanted to do our part', 'we did it for our country and loved ones', 'it was a privilege to be a part of', 'I would do it again'.**
+They did it because they refused to have our freedoms, values and democracy as we know it today taken away from us.
+They were to become known as the **Greatest Generation**, growing up in the Great Depression but still finding the hope, sense of duty and inspiration to give away the last of what little they had - their lives.
+This game conveys the story of the contribution to the war by one of my family for my children and for anyone else curious to relive a part of the war that is not often recounted or told outside of the stories shared among familes that were involved in the Battle for the Mediterranean.
+
 # Guardians of the Rock
 
 A browser game about **No. 202 Squadron RAF at Gibraltar, 1939–1943**, flown from the seat of
