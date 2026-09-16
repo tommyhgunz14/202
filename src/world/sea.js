@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { WORLD_HALF } from '../config.js';
 import { terrainHeight } from './terrain.js';
+import { LITE } from '../tier.js';
 
 // Sea surface. Vertex: seven directional waves of different lengths, headings and phases summed
 // (no two share a direction, so the swell never reads as a grid). Fragment: the analytic slope of
@@ -136,7 +137,7 @@ void main() {
 // Two tiers share one material: a coarse far plane covering the whole world and a fine patch
 // (10 m vertex spacing) that follows the camera so the swell has real shape close in.
 export function buildSea(sunDir, fogColor, fogDensity, depthTex = null) {
-  const geo = new THREE.PlaneGeometry(WORLD_HALF * 2.4, WORLD_HALF * 2.4, 160, 160);
+  const geo = new THREE.PlaneGeometry(WORLD_HALF * 2.4, WORLD_HALF * 2.4, LITE ? 100 : 160, LITE ? 100 : 160);
   geo.rotateX(-Math.PI / 2);
   const mat = new THREE.ShaderMaterial({
     vertexShader: VERT_SRC, fragmentShader: FRAG,
@@ -158,7 +159,7 @@ export function buildSea(sunDir, fogColor, fogDensity, depthTex = null) {
   // the far tier shares the uniform objects but discards inside the near patch's square
   const farMat = new THREE.ShaderMaterial({ vertexShader: VERT_SRC, fragmentShader: FRAG, uniforms: mat.uniforms, defines: { FAR_TIER: 1 } });
   const far = new THREE.Mesh(geo, farMat); far.renderOrder = -1; far.frustumCulled = false; group.add(far);
-  const NEAR = 2600, SEG = 260;   // 10 m spacing
+  const NEAR = 2600, SEG = LITE ? 170 : 260;   // 10 m spacing (15 m on the light build)
   const ng = new THREE.PlaneGeometry(NEAR, NEAR, SEG, SEG); ng.rotateX(-Math.PI / 2);
   const near = new THREE.Mesh(ng, mat); near.renderOrder = -1; near.position.y = 0.02; near.frustumCulled = false; group.add(near);
   group.userData.near = near; group.userData.step = NEAR / SEG;

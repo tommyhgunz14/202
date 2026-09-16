@@ -2,6 +2,11 @@ import * as THREE from 'three';
 import { terrainHeight, MED, GIB, rockWestFace, rockFrame, onEuropaFlats } from './terrain.js';
 import { PLACES } from '../data/geo.js';
 import { toWorld } from '../config.js';
+import { LITE } from '../tier.js';
+
+// the light build plants a fifth as many, with canopies of fewer faces, and they cast no shadows
+const PLANT_SHARE = LITE ? 0.2 : 1;
+const SEG_A = LITE ? 5 : 7, SEG_B = LITE ? 4 : 5;
 
 // Vegetation of the Strait, 1940: stone and Aleppo pines on the middle slopes, cork oaks and
 // olives on the lower ground, lentisk and cistus scrub everywhere the goats left it, cypresses
@@ -24,22 +29,22 @@ function nearTown(x, z) { let best = 1e9; for (const t of towns) best = Math.min
 // geometry builders: front +Z irrelevant, base at y = 0, unit height ~1 so instances scale it
 function pineGeo() {
   const trunk = new THREE.CylinderGeometry(0.05, 0.08, 0.5, 6).translate(0, 0.25, 0);
-  const canopy = new THREE.SphereGeometry(0.5, 7, 5).scale(1, 0.6, 1).translate(0, 0.72, 0);   // stone pine umbrella
+  const canopy = new THREE.SphereGeometry(0.5, SEG_A, SEG_B).scale(1, 0.6, 1).translate(0, 0.72, 0);   // stone pine umbrella
   return { trunk, canopy };
 }
 function oakGeo() {
   const trunk = new THREE.CylinderGeometry(0.06, 0.1, 0.3, 6).translate(0, 0.15, 0);
-  const canopy = new THREE.SphereGeometry(0.46, 7, 5).scale(1.15, 0.8, 1).translate(0, 0.52, 0);
+  const canopy = new THREE.SphereGeometry(0.46, SEG_A, SEG_B).scale(1.15, 0.8, 1).translate(0, 0.52, 0);
   return { trunk, canopy };
 }
 function oliveGeo() {
   const trunk = new THREE.CylinderGeometry(0.09, 0.14, 0.28, 6).translate(0, 0.14, 0);
-  const canopy = new THREE.SphereGeometry(0.52, 7, 5).scale(1.25, 0.62, 1.15).translate(0, 0.46, 0);
+  const canopy = new THREE.SphereGeometry(0.52, SEG_A, SEG_B).scale(1.25, 0.62, 1.15).translate(0, 0.46, 0);
   return { trunk, canopy };
 }
 function citrusGeo() {
   const trunk = new THREE.CylinderGeometry(0.05, 0.07, 0.26, 5).translate(0, 0.13, 0);
-  const canopy = new THREE.SphereGeometry(0.38, 7, 6).translate(0, 0.62, 0);
+  const canopy = new THREE.SphereGeometry(0.38, SEG_A, SEG_B + 1).translate(0, 0.62, 0);
   return { trunk, canopy };
 }
 function bushGeo() { return { canopy: new THREE.SphereGeometry(0.5, 5, 3).scale(1.2, 0.6, 1).translate(0, 0.3, 0) }; }
@@ -83,12 +88,13 @@ export function buildVegetation() {
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), pv = new THREE.Vector3(), col = new THREE.Color();
   for (const [name, K] of Object.entries(KINDS)) {
     const parts = K.geo();
+    const count = Math.round(K.count * PLANT_SHARE);
     const placements = [];
     // grove centres: the woods and scrub of the Campo grow in patches, not as an even sprinkle
     const groves = [];
     if (K.grove) {
       let gt = 0;
-      while (groves.length < K.count / 25 && gt < K.count) {
+      while (groves.length < count / 25 && gt < count) {
         gt++;
         const R = K.region === 'gib' ? regions[1] : regions[Math.floor(rnd() * regions.length)];
         const x = R.x + (rnd() * 2 - 1) * R.half, z = R.z + (rnd() * 2 - 1) * R.half;
@@ -112,7 +118,7 @@ export function buildVegetation() {
       }
     }
     let tries = 0;
-    while (placements.length < K.count && tries < K.count * 8) {
+    while (placements.length < count && tries < count * 8) {
       tries++;
       let x, z;
       if (K.orchard && orchards.length) {
@@ -148,7 +154,7 @@ export function buildVegetation() {
       const isTrunk = partName === 'trunk';
       const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, flatShading: !isTrunk, emissive: isTrunk ? 0x000000 : 0x1c2412 });
       const mesh = new THREE.InstancedMesh(geo, mat, placements.length);
-      mesh.castShadow = !isTrunk; mesh.receiveShadow = true;
+      mesh.castShadow = !isTrunk && !LITE; mesh.receiveShadow = true;
       placements.forEach((pl, i) => {
         const hgt = K.h[0] + rnd() * (K.h[1] - K.h[0]);
         const w = hgt * (0.8 + rnd() * 0.4);

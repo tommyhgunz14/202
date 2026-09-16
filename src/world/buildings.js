@@ -5,6 +5,7 @@ import { toWorld, H_SCALE, V_SCALE, GIB_ZOOM } from '../config.js';
 import { terrainHeight, rockFrame } from './terrain.js';
 import { FRENCH_HARBOUR } from '../data/geo.js';
 import { planarUVs, texture } from './textures.js';
+import { LITE } from '../tier.js';
 
 // which generated texture dresses each material key, and the tile size in metres
 const TEX = { tile: ['roof_tiles', 2.5], white: ['rendered_wall', 4], ochre: ['rendered_wall', 4], pink: ['rendered_wall', 4], cream: ['rendered_wall', 4],
@@ -65,7 +66,7 @@ class Builder {
       const mat = TEX[k] ? MATS[k].clone() : MATS[k];
       if (TEX[k]) texture(mat, TEX[k][0], TEX[k][1], { tint: MATS[k].color.clone().lerp(new THREE.Color(0xffffff), 0.5) });
       const mesh = new THREE.Mesh(geo, mat);
-      mesh.castShadow = true; mesh.receiveShadow = true;
+      mesh.castShadow = !LITE; mesh.receiveShadow = true;
       g.add(mesh);
     }
     g.userData.colliders = this.colliders;
@@ -415,18 +416,20 @@ function spanishTown(b, lat, lon, count, spread, withTower = false) {
   }
 }
 
+// Each town is merged on its own, so a town out of view is not drawn at all. The light build
+// has half as many houses in the towns across the water.
 export function buildTown() {
-  const b = new Builder();
-  town(b);
-  europaPoint(b);
-  moorishCastle(b);
-  rockHotel(b);
-  catchments(b);
-  spanishTown(b, 36.130, -5.452, 90, 700, true);   // Algeciras
-  spanishTown(b, 36.168, -5.348, 60, 500);         // La Línea
-  spanishTown(b, 36.013, -5.605, 40, 400, true);   // Tarifa
-  spanishTown(b, 35.889, -5.316, 60, 500, true);   // Ceuta
-  frenchHarbour(b);                                // the French naval harbour south of Ceuta
-  spanishTown(b, 35.785, -5.810, 60, 600, true);   // Tangier
-  return b.build();
+  const g = new THREE.Group();
+  g.userData.colliders = [];
+  const part = (fill) => { const b = new Builder(); fill(b); const m = b.build(); g.add(m); g.userData.colliders.push(...m.userData.colliders); };
+  const across = LITE ? 0.5 : 1;
+  part((b) => { town(b); moorishCastle(b); rockHotel(b); catchments(b); });
+  part((b) => europaPoint(b));
+  part((b) => spanishTown(b, 36.130, -5.452, Math.round(90 * across), 700, true));   // Algeciras
+  part((b) => spanishTown(b, 36.168, -5.348, Math.round(60 * across), 500));         // La Línea
+  part((b) => spanishTown(b, 36.013, -5.605, Math.round(40 * across), 400, true));   // Tarifa
+  part((b) => spanishTown(b, 35.889, -5.316, Math.round(60 * across), 500, true));   // Ceuta
+  part((b) => frenchHarbour(b));                                                     // the French naval harbour south of Ceuta
+  part((b) => spanishTown(b, 35.785, -5.810, Math.round(60 * across), 600, true));   // Tangier
+  return g;
 }

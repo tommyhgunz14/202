@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { Collisions } from './collide.js';
 
 // Loads a 404-contract asset module (default export: function(THREE) -> Group), keeping the
 // hierarchy so named nodes (props, guns, cockpit) stay addressable. Prototypes are cached and
@@ -14,6 +16,9 @@ export async function loadAsset(url) {
       g.traverse((n) => {
         if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; }
       });
+      // the part boxes for contact are taken from the parts as modelled, before they are merged
+      Collisions.parts(g);
+      mergeStatic(g);
       return g;
     })());
   }
@@ -21,6 +26,50 @@ export async function loadAsset(url) {
   const inst = proto.clone(true);
   inst.userData = { ...proto.userData };
   return inst;
+}
+
+// A model is built from hundreds of small parts, and each is a draw call. Everything that is not
+// a named node (or inside one) never moves on its own, so those parts are merged into one mesh per
+// material. Named nodes (propellers, guns, flags, pennants, turrets) keep their own meshes.
+export function mergeStatic(root) {
+  root.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
+  const buckets = new Map(), taken = [];
+  const visit = (node) => {
+    for (const c of node.children) {
+      if (c.name) continue;                          // a named node and all beneath it stay as they are
+      if (c.isMesh && !c.isInstancedMesh && !c.isSkinnedMesh && c.visible && !Array.isArray(c.material)
+        && !Object.keys(c.geometry.morphAttributes || {}).length) {
+        let geo = c.geometry.index ? c.geometry.toNonIndexed() : c.geometry.clone();
+        geo.clearGroups();   // box and cylinder faces carry groups; with one material they mean nothing
+        geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, c.matrixWorld));
+        if (c.matrixWorld.determinant() < 0) { const p = geo.attributes.position; for (let i = 0; i < p.count; i += 3) { for (const a of Object.values(geo.attributes)) { for (let k = 0; k < a.itemSize; k++) { const t = a.getComponent(i, k); a.setComponent(i, k, a.getComponent(i + 2, k)); a.setComponent(i + 2, k, t); } } } }
+        const key = c.material.uuid + '|' + Object.keys(geo.attributes).sort().join(',') + '|' + c.castShadow + c.receiveShadow + '|' + c.renderOrder;
+        if (!buckets.has(key)) buckets.set(key, { mat: c.material, geos: [], cast: c.castShadow, recv: c.receiveShadow, order: c.renderOrder });
+        buckets.get(key).geos.push(geo);
+        taken.push(c);
+      }
+      visit(c);
+    }
+  };
+  visit(root);
+  if (taken.length < 2) return;
+  for (const b of buckets.values()) {
+    const geo = b.geos.length === 1 ? b.geos[0] : mergeGeometries(b.geos, false);
+    if (!geo) return;   // attribute layouts that will not merge: leave the model as modelled
+    b.geo = geo;
+  }
+  for (const c of taken) {
+    // a part with children keeps its place as an empty node so the children stay where they are
+    if (c.children.length) { const o = new THREE.Object3D(); o.position.copy(c.position); o.quaternion.copy(c.quaternion); o.scale.copy(c.scale); for (const k of [...c.children]) o.add(k); c.parent.add(o); }
+    c.parent.remove(c);
+  }
+  for (const b of buckets.values()) {
+    const m = new THREE.Mesh(b.geo, b.mat);
+    m.castShadow = b.cast; m.receiveShadow = b.recv; m.renderOrder = b.order;
+    m.matrixAutoUpdate = true;
+    root.add(m);
+  }
 }
 
 export function findNamed(root, name) {

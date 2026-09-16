@@ -42,6 +42,17 @@ export class Collisions {
   // every sizeable mesh under a group that does not move again (harbour works, moored scenery ships)
   addStatic(root, label) {
     root.updateMatrixWorld(true);
+    // a loaded model carries its part boxes from before its parts were merged
+    const pre = root.userData._parts;
+    if (pre) {
+      const inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
+      for (const box of pre.parts) {
+        const s = box.getSize(_p);
+        if (Math.max(s.x, s.y, s.z) < MIN_PART || Math.min(s.x, s.y, s.z) < THIN) continue;
+        this.addBox({ box, inv }, label);
+      }
+      return;
+    }
     root.traverse((n) => {
       if (!n.isMesh || n.isInstancedMesh || !n.visible || (n.material && n.material.transparent)) return;
       this.addBox(partBox(n.geometry, n.matrixWorld), label);

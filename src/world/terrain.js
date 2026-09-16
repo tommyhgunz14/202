@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { COAST, PEAKS, RIDGES, pointInPoly, distToPoly, FRENCH_HARBOUR } from '../data/geo.js';
 import { toWorld, H_SCALE, V_SCALE, WORLD_HALF, GIB_ZOOM } from '../config.js';
 import { loadTex, terrainDetail } from './textures.js';
+import { LITE } from '../tier.js';
 
 // Convert coast polygons to world space once.
 const POLYS = {};
@@ -352,13 +353,13 @@ const inGib = (x, z, m = 60) => Math.abs(x - GIB_CENTRE.x) < GIB_HALF - m && Mat
 const inMed = (x, z, m = 100) => Math.abs(x - MED.x) < MED.half - m && Math.abs(z - MED.z) < MED.half - m;
 export function buildTerrain() {
   const g = new THREE.Group();
-  const coarse = buildGrid(0, 0, WORLD_HALF * 2, 320, terrainHeight, { mask: (x, z) => !inMed(x, z) });
+  const coarse = buildGrid(0, 0, WORLD_HALF * 2, LITE ? 120 : 320, terrainHeight, { mask: (x, z) => !inMed(x, z) });
   g.add(coarse);
-  const medium = buildGrid(MED.x, MED.z, MED.half * 2, 520, terrainHeight, { mask: (x, z) => !inGib(x, z), tile: 60 });
-  medium.castShadow = true;
+  const medium = buildGrid(MED.x, MED.z, MED.half * 2, LITE ? 210 : 520, terrainHeight, { mask: (x, z) => !inGib(x, z), tile: 60 });
+  medium.castShadow = !LITE;
   g.add(medium);
-  const fine = buildGrid(GIB_CENTRE.x, GIB_CENTRE.z, GIB_HALF * 2, 540, terrainHeight, { tile: 45 });
-  fine.castShadow = true;
+  const fine = buildGrid(GIB_CENTRE.x, GIB_CENTRE.z, GIB_HALF * 2, LITE ? 300 : 540, terrainHeight, { tile: 45 });
+  fine.castShadow = !LITE;
   g.add(fine);
   return g;
 }

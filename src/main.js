@@ -37,7 +37,7 @@ import { HARBOUR } from './data/geo.js';
 // ---------- renderer & scene ----------
 const canvas = document.getElementById('gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, LITE ? 1.5 : 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -55,7 +55,7 @@ renderer.autoClear = false;
 const camera = new THREE.PerspectiveCamera(62, 1, 0.5, 60000);
 const sun = new THREE.DirectionalLight(0xfff2dc, 2.4);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(LITE ? 1024 : 2048, LITE ? 1024 : 2048);   // the light build: only aircraft and ships cast
 sun.shadow.camera.near = 10; sun.shadow.camera.far = 3000;
 sun.shadow.camera.left = -400; sun.shadow.camera.right = 400; sun.shadow.camera.top = 400; sun.shadow.camera.bottom = -400;
 sun.shadow.bias = -0.0005;
@@ -72,6 +72,9 @@ const depthTex = buildDepthTexture(384);
 const harbour = buildHarbour(); world.add(harbour);
 const town = buildTown(); world.add(town);
 const vegetation = buildVegetation(); world.add(vegetation);
+// the light build: the small inset views (gunner, depth charges) leave out the trees and the towns
+const DETAIL_LAYER = 1;
+if (LITE) { for (const grp of [vegetation, town]) grp.traverse((o) => o.layers.set(DETAIL_LAYER)); camera.layers.enable(DETAIL_LAYER); }
 // solid things the aircraft can strike, besides the terrain and the sea
 const collisions = new Collisions();
 collisions.addStatic(harbour, 'the harbour works');
@@ -1385,7 +1388,9 @@ function update(dt) {
     const desired = _v2.copy(p).addScaledVector(fwd, -d).add(new THREE.Vector3(0, d * 0.32, 0));
     if (desired.y < 2.5) desired.y = 2.5;
     const th = terrainHeight(desired.x, desired.z); if (desired.y < th + 4) desired.y = th + 4;
-    camera.position.lerp(desired, Math.min(1, dt * 4));
+    // far off (a sortie just begun in the air): jump rather than sweep in across the whole Strait
+    if (camera.position.distanceTo(desired) > 400) camera.position.copy(desired);
+    else camera.position.lerp(desired, Math.min(1, dt * 4));
     camLook.copy(p).addScaledVector(fwd, 40).add(new THREE.Vector3(0, 4, 0));
     camera.lookAt(camLook);
   }
@@ -1702,6 +1707,8 @@ function frame() {
     if (G.gunOverlay) G.gunOverlay.group.visible = G.view.startsWith('gun:');
     renderer.clearDepth(); renderer.render(cockpitScene, cockpitCam);
   }
+  // the insets use the shadow map already drawn for this frame
+  renderer.shadowMap.autoUpdate = false;
   if (G.running && G.pip) {
     updatePip();
     const fr = G.pip && document.getElementById('gun-cam-frame').getBoundingClientRect();
@@ -1728,6 +1735,7 @@ function frame() {
       renderer.setScissorTest(false); renderer.setViewport(0, 0, _size.x, _size.y);
     }
   }
+  renderer.shadowMap.autoUpdate = true;
 }
 function loop() { requestAnimationFrame(loop); frame(); }
 window.DBG.frame = frame;

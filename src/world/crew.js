@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { LITE } from '../tier.js';
 
 // Crew and ground-crew figures, built to the Atlas reference sheet of 1941 Coastal Command
 // aircrew: about 7.5 heads tall (1.78 m), broad through the shoulders in the Irvin jacket, the
@@ -82,7 +83,7 @@ export function buildFigure(kind = 'aircrew') {
     const barb = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.012, 6, 12, Math.PI), M.steel); barb.position.set(0, 0.6, 0.05); arms[1].elbow.add(barb);
   }
   f.userData = { kind, body, legs, arms, neck, phase: Math.random() * 6.28, bats: kind === 'marshaller' };
-  f.traverse((o) => { if (o.isMesh) { o.castShadow = true; } });
+  f.traverse((o) => { if (o.isMesh) { o.castShadow = !LITE; } });   // the light build: figures cast no shadow
   return f;
 }
 

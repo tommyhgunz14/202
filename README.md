@@ -88,8 +88,11 @@ side dragged directly, and Fire, Drop, Report, Depth and View buttons; II pauses
 on the opening cards goes straight to a Catalina on the practice range.
 
 Phones, low-memory devices and slow connections get a light build (half-size textures without
-normal or roughness maps, a half-size sky, mono sound at a lower bit rate); everything else gets
-full definition. Add `?quality=lite` or `?quality=hd` to the address to choose, or
+normal or roughness maps, a half-size sky, mono sound at a lower bit rate, coarser terrain and
+sea meshes, a fifth of the trees, fewer houses across the water, and shadows from aircraft and
+ships only); everything else gets full definition. On every device a model's fixed parts are
+merged into one mesh per material when it loads, and each town is its own mesh so a town out of
+view is not drawn. Add `?quality=lite` or `?quality=hd` to the address to choose, or
 `?quality=auto` to go back to the guess. Music is fetched one cue at a time as it is needed.
 
 ## Quick play
