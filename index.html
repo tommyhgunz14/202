@@ -26,6 +26,11 @@
   .plan .aim { margin: 0 0 10px; color: #ded7c2; }
   .plan-list { margin: 0; padding-left: 20px; color: #c9c2ac; }
   .plan-list li { margin: 3px 0; }
+  .pace { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 4px; }
+  .pace button { text-align: left; padding: 8px 12px; display: flex; flex-direction: column; gap: 3px; opacity: .7; }
+  .pace button.sel { opacity: 1; border-color: #ffd27a; box-shadow: inset 0 0 0 1px #ffd27a; }
+  .pace button span { font-size: 12px; color: #bdb59c; font-weight: normal; }
+  @media (max-width: 600px) { .pace { grid-template-columns: 1fr; } }
   .plan .role { display: block; width: 100%; text-align: left; margin: 0 0 8px; padding: 9px 12px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(200, 178, 122, 0.35); border-radius: 4px; color: inherit; font: inherit; cursor: pointer; }
   .plan .role.sel { border-color: var(--brass); background: rgba(200, 178, 122, 0.16); }
   .plan .role b { display: block; color: var(--brass); font-size: 15px; letter-spacing: 0.5px; }
@@ -156,6 +161,16 @@
   #startb { pointer-events: auto; white-space: nowrap; padding: 12px 26px; font: 600 15px/1 Georgia, serif; letter-spacing: .08em; text-transform: uppercase; color: #f1e8d2; background: rgba(20,24,20,.72); border: 1px solid rgba(241,232,210,.55); border-radius: 3px; cursor: pointer; touch-action: manipulation; }
   #startb:hover { background: rgba(60,64,52,.85); }
   body.flying #startw { display: none; }
+  /* quick play: the marker on what to do next, and the press-on state */
+  #obj-marker { position: absolute; display: none; transform: translate(-50%, -50%); pointer-events: none; text-align: center; font-family: monospace; font-size: 11px; color: #ffd27a; text-shadow: 0 0 4px #000; white-space: nowrap; }
+  #obj-marker i { display: block; margin: 0 auto 3px; width: 18px; height: 18px; border: 2px solid #ffd27a; border-radius: 50%; box-shadow: 0 0 6px rgba(0,0,0,.6); }
+  #obj-marker.edge i { border-radius: 0; border: none; width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-bottom: 18px solid #ffd27a; }
+  #touch #bff { display: none; }
+  #touch .ffi { font-size: 13px; letter-spacing: -3px; }
+  body.touch #hud-contact { top: 58px; }
+  body.quick #touch #bff { display: block; }
+  body.ff #touch #bff { background: rgba(255,210,122,.45); }
+  body.ff #hud-top::after { content: '▸▸ ×6'; color: #ffd27a; font-weight: 700; }
   /* on-screen controls */
   #touch { display: none; position: fixed; inset: 0; z-index: 30; pointer-events: none; font-family: Georgia, serif; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   body.touch.flying:not(.cine) #touch { display: block; }
@@ -269,6 +284,7 @@
   <div id="hud-warn"></div>
   <div id="hud-guide"></div>
   <div id="track-tag"></div>
+  <div id="obj-marker"><i></i><span></span></div>
   <div id="reticle"></div>
   <div id="bombsight"><div class="grat"></div><div class="drift"></div><div id="impact"><i></i><span></span></div><div class="readout" id="bs-read"></div></div>
   <div id="hud-log"></div>

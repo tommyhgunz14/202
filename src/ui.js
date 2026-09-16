@@ -2,6 +2,7 @@ import { AIRCRAFT, SCORE_LABELS, availableOn } from './data/aircraft.js';
 import { MISSIONS, PILOT } from './data/missions.js';
 import { PLANS, DEFAULT_PLAN } from './data/plans.js';
 import { PLATES } from './data/archive.js';
+import { PACE } from './pace.js';
 
 // period photographs (Atlas, RAF official style) shown at the start of a sortie
 const PHOTOS = ['photo_london_gunwharf.jpg', 'photo_briefing.jpg', 'photo_swordfish_slip.jpg', 'photo_sunderland_moor.jpg', 'photo_uboat_air.jpg', 'photo_destroyer.jpg', 'photo_crew_dusk.jpg'];
@@ -38,6 +39,7 @@ export class UI {
     else if (action === 'ac-screen') this.screen = 'aircraft';
     else if (action === 'plan') { this.roleIdx = 0; this.screen = 'plan'; }
     else if (action === 'role') this.roleIdx = +data.idx;
+    else if (action === 'pace') PACE.set(data.pace === 'quick');
     else if (action === 'fly') { this.hide(); this.onStart && this.onStart(MISSIONS[this.missionIdx], this.currentAircraft(), this.currentRoleId()); return; }
     this.render();
   }
@@ -51,6 +53,12 @@ export class UI {
     const i0 = this.missionIdx % pick.length, i1 = (this.missionIdx * 3 + 1) % pick.length;
     const shots = [card, 'assets/intro/intro_walk.jpg', 'assets/intro/' + pick[i0], 'assets/intro/intro_board.jpg', 'assets/intro/' + pick[i1 === i0 ? (i1 + 1) % pick.length : i1]];
     return '<div class="cine">' + shots.map((s, i) => `<div class="cslide" style="background-image:url(${s});animation-delay:${i * 5}s"></div>`).join('') + '<i></i></div>';
+  }
+
+  // how the sortie is flown: straight to the action, or the whole of it from the mooring and back
+  paceChoice() {
+    const b = (id, name, blurb) => `<button class="${PACE.quick === (id === 'quick') ? 'sel' : ''}" data-action="pace" data-pace="${id}"><b>${name}</b><span>${blurb}</span></button>`;
+    return `<div class="pace">${b('quick', 'Quick play', 'Start in the air near the action; press on through quiet stretches; ends when the job is done')}${b('full', 'Full sortie', 'Board at the mooring, taxi out, fly there and back, and bring her alongside')}</div>`;
   }
 
   // the plan for this sortie, and the part the player has chosen in it
@@ -195,7 +203,8 @@ export class UI {
               : `<p class="only">No other aircraft of the squadron is on this sortie: the whole of it is yours.</p>`}
           </div>
         </div>
-        <div class="menu"><button class="primary" data-action="fly">Take off</button>${nav('ac-screen')}</div>
+        ${this.paceChoice()}
+        <div class="menu"><button class="primary" data-action="fly">${PACE.quick ? 'Fly' : 'Take off'}</button>${nav('ac-screen')}</div>
       </div>`;
     } else if (s === 'controls') {
       html = `<div class="card wide"><h2>Controls</h2>

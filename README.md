@@ -92,6 +92,21 @@ normal or roughness maps, a half-size sky, mono sound at a lower bit rate); ever
 full definition. Add `?quality=lite` or `?quality=hd` to the address to choose, or
 `?quality=auto` to go back to the guess. Music is fetched one cue at a time as it is needed.
 
+## Quick play
+
+Chosen under the plan, beside Take off (on by default on phones, remembered):
+
+- the sortie starts in the air at about 1,000 ft, two-thirds of the way from the Bay to the area
+- **Press on** (N, or ▸▸ on a phone) runs the quiet stretches at six times speed with the autopilot
+  flying towards the marker; an unidentified contact, an enemy aircraft, getting close or touching
+  the stick drops back to normal speed
+- scripted waits, enemy aircraft and timed objectives come in at 40% of their full-sortie time, and
+  the time on the water beside a boat is halved
+- a marker shows what to fly to next, and a sighting report goes out as soon as its contact is identified
+- the sortie ends when the last task is done: no flight home, landing or taxi
+
+Full sortie is the whole of it: boarding at the mooring, taxiing out, there and back, and alongside.
+
 ## On the water
 
 The hull floats at its draft and rises on to the step as speed builds, with bow wash and a wake

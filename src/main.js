@@ -1,4 +1,5 @@
 import { LITE } from './tier.js';
+import { PACE, QUICK, shortenText } from './pace.js';
 import * as THREE from 'three';
 import { toWorld, toLatLon, H_SCALE, FT, MPH, KT } from './config.js';
 import { buildTerrain, terrainHeight, buildDepthTexture } from './world/terrain.js';
@@ -255,13 +256,14 @@ function randomEntities(m) {
   return out;
 }
 
-async function startMission(mission, spec, roleId) {
+async function startMission(mission, spec, roleId, opts = {}) {
   clearMission();
   // the part the player takes: the first role is the sortie as the record has it
   const plan = PLANS[mission.id] || DEFAULT_PLAN;
   const role = plan.roles ? (plan.roles.find((r) => r.id === roleId) || plan.roles[0]) : null;
   G.plan = plan; G.role = role;
   G.mission = mission; G.spec = spec; G.running = false; G.paused = false; G.probes = null;
+  G.fast = opts.quick != null ? opts.quick : PACE.quick; G.ff = false; document.body.classList.remove('quick', 'ff');
   G.time = 0; G.park = null; G.endTimer = -1; G.result = null; G.landedMsg = false; G.score = 0; G.penalties = 0; G.tookOff = false; G.idCount = 0; G.identifiedTargets.clear();
   G.clock = { dawn: 6 * 3600 + 10 * 60, morning: 8 * 3600 + 30 * 60, afternoon: 14 * 3600 + 20 * 60, dusk: 18 * 3600 + 40 * 60, night: 22 * 3600 + 20 * 60 }[mission.sky] || 8 * 3600;
   if (mission.clock) { const [hh, mm] = mission.clock.split(':').map(Number); G.clock = hh * 3600 + mm * 60; }
@@ -306,6 +308,7 @@ async function startMission(mission, spec, roleId) {
   G.flight.reset(new THREE.Vector3(berth.x, 0, berth.z - hatchZ), berth.heading, 0, true);
   G.taxiedOut = false;
   input.throttle = 0;
+  if (G.fast) quickStart(mission, spec);
   G.stores = spec.stores.count; G.ammo = spec.guns[0].rounds;
   radar.fitted = !!spec.asv;
   // vessels
@@ -321,7 +324,7 @@ async function startMission(mission, spec, roleId) {
   });
   const byName = {};
   for (const e of ents) {
-    if (e.type === 'bandit') { if (Math.random() <= (e.chance == null ? 1 : e.chance)) G.pendingBandits.push({ ...e, timer: e.delay || 180 }); continue; }
+    if (e.type === 'bandit') { if (Math.random() <= (e.chance == null ? 1 : e.chance)) G.pendingBandits.push({ ...e, timer: (e.delay || 180) * waitShare() }); continue; }
     if (e.type === 'friendly') { G.pendingFriendlies.push({ ...e, timer: e.delay == null ? 6 : e.delay }); continue; }
     const v = await spawnVessel(e.type, e);
     v.tag = e.tag || null;
@@ -338,6 +341,12 @@ async function startMission(mission, spec, roleId) {
   } else G.slick = null;
   mission.datums = [];
   G.objectives = ((role && role.objectives) || mission.objectives).map((o) => ({ ...o, done: false, failed: false, progress: 0, near: 0, elapsed: 0, baseText: o.text }));
+  if (G.fast) for (const o of G.objectives) {
+    if (!o.seconds) continue;
+    o.seconds = Math.round(o.seconds * (o.kind === 'pickup' ? QUICK.PICKUP : QUICK.WAIT));
+    o.text = o.baseText = shortenText(o.text, o.seconds);
+  }
+  if (G.fast) for (const o of G.objectives) if (o.kind === 'return') o.text = o.baseText = 'Return to base once the tasks are done';
   G.triggers = ((role && role.triggers) || mission.triggers || []).map((t) => ({ ...t, fired: false }));
   G.range = { hits: 0, rounds: 0, dcScore: 0, drops: 0 };
   // views: chase, cockpit, then every manned gun position the type has
@@ -356,7 +365,7 @@ async function startMission(mission, spec, roleId) {
   // squadron record calls him Wing Commander (see docs/HISTORY.md)
   if (mission.id === 'casablanca' && !G.promoShown) { G.promoShown = true; await showPromotion(document.body, input); }
   const BEAMS = { catalina: 3.1, london: 3.2, sunderland: 3.4, swordfish: 2.2 };
-  const walk = startWalkout(scene, plane, { x: G.berth.x, z: G.berth.z }, harbour.userData.pontoon, { crew: spec.crew, beam: BEAMS[spec.id] || 3, span: plane.userData.span || 30, length: plane.userData.length || 20, heading: toEnt, boarding: spec.id === 'swordfish' ? 'cockpit' : 'hatch', cockpit: G.cockpitLocal });
+  const walk = G.fast ? null : startWalkout(scene, plane, { x: G.berth.x, z: G.berth.z }, harbour.userData.pontoon, { crew: spec.crew, beam: BEAMS[spec.id] || 3, span: plane.userData.span || 30, length: plane.userData.length || 20, heading: toEnt, boarding: spec.id === 'swordfish' ? 'cockpit' : 'hatch', cockpit: G.cockpitLocal });
   // where film of this aircraft type's crew exists, it plays over the walk-out (see crewCinematic.js)
   // the rest of the squadron at their buoys: the types it flew on the sortie's date, lying head to
   // the easterly the windsock shows, each riding to her buoy by the bow. Buoys 3 to 5 only: the
@@ -378,6 +387,7 @@ async function startMission(mission, spec, roleId) {
       G.parked.push({ g: pg, y0, h, ph: i * 1.7 });
     }
   }
+  if (G.fast) { if (titlePlane) titlePlane.visible = false; G.running = true; quickBrief(); return; }
   const crewShots = await findCrewShots(spec.id);
   G.cine = crewShots.length ? startCrewCinematic(crewShots, walk) : walk;
   document.body.classList.add('cine');
@@ -387,21 +397,153 @@ async function startMission(mission, spec, roleId) {
 ui.onStart = (mission, spec, role) => startMission(mission, spec, role);
 // launch intro: shown once per page load, before the title menu (skippable)
 ui.hide();
-const intro = runIntro(document.body, input, { onMusic: startMenuMusic, onDone: () => { if (G.quick) return; ui.show(); if (audio.ctx) audio.music.setMood('menu'); } });
+const intro = runIntro(document.body, input, { onMusic: startMenuMusic, onDone: () => { const sw = document.getElementById('startw'); if (sw) sw.remove(); if (G.quick) return; ui.show(); if (audio.ctx) audio.music.setMood('menu'); } });
 // Quick sortie: one tap from the opening cards straight to a Catalina on the practice range
 const touch = initTouch(input);
 const startb = document.getElementById('startb');
 startb.addEventListener('click', (e) => {
   e.stopPropagation();
   if (G.running || G.quick) return;
-  G.quick = true; startb.parentNode.remove();
+  G.quick = true; if (startb.parentNode) startb.parentNode.remove();
   intro.skip(); ui.hide();
   const m = MISSIONS.find((x) => x.id === 'range');
-  startMission(m, AIRCRAFT.catalina).then(() => { finishWalkout(); input.throttle = 0.3; G.quick = false; });
+  startMission(m, AIRCRAFT.catalina, null, { quick: true }).then(() => { G.quick = false; });
 });
 window.__READY__ = true;
 
 // crew aboard: engines started, HUD shown, briefing on the log (also reached by skipping)
+// ---------- quick play ----------
+function waitShare() { return G.fast ? QUICK.WAIT : 1; }
+
+// airborne, most of the way from the Bay to the area, heading for it at cruise
+function quickStart(mission, spec) {
+  const aim = mission.area ? toWorld(mission.area.lat, mission.area.lon)
+    : (Array.isArray(mission.entities) && mission.entities.find((e) => e.lat != null)) ? toWorld(mission.entities.find((e) => e.lat != null).lat, mission.entities.find((e) => e.lat != null).lon)
+    : { x: BASE.x - 3000, z: BASE.z };
+  let k = QUICK.START_SHARE, x = 0, z = 0;
+  // not over land, and not so close that the first thing seen is already under the nose
+  for (; k > 0; k -= 0.05) {
+    x = BASE.x + (aim.x - BASE.x) * k; z = BASE.z + (aim.z - BASE.z) * k;
+    if (terrainHeight(x, z) < -1 && terrainHeight(x + 400, z) < -1 && terrainHeight(x - 400, z) < -1 && terrainHeight(x, z + 400) < -1 && terrainHeight(x, z - 400) < -1) break;
+  }
+  if (k <= 0) { x = BASE.x - 1500; z = BASE.z; }
+  const heading = Math.atan2(aim.x - x, aim.z - z);
+  G.flight.reset(new THREE.Vector3(x, QUICK.START_ALT, z), heading, spec.cruise / MPH, false);
+  G.flight.onWater = false; G.flight.hullY = 0;
+  input.throttle = 0.75;
+  G.tookOff = true; G.tookOffAt = 0; G.taxiedOut = true;
+}
+
+// the briefing lines, engines and HUD, in place of the walk-out
+function quickBrief() {
+  const spec = G.spec, mission = G.mission;
+  document.body.classList.remove('cine');
+  hud.log(`${mission.date} — ${mission.title}. ${spec.name} ${spec.code}, airborne on course for the area.`);
+  hud.log(document.body.classList.contains('touch') ? 'Follow the marker. ▸▸ runs the quiet stretches at speed.' : 'Follow the marker. N (or ▸▸) runs the quiet stretches at speed.');
+  audio.startEngines(spec.engines.startsWith('4') ? 4 : spec.engines.startsWith('2') ? 2 : 1, spec.id === 'swordfish' ? 70 : 55);
+  document.getElementById('hud').style.display = 'block';
+  document.body.classList.add('quick');
+}
+
+// "Press on": time runs six times over while nothing needs the pilot, with the autopilot flying
+// towards the marker. Anything that needs attention drops it back to normal speed.
+function pressOnBlocker() {
+  const f = G.flight, p = f.obj.position;
+  if (!G.fast) return 'Only in quick play.';
+  if (f.onWater || !G.tookOff) return 'Not on the water.';
+  if (p.y < 90) return 'Too low to hand over to the autopilot.';
+  if (G.bandits.some((b) => b.alive !== false)) return 'Enemy aircraft about.';
+  // a ship not yet identified, and on the surface where the crew would see her (identified ones
+  // are known; the marker's own target is dealt with below)
+  for (const v of G.vessels) {
+    if (!v.alive || v.identified || v.kind === 'neutral' || v.faction === 'rn' || v.faction === 'allied' || (v.kind === 'submarine' && !v.surfaced)) continue;
+    if (Math.hypot(v.group.position.x - p.x, v.group.position.z - p.z) < 2500) return 'Unidentified contact close by.';
+  }
+  const tg = objectiveTarget();
+  if (tg && Math.hypot(tg.pos.x - p.x, tg.pos.z - p.z) < 1800) return 'Nearly there.';
+  return null;
+}
+function pressOn(on, why) {
+  if (!!G.ff === on) return;
+  G.ff = on;
+  document.body.classList.toggle('ff', on);
+  if (why) hud.log(why);
+}
+function togglePressOn() {
+  if (G.ff) { pressOn(false, 'Normal speed.'); return; }
+  const why = pressOnBlocker();
+  if (why) hud.log('Cannot press on: ' + why.charAt(0).toLowerCase() + why.slice(1));
+  else pressOn(true, 'Pressing on ▸▸');
+}
+function checkPressOn(ctl) {
+  if (Math.abs(ctl.pitch) > 0.35 || Math.abs(ctl.roll) > 0.35) { pressOn(false, 'You have control. Normal speed.'); return; }
+  const why = pressOnBlocker();
+  if (why) pressOn(false, why + ' Normal speed.');
+}
+// wings level into a gentle turn towards the marker, holding about 1,000 ft
+function autopilot(f, ctl) {
+  const p = f.obj.position, tg = objectiveTarget();
+  let roll = -f.bank * 1.5;
+  if (tg) {
+    const want = Math.atan2(tg.pos.x - p.x, tg.pos.z - p.z);
+    const fw = f.forward(_v1);
+    let err = want - Math.atan2(fw.x, fw.z);
+    err = Math.atan2(Math.sin(err), Math.cos(err));
+    const bankWant = THREE.MathUtils.clamp(-err * 1.2, -0.45, 0.45);
+    roll = THREE.MathUtils.clamp((bankWant - f.bank) * 2.5, -0.6, 0.6);
+  }
+  const pitch = THREE.MathUtils.clamp((QUICK.START_ALT - p.y) * 0.004 - f.vertSpeed * 0.05 - f.pitch * 1.5, -0.4, 0.4);
+  return { ...ctl, pitch, roll, yaw: 0, fire: false, drop: false };
+}
+
+// What to fly to next: the first open objective's ship or aircraft, else the area.
+function objectiveTarget() {
+  const m = G.mission; if (!m || !G.flight) return null;
+  const p = G.flight.obj.position;
+  const area = m.area ? toWorld(m.area.lat, m.area.lon) : null;
+  const nearest = (list) => { let b = null, bd = 1e12; for (const v of list) { const d = v.group.position.distanceToSquared(p); if (d < bd) { bd = d; b = v; } } return b; };
+  for (const o of G.objectives) {
+    if (o.done || o.failed || o.kind === 'takeoff' || o.kind === 'return') continue;
+    let t = null;
+    if (o.target) t = ctx.named(o.target);
+    else if (o.kind === 'identify_count') t = nearest(G.vessels.filter((v) => v.alive && !v.identified));
+    else if (o.kind === 'protect') t = G.vessels.find((v) => v.tag === o.tag && v.alive) || null;
+    else if (o.kind === 'dc_score' || o.kind === 'gun_hits' || o.kind === 'attack_any_sub') t = nearest(G.vessels.filter((v) => v.alive));
+    if (t && t !== PLAYER_REF && t.group) return { pos: t.group.position, label: (t.short || t.name), obj: o };
+    if (o.kind === 'reach' && G.slick) return { pos: G.slick, label: 'Oil slick', obj: o };
+    if (area) return { pos: new THREE.Vector3(area.x, 0, area.z), label: 'Patrol area', obj: o };
+    return null;
+  }
+  return null;
+}
+const markerEl = document.getElementById('obj-marker');
+function updateObjectiveMarker(f) {
+  const tg = G.fast && G.view !== 'bombsight' ? objectiveTarget() : null;
+  if (!tg) { markerEl.style.display = 'none'; return; }
+  const p = f.obj.position;
+  const d = Math.hypot(tg.pos.x - p.x, tg.pos.z - p.z);
+  const ndc = _v2.set(tg.pos.x, Math.max(tg.pos.y || 0, 0) + 8, tg.pos.z).project(camera);
+  const W = window.innerWidth, H = window.innerHeight;
+  const dist = d < 1000 ? d.toFixed(0) + ' m' : (d / H_SCALE / 1852).toFixed(1) + ' nm';
+  markerEl.style.display = 'block';
+  const onScreen = ndc.z < 1 && Math.abs(ndc.x) < 0.9 && Math.abs(ndc.y) < 0.85;
+  markerEl.classList.toggle('edge', !onScreen);
+  let x, y, ang = 0;
+  if (onScreen) { x = (ndc.x + 1) / 2 * W; y = (1 - ndc.y) / 2 * H; }
+  else {
+    // behind the camera the projection flips: mirror it so the arrow still points the right way
+    let dx = ndc.z > 1 ? -ndc.x : ndc.x, dy = ndc.z > 1 ? -ndc.y : ndc.y;
+    if (Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3) dy = -1;
+    const k = Math.min(0.8 / Math.abs(dx || 1e-6), 0.62 / Math.abs(dy || 1e-6));
+    dx *= k; dy *= k;
+    x = (dx + 1) / 2 * W; y = (1 - dy) / 2 * H;
+    ang = Math.atan2(dx, dy);
+  }
+  markerEl.style.left = x + 'px'; markerEl.style.top = y + 'px';
+  markerEl.firstChild.style.transform = onScreen ? '' : `rotate(${ang}rad)`;
+  markerEl.lastChild.textContent = `${tg.label} · ${dist}`;
+}
+
 function finishWalkout() {
   if (!G.cine) return;
   G.cine.dispose(); G.cine = null; document.body.classList.remove('cine');
@@ -568,7 +710,7 @@ function withCallsign(text) {
 const ctx = {
   get player() { return G.flight; }, get vessels() { return G.vessels; }, get time() { return G.time; },
   weapons, audio, scene,
-  log: (t, c) => { t = withCallsign(t); hud.log(t, c); G.events.push({ t: G.time, text: t }); },
+  log: (t, c) => { t = withCallsign(t); hud.log(t, c); G.events.push({ t: G.time, text: t }); if (c === 'bad' && G.ff) pressOn(false, 'Something is happening: back to normal speed.'); },
   enemyFire(v, p) {
     const from = new THREE.Vector3(); (findNamed(v.group, 'flak') || findNamed(v.group, 'bridge') || v.group).getWorldPosition(from);
     from.y = Math.max(from.y, 2);
@@ -630,10 +772,10 @@ const ctx = {
     const pp = G.flight.obj.position;
     const hd = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
     let ok = true;
-    if (c.after != null) ok = ok && G.tookOff && G.time - G.tookOffAt >= c.after;
-    if (c.stepTime != null) ok = ok && !!self && self.stepT >= c.stepTime;
+    if (c.after != null) ok = ok && G.tookOff && G.time - G.tookOffAt >= c.after * waitShare();
+    if (c.stepTime != null) ok = ok && !!self && self.stepT >= c.stepTime * waitShare();
     if (c.flag) ok = ok && G.flags.has(c.flag);
-    if (c.since) ok = ok && G.flags.has(c.since[0]) && G.time - G.flagTimes[c.since[0]] >= c.since[1];
+    if (c.since) ok = ok && G.flags.has(c.since[0]) && G.time - G.flagTimes[c.since[0]] >= c.since[1] * waitShare();
     if (c.identified) { const v = ctx.named(c.identified); ok = ok && !!v && v.identified; }
     if (c.reported) { const v = ctx.named(c.reported); ok = ok && !!v && v.reported; }
     if (c.hpBelow) { const v = ctx.named(c.hpBelow[0]); ok = ok && !!v && (v.hp < c.hpBelow[1] || !v.alive); }
@@ -643,14 +785,14 @@ const ctx = {
   },
   acts(list) {
     for (const a of [].concat(list || [])) {
-      if (a.after != null) { G.timers.push({ t: a.after, acts: a.do }); continue; }
+      if (a.after != null) { G.timers.push({ t: a.after * waitShare(), acts: a.do }); continue; }
       if (a.vessel) { const v = ctx.named(a.vessel); if (!v || !v.alive) continue; }
       if (a.log) ctx.log(a.log, a.cls || 'ok');
       if (a.say) audio.say(a.say, 20);
       if (a.music) audio.music.setMood(a.music);
       if (a.flag) ctx.flag(a.flag);
       if (a.spawn) G.pendingFriendlies.push({ ...a.spawn, timer: a.spawn.delay || 0 });
-      if (a.bandit && Math.random() <= (a.bandit.chance == null ? 1 : a.bandit.chance)) G.pendingBandits.push({ ...a.bandit, timer: a.bandit.delay || 0 });
+      if (a.bandit && Math.random() <= (a.bandit.chance == null ? 1 : a.bandit.chance)) G.pendingBandits.push({ ...a.bandit, timer: (a.bandit.delay || 0) * waitShare() });
       if (a.friendly) { const fr = ctx.named(a.friendly); if (fr && a.damage) fr.damage(a.damage, ctx); }
       if (a.ferry) startFerry(a.ferry);
       if (a.ferryDo) ferryDo(a.ferryDo);
@@ -823,12 +965,12 @@ function failMission(reason) {
 }
 
 // ---------- sighting report ----------
-function sightingReport() {
-  if (G.reportCooldown > 0) return;
+function sightingReport(forced) {
+  if (G.reportCooldown > 0 && !forced) return;
   G.reportCooldown = 6;
   const p = G.flight.obj.position;
-  let best = null, bd = 3500;
-  for (const v of G.vessels) {
+  let best = forced || null, bd = 3500;
+  if (!forced) for (const v of G.vessels) {
     if (!v.alive || !v.identified) continue;
     const d = v.group.position.distanceTo(p); if (d < bd) { bd = d; best = v; }
   }
@@ -909,11 +1051,13 @@ function update(dt) {
     }
   }
   const manning = G.view.startsWith('gun:');
-  const flightCtl = manning ? { ...ctl, pitch: 0, roll: 0, yaw: 0, fire: false } : ctl;
+  if (G.ff) checkPressOn(ctl);
+  const flightCtl = G.ff ? autopilot(f, ctl) : manning ? { ...ctl, pitch: 0, roll: 0, yaw: 0, fire: false } : ctl;
   if (input.pressed && input.invertToggle) { G.gunInvert = !G.gunInvert; input.invertToggle = false; hud.log(`Gunner elevation: ${G.gunInvert ? 'inverted (push forward = barrel down)' : 'normal (push forward = barrel up)'}.`); }
   if (ctl.depth) hud.log(`Depth charges set to ${weapons.cycleDepth()} ft.`);
   if (ctl.radarRange && radar.fitted) hud.log(`ASV range scale ${radar.cycleRange()} miles.`);
   if (ctl.report) sightingReport();
+  if (ctl.ff) togglePressOn();
 
   const prevPos = _v3.copy(p);
   f.update(dt, flightCtl);
@@ -1194,6 +1338,7 @@ function update(dt) {
         v.identified = true; G.idCount++; ctx.log(`Identified: ${v.name} — ${v.label}${v.kind === 'neutral' ? ' (neutral: do not attack)' : ''}.${ours ? ' "She looks like one of ours, sir."' : ''}`, v.kind === 'neutral' ? '' : 'ok'); G.score += 20;
         // a British or Allied boat gets the crew's own call, submarine or not, before any contact call
         if (ours) audio.say('voice_ours', 20); else if (v.kind === 'submarine') audio.say('voice_contact', 30); else if (v.kind === 'neutral') audio.say('voice_neutral', 40);
+        if (G.fast && G.objectives.some((o) => o.kind === 'report' && !o.done && (!o.target || o.target === v.name))) { const rv = v; G.timers.push({ t: 2, fn: () => { if (G.running && rv.alive && !rv.reported) sightingReport(rv); } }); }
       }
     }
   }
@@ -1275,6 +1420,7 @@ function update(dt) {
   document.body.classList.toggle('cockpit', G.view === 'cockpit');
   updateBombsight(f, ctl);
   updateTrackTag(f);
+  updateObjectiveMarker(f);
   updateFriendTags(f);
   if (manning && G.gunOverlay) {
     const sunW = new THREE.Vector3(...(SKIES[G.mission.sky] || SKIES.morning).sun).normalize();
@@ -1439,6 +1585,14 @@ function evaluateObjectives(dt) {
       }
       case 'return': {
         const others = G.objectives.filter((x) => x !== o);
+        if (G.fast) {
+          if (others.every((x) => x.done || x.failed) && G.endTimer < 0 && !f.crashed) {
+            o.done = true; G.score += 50;
+            ctx.log(`Gibraltar: "${CALLSIGN}, task complete. Return to base." Sortie ends ${fmtClock(G.clock)}.`, 'ok');
+            G.ff = false; G.endTimer = 5;
+          }
+          break;
+        }
         const dj = Math.hypot(p.x - G.berth.x, p.z - G.berth.hullZ);
         if (f.onWater && G.tookOff && !G.landedMsg && f.speed < 25 && Math.hypot(p.x - BASE.x, p.z - BASE.z) < 2500) {
           G.landedMsg = true; ctx.log('Down at ' + fmtClock(G.clock) + '. Taxi to the jetty at New Camp (the yellow flag) and cut the engines alongside.', 'ok'); audio.say('voice_down', 999);
@@ -1464,7 +1618,7 @@ function endMission() {
   audio.music.setMood('menu');
   for (const k of Object.keys(planeWake)) planeWake[k].visible = false;
   document.getElementById('hud').style.display = 'none';
-  document.body.classList.remove('flying'); document.body.classList.remove('cockpit');
+  document.body.classList.remove('flying', 'cockpit', 'quick', 'ff'); G.ff = false;
   document.getElementById('cockpit').style.display = 'none';
   pauseEl.style.display = 'none';
   const objs = G.objectives;
@@ -1539,7 +1693,7 @@ function frame() {
   renderer.info.reset();
   const dt = Math.min(0.05, clock.getDelta());
   SEA.t += dt; if (sea) sea.material.uniforms.uTime.value = SEA.t;
-  if (G.running) update(dt); else { ui.poll(); titleCamera(dt); }
+  if (G.running) { const n = G.ff ? QUICK.FF : 1; for (let i = 0; i < n && G.running; i++) update(dt); } else { ui.poll(); titleCamera(dt); }
   if (sea && sea.follow) sea.follow(camera.position.x, camera.position.z);
   renderer.clear();
   renderer.render(scene, camera);

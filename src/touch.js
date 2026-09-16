@@ -9,6 +9,7 @@ const BUTTONS = [
   ['breport', 'Report', 'key', 'KeyR'],
   ['bdepth', 'Depth<br><small>25 ft</small>', 'key', 'KeyF'],
   ['bview', 'View', 'key', 'KeyV'],
+  ['bff', '<b class="ffi">&#9654;&#9654;</b>', 'key', 'KeyN'],   // quick play: press on at speed
 ];
 
 export function initTouch(input) {

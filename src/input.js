@@ -19,7 +19,7 @@ export class Input {
     this.throttle = 0.0;
     this.invertPitch = false;
     this.touch = null;           // on-screen controls (touch.js), when present
-    this.state = { pitch: 0, roll: 0, yaw: 0, throttle: 0, fire: false, drop: false, report: false, camera: false, depth: false, radarRange: false, pause: false, map: false, brake: false };
+    this.state = { pitch: 0, roll: 0, yaw: 0, throttle: 0, fire: false, drop: false, report: false, camera: false, depth: false, radarRange: false, pause: false, map: false, brake: false, ff: false };
     window.addEventListener('keydown', (e) => {
       if (e.repeat) return;
       this.keys.add(e.code); this.pressed.add(e.code);
@@ -54,6 +54,7 @@ export class Input {
     let pause = this.pressed.has('Escape') || this.pressed.has('KeyP');
     let map = this.pressed.has('KeyM');
     let brake = k.has('KeyX');
+    const ff = this.pressed.has('KeyN');
     const tc = this.touch;
     if (tc) {
       if (tc.pitch || tc.roll) { pitch = tc.pitch; roll = tc.roll; }
@@ -97,7 +98,7 @@ export class Input {
     s.yaw = Math.max(-1, Math.min(1, yaw));
     s.throttle = this.throttle;
     s.fire = fire; s.drop = drop; s.report = report; s.camera = camera; s.depth = depth;
-    s.radarRange = radarRange; s.pause = pause; s.map = map; s.brake = brake;
+    s.radarRange = radarRange; s.pause = pause; s.map = map; s.brake = brake; s.ff = ff;
     this.pressed.clear();
     return s;
   }
