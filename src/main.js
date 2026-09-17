@@ -1,39 +1,39 @@
-import { LITE } from './tier.js?v=202609171221';
-import { PACE, QUICK, shortenText } from './pace.js?v=202609171221';
-import { forDevice } from './keys.js?v=202609171221';
+import { LITE } from './tier.js?v=202609171500';
+import { PACE, QUICK, shortenText } from './pace.js?v=202609171500';
+import { forDevice } from './keys.js?v=202609171500';
 import * as THREE from 'three';
-import { toWorld, toLatLon, H_SCALE, FT, MPH, KT } from './config.js?v=202609171221';
-import { buildTerrain, terrainHeight, buildDepthTexture } from './world/terrain.js?v=202609171221';
-import { buildSea, SEA, seaHeight } from './world/sea.js?v=202609171221';
-import { buildSky, buildClouds } from './world/sky.js?v=202609171221';
-import { loadPanorama, buildPanoramaSky } from './world/skybox.js?v=202609171221';
-import { buildHarbour, JETTY, ENTRANCE, updateMarshallers, updateFlags } from './world/harbour.js?v=202609171221';
-import { loadOrPlaceholder, findNamed, findAllNamed } from './loader.js?v=202609171221';
-import { Flight } from './flight.js?v=202609171221';
-import { Input } from './input.js?v=202609171221';
-import { Weapons } from './weapons.js?v=202609171221';
-import { spawnVessel } from './vessels.js?v=202609171221';
-import { spawnFriendly } from './friendlies.js?v=202609171221';
-import { foamStrip } from './world/foam.js?v=202609171221';
-import { buildTown } from './world/buildings.js?v=202609171221';
-import { buildVegetation } from './world/vegetation.js?v=202609171221';
-import { Radar } from './radar.js?v=202609171221';
-import { Hud } from './hud.js?v=202609171221';
-import { Cockpit } from './cockpit.js?v=202609171221';
-import { Audio } from './audio.js?v=202609171221';
-import { UI } from './ui.js?v=202609171221';
-import { buildCockpitInterior, buildGunnerOverlay } from './cockpitModel.js?v=202609171221';
-import { spawnBandit } from './bandits.js?v=202609171221';
-import { initTouch } from './touch.js?v=202609171221';
-import { Collisions } from './collide.js?v=202609171221';
-import { runIntro } from './intro.js?v=202609171221';
-import { startWalkout } from './walkout.js?v=202609171221';
-import { findCrewShots, startCrewCinematic } from './crewCinematic.js?v=202609171221';
-import { showPromotion } from './promotion.js?v=202609171221';
-import { MISSIONS, SKIES, PILOT } from './data/missions.js?v=202609171221';
-import { AIRCRAFT, availableOn } from './data/aircraft.js?v=202609171221';
-import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171221';
-import { HARBOUR } from './data/geo.js?v=202609171221';
+import { toWorld, toLatLon, H_SCALE, FT, MPH, KT } from './config.js?v=202609171500';
+import { buildTerrain, terrainHeight, buildDepthTexture } from './world/terrain.js?v=202609171500';
+import { buildSea, SEA, seaHeight } from './world/sea.js?v=202609171500';
+import { buildSky, buildClouds } from './world/sky.js?v=202609171500';
+import { loadPanorama, buildPanoramaSky } from './world/skybox.js?v=202609171500';
+import { buildHarbour, JETTY, ENTRANCE, updateMarshallers, updateFlags } from './world/harbour.js?v=202609171500';
+import { loadOrPlaceholder, findNamed, findAllNamed } from './loader.js?v=202609171500';
+import { Flight } from './flight.js?v=202609171500';
+import { Input } from './input.js?v=202609171500';
+import { Weapons } from './weapons.js?v=202609171500';
+import { spawnVessel } from './vessels.js?v=202609171500';
+import { spawnFriendly } from './friendlies.js?v=202609171500';
+import { foamStrip } from './world/foam.js?v=202609171500';
+import { buildTown } from './world/buildings.js?v=202609171500';
+import { buildVegetation } from './world/vegetation.js?v=202609171500';
+import { Radar } from './radar.js?v=202609171500';
+import { Hud } from './hud.js?v=202609171500';
+import { Cockpit } from './cockpit.js?v=202609171500';
+import { Audio } from './audio.js?v=202609171500';
+import { UI } from './ui.js?v=202609171500';
+import { buildCockpitInterior, buildGunnerOverlay } from './cockpitModel.js?v=202609171500';
+import { spawnBandit } from './bandits.js?v=202609171500';
+import { initTouch } from './touch.js?v=202609171500';
+import { Collisions } from './collide.js?v=202609171500';
+import { runIntro } from './intro.js?v=202609171500';
+import { startWalkout } from './walkout.js?v=202609171500';
+import { findCrewShots, startCrewCinematic } from './crewCinematic.js?v=202609171500';
+import { showPromotion } from './promotion.js?v=202609171500';
+import { MISSIONS, SKIES, PILOT } from './data/missions.js?v=202609171500';
+import { AIRCRAFT, availableOn } from './data/aircraft.js?v=202609171500';
+import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171500';
+import { HARBOUR } from './data/geo.js?v=202609171500';
 
 // ---------- renderer & scene ----------
 const canvas = document.getElementById('gl');
@@ -296,7 +296,7 @@ async function startMission(mission, spec, roleId, opts = {}) {
   const role = plan.roles ? (plan.roles.find((r) => r.id === roleId) || plan.roles[0]) : null;
   G.plan = plan; G.role = role;
   G.mission = mission; G.spec = spec; G.running = false; G.paused = false; G.probes = null;
-  G.fast = opts.quick != null ? opts.quick : PACE.quick; G.ff = false; document.body.classList.remove('quick', 'ff');
+  G.fast = opts.quick != null ? opts.quick : PACE.quick; G.ff = false; G.quickVia = null; G.autoPressT = null; document.body.classList.remove('quick', 'ff');
   G.time = 0; G.park = null; G.endTimer = -1; G.result = null; G.landedMsg = false; G.score = 0; G.penalties = 0; G.tookOff = false; G.idCount = 0; G.identifiedTargets.clear();
   G.clock = { dawn: 6 * 3600 + 10 * 60, morning: 8 * 3600 + 30 * 60, afternoon: 14 * 3600 + 20 * 60, dusk: 18 * 3600 + 40 * 60, night: 22 * 3600 + 20 * 60 }[mission.sky] || 8 * 3600;
   if (mission.clock) { const [hh, mm] = mission.clock.split(':').map(Number); G.clock = hh * 3600 + mm * 60; }
@@ -455,8 +455,10 @@ function quickStart(mission, spec) {
     const q = mission.quickStart, w = toWorld(q.lat, q.lon), d = q.heading * Math.PI / 180;
     G.flight.reset(new THREE.Vector3(w.x, q.alt || QUICK.START_ALT, w.z), Math.atan2(Math.sin(d), -Math.cos(d)), spec.cruise / MPH, false);
     G.flight.onWater = false; G.flight.hullY = 0;
-    input.throttle = 0.75;
+    input.throttle = 1;
     G.tookOff = true; G.tookOffAt = 0; G.taxiedOut = true;
+    if (q.via) { const v = toWorld(q.via[0], q.via[1]); G.quickVia = new THREE.Vector3(v.x, 0, v.z); }
+    if (q.autoPress != null) G.autoPressT = q.autoPress;
     return;
   }
   const aim = mission.area ? toWorld(mission.area.lat, mission.area.lon)
@@ -499,10 +501,10 @@ function pressOnBlocker() {
   // are known; the marker's own target is dealt with below)
   for (const v of G.vessels) {
     if (!v.alive || v.identified || v.kind === 'neutral' || v.faction === 'rn' || v.faction === 'allied' || (v.kind === 'submarine' && !v.surfaced)) continue;
-    if (Math.hypot(v.group.position.x - p.x, v.group.position.z - p.z) < 2500) return 'Unidentified contact close by.';
+    if (Math.hypot(v.group.position.x - p.x, v.group.position.z - p.z) < 1200) return 'Unidentified contact close by.';
   }
   const tg = objectiveTarget();
-  if (tg && Math.hypot(tg.pos.x - p.x, tg.pos.z - p.z) < 1800) return 'Nearly there.';
+  if (tg && Math.hypot(tg.pos.x - p.x, tg.pos.z - p.z) < 1400) return 'Nearly there.';   // room to get down and line up
   return null;
 }
 function pressOn(on, why) {
@@ -526,8 +528,10 @@ function checkPressOn(ctl) {
 function autopilot(f, ctl) {
   const p = f.obj.position, tg = objectiveTarget();
   let roll = -f.bank * 1.5;
-  if (tg) {
-    const want = Math.atan2(tg.pos.x - p.x, tg.pos.z - p.z);
+  if (G.quickVia && Math.hypot(G.quickVia.x - p.x, G.quickVia.z - p.z) < 500) G.quickVia = null;   // turning point reached
+  const aim = G.quickVia || (tg && tg.pos);
+  if (aim) {
+    const want = Math.atan2(aim.x - p.x, aim.z - p.z);
     const fw = f.forward(_v1);
     let err = want - Math.atan2(fw.x, fw.z);
     err = Math.atan2(Math.sin(err), Math.cos(err));
@@ -1093,6 +1097,11 @@ function update(dt) {
     }
   }
   const manning = G.view.startsWith('gun:');
+  if (G.autoPressT != null) {
+    G.autoPressT -= dt;
+    if (Math.abs(ctl.pitch) > 0.2 || Math.abs(ctl.roll) > 0.2) G.autoPressT = null;   // the pilot has taken control
+    else if (G.autoPressT <= 0) { G.autoPressT = null; if (!G.ff && !pressOnBlocker()) pressOn(true, 'Pressing on to the range ▸▸  Touch the stick to take control.'); }
+  }
   if (G.ff) checkPressOn(ctl);
   const flightCtl = G.ff ? autopilot(f, ctl) : manning ? { ...ctl, pitch: 0, roll: 0, yaw: 0, fire: false } : ctl;
   if (input.pressed && input.invertToggle) { G.gunInvert = !G.gunInvert; input.invertToggle = false; hud.log(`Gunner elevation: ${G.gunInvert ? 'inverted (push forward = barrel down)' : 'normal (push forward = barrel up)'}.`); }

@@ -19,7 +19,9 @@ export const MISSIONS = [
     spawn: { ...BASE, heading: 205 },
     // quick play: over the Bay at 800 ft, running south-east at the Rock, its western face and the town
     // ahead on the left, the moles and the ships in the harbour below, Europa Point beyond
-    quickStart: { lat: 36.152, lon: -5.376, heading: 150, alt: 250 },
+    // a few seconds of that view, then Press on engages by itself and the autopilot rounds Europa
+    // Point by the 'via' turning point (the direct line to the range crosses the Rock)
+    quickStart: { lat: 36.152, lon: -5.376, heading: 150, alt: 250, via: [36.105, -5.355], autoPress: 5 },
     area: { lat: 36.075, lon: -5.29, radius: 1500 },
     entities: [
       { type: 'raft', name: 'Raft A', lat: 36.078, lon: -5.300, heading: 0 },
