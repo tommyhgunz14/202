@@ -2,7 +2,7 @@
 // 215 m, a long flush forecastle rising to the stem, two quadruple 330 mm turrets forward (the
 // second superfiring), the tall tower bridge, one big raked funnel, three quadruple 130 mm turrets
 // aft, and the hangar, catapult and crane on the quarterdeck. French navy light grey.
-import { warshipKit } from './lib/warship_kit.js?v=202609171534';
+import { warshipKit } from './lib/warship_kit.js?v=202609171548';
 
 export default function (THREE) {
   const g = new THREE.Group();

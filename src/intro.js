@@ -18,7 +18,7 @@ const STORY = [
   'Led by Wing Commander Thomas Q. Horner - callsign \'Jackie\' - these dedicated airmen were tasked to locate and destroy the enemy subs, protect the supply convoys and help win the war for the Allies in the Mediterranean Ocean.',
 ];
 
-export function runIntro(root, input, { onDone, onTitle, onMusic } = {}) {
+export function runIntro(root, input, { onDone, onTitle, onMusic, onStory } = {}) {
   const el = document.createElement('div');
   el.id = 'intro';
   el.innerHTML = `
@@ -53,8 +53,8 @@ export function runIntro(root, input, { onDone, onTitle, onMusic } = {}) {
   // controller: poll the menu buttons
   const poll = setInterval(() => { if (done) return clearInterval(poll); const m = input.menuPoll(); if (m.accept || m.back) finish(); }, 120);
 
-  // the cue runs from the first card through to the menu: asked for at once, and asked for
-  // again on the first touch of the page in case the browser held it back until then
+  // sound is set up at once (the title cue downloads now) and again on the first touch of the page,
+  // in case the browser held it back until then; the cue itself begins with the story card (onStory)
   if (onMusic) {
     onMusic();
     const kick = () => onMusic();
@@ -66,7 +66,7 @@ export function runIntro(root, input, { onDone, onTitle, onMusic } = {}) {
   (async () => {
     await wait(900);
     show('intro-true', true); await wait(3200); show('intro-true', false); await wait(1400);
-    show('intro-story', true); await wait(14000); if (!done) preload(); await wait(20000); show('intro-story', false); await wait(1400);
+    show('intro-story', true); if (onStory) onStory(); await wait(14000); if (!done) preload(); await wait(20000); show('intro-story', false); await wait(1400);
     onTitle && onTitle();
     // the title and subtitle hold over the whole picture sequence - the archive photographs
     // first, then the crew walking out and boarding - and only leave with the last of them

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { LITE } from '../tier.js?v=202609171534';
+import { LITE } from '../tier.js?v=202609171548';
 
 // Crew and ground-crew figures, built to the Atlas reference sheet of 1941 Coastal Command
 // aircrew: about 7.5 heads tall (1.78 m), broad through the shoulders in the Irvin jacket, the

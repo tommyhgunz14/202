@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { terrainHeight, MED, GIB, rockWestFace, rockFrame, onEuropaFlats } from './terrain.js?v=202609171534';
-import { PLACES } from '../data/geo.js?v=202609171534';
-import { toWorld } from '../config.js?v=202609171534';
-import { LITE } from '../tier.js?v=202609171534';
+import { terrainHeight, MED, GIB, rockWestFace, rockFrame, onEuropaFlats } from './terrain.js?v=202609171548';
+import { PLACES } from '../data/geo.js?v=202609171548';
+import { toWorld } from '../config.js?v=202609171548';
+import { LITE } from '../tier.js?v=202609171548';
 
 // the light build plants a fifth as many, with canopies of fewer faces, and they cast no shadows
 const PLANT_SHARE = LITE ? 0.2 : 1;

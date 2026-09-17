@@ -1,39 +1,39 @@
-import { LITE } from './tier.js?v=202609171534';
-import { PACE, QUICK, shortenText } from './pace.js?v=202609171534';
-import { forDevice } from './keys.js?v=202609171534';
+import { LITE } from './tier.js?v=202609171548';
+import { PACE, QUICK, shortenText } from './pace.js?v=202609171548';
+import { forDevice } from './keys.js?v=202609171548';
 import * as THREE from 'three';
-import { toWorld, toLatLon, H_SCALE, FT, MPH, KT } from './config.js?v=202609171534';
-import { buildTerrain, terrainHeight, buildDepthTexture } from './world/terrain.js?v=202609171534';
-import { buildSea, SEA, seaHeight } from './world/sea.js?v=202609171534';
-import { buildSky, buildClouds } from './world/sky.js?v=202609171534';
-import { loadPanorama, buildPanoramaSky } from './world/skybox.js?v=202609171534';
-import { buildHarbour, JETTY, ENTRANCE, updateMarshallers, updateFlags } from './world/harbour.js?v=202609171534';
-import { loadOrPlaceholder, findNamed, findAllNamed } from './loader.js?v=202609171534';
-import { Flight } from './flight.js?v=202609171534';
-import { Input } from './input.js?v=202609171534';
-import { Weapons } from './weapons.js?v=202609171534';
-import { spawnVessel } from './vessels.js?v=202609171534';
-import { spawnFriendly } from './friendlies.js?v=202609171534';
-import { foamStrip } from './world/foam.js?v=202609171534';
-import { buildTown } from './world/buildings.js?v=202609171534';
-import { buildVegetation } from './world/vegetation.js?v=202609171534';
-import { Radar } from './radar.js?v=202609171534';
-import { Hud } from './hud.js?v=202609171534';
-import { Cockpit } from './cockpit.js?v=202609171534';
-import { Audio } from './audio.js?v=202609171534';
-import { UI } from './ui.js?v=202609171534';
-import { buildCockpitInterior, buildGunnerOverlay } from './cockpitModel.js?v=202609171534';
-import { spawnBandit } from './bandits.js?v=202609171534';
-import { initTouch } from './touch.js?v=202609171534';
-import { Collisions } from './collide.js?v=202609171534';
-import { runIntro } from './intro.js?v=202609171534';
-import { startWalkout } from './walkout.js?v=202609171534';
-import { findCrewShots, startCrewCinematic } from './crewCinematic.js?v=202609171534';
-import { showPromotion } from './promotion.js?v=202609171534';
-import { MISSIONS, SKIES, PILOT } from './data/missions.js?v=202609171534';
-import { AIRCRAFT, availableOn } from './data/aircraft.js?v=202609171534';
-import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171534';
-import { HARBOUR } from './data/geo.js?v=202609171534';
+import { toWorld, toLatLon, H_SCALE, FT, MPH, KT } from './config.js?v=202609171548';
+import { buildTerrain, terrainHeight, buildDepthTexture } from './world/terrain.js?v=202609171548';
+import { buildSea, SEA, seaHeight } from './world/sea.js?v=202609171548';
+import { buildSky, buildClouds } from './world/sky.js?v=202609171548';
+import { loadPanorama, buildPanoramaSky } from './world/skybox.js?v=202609171548';
+import { buildHarbour, JETTY, ENTRANCE, updateMarshallers, updateFlags } from './world/harbour.js?v=202609171548';
+import { loadOrPlaceholder, findNamed, findAllNamed } from './loader.js?v=202609171548';
+import { Flight } from './flight.js?v=202609171548';
+import { Input } from './input.js?v=202609171548';
+import { Weapons } from './weapons.js?v=202609171548';
+import { spawnVessel } from './vessels.js?v=202609171548';
+import { spawnFriendly } from './friendlies.js?v=202609171548';
+import { foamStrip } from './world/foam.js?v=202609171548';
+import { buildTown } from './world/buildings.js?v=202609171548';
+import { buildVegetation } from './world/vegetation.js?v=202609171548';
+import { Radar } from './radar.js?v=202609171548';
+import { Hud } from './hud.js?v=202609171548';
+import { Cockpit } from './cockpit.js?v=202609171548';
+import { Audio } from './audio.js?v=202609171548';
+import { UI } from './ui.js?v=202609171548';
+import { buildCockpitInterior, buildGunnerOverlay } from './cockpitModel.js?v=202609171548';
+import { spawnBandit } from './bandits.js?v=202609171548';
+import { initTouch } from './touch.js?v=202609171548';
+import { Collisions } from './collide.js?v=202609171548';
+import { runIntro } from './intro.js?v=202609171548';
+import { startWalkout } from './walkout.js?v=202609171548';
+import { findCrewShots, startCrewCinematic } from './crewCinematic.js?v=202609171548';
+import { showPromotion } from './promotion.js?v=202609171548';
+import { MISSIONS, SKIES, PILOT } from './data/missions.js?v=202609171548';
+import { AIRCRAFT, availableOn } from './data/aircraft.js?v=202609171548';
+import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171548';
+import { HARBOUR } from './data/geo.js?v=202609171548';
 
 // ---------- renderer & scene ----------
 const canvas = document.getElementById('gl');
@@ -237,9 +237,13 @@ input.onPad = (id) => { if (id) hud.log(`Controller connected: ${id.slice(0, 40)
 // The title cue. useTracks is called as well as setMood because setMood returns early once the
 // mood is already 'menu', which would leave the generative pad playing if the clips had not
 // finished decoding the first time round.
+// The title cue begins with the second card of the intro (the story), not the first; it is
+// downloaded and decoded from the start so it is ready then.
+let menuMusicFrom = false;
 function startMenuMusic() {
   audio.init(); audio.resume();
-  if (G.running) return;
+  audio.samples.prefetch('music_title');
+  if (G.running || !menuMusicFrom) return;
   audio.music.setMood('menu');
   if (audio.music.useTracks) audio.music.useTracks('menu');
 }
@@ -430,7 +434,13 @@ async function startMission(mission, spec, roleId, opts = {}) {
 ui.onStart = (mission, spec, role) => startMission(mission, spec, role);
 // launch intro: shown once per page load, before the title menu (skippable)
 ui.hide();
-const intro = runIntro(document.body, input, { onMusic: startMenuMusic, onDone: () => { const sw = document.getElementById('startw'); if (sw) sw.remove(); if (G.quick) return; ui.show(); if (audio.ctx) audio.music.setMood('menu'); } });
+const dropQuickSortie = () => { const sw = document.getElementById('startw'); if (sw) sw.remove(); };
+const intro = runIntro(document.body, input, {
+  onMusic: startMenuMusic,
+  onStory: () => { menuMusicFrom = true; startMenuMusic(); },
+  // the photographs have captions along the bottom: the button goes when they begin
+  onTitle: dropQuickSortie,
+  onDone: () => { menuMusicFrom = true; dropQuickSortie(); if (G.quick) return; ui.show(); if (audio.ctx) audio.music.setMood('menu'); } });
 // Quick sortie: one tap from the opening cards straight to a Catalina on the practice range
 const touch = initTouch(input);
 const startb = document.getElementById('startb');

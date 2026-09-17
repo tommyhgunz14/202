@@ -6,8 +6,8 @@ const rep = (s, a, b, what) => { if (!s.includes(a)) throw new Error('anchor mis
 
 // ---------- terrain: rock attribute + detail maps ----------
 let t = rd('src/world/terrain.js');
-t = rep(t, `import { toWorld, H_SCALE, V_SCALE, WORLD_HALF } from '../config.js?v=202609171534';`, `import { toWorld, H_SCALE, V_SCALE, WORLD_HALF } from '../config.js?v=202609171534';
-import { loadTex, terrainDetail } from './textures.js?v=202609171534';`, 'import');
+t = rep(t, `import { toWorld, H_SCALE, V_SCALE, WORLD_HALF } from '../config.js?v=202609171548';`, `import { toWorld, H_SCALE, V_SCALE, WORLD_HALF } from '../config.js?v=202609171548';
+import { loadTex, terrainDetail } from './textures.js?v=202609171548';`, 'import');
 t = rep(t, `  const rock = Math.max(rockByHeight, rockBySlope);
   c.lerp(slope > 0.35 ? LIMESTONE_DK : LIMESTONE, rock * (0.75 + 0.25 * n));
   return c;
@@ -38,8 +38,8 @@ wr('src/world/terrain.js', t);
 
 // ---------- buildings: planar UVs + textures ----------
 let b = rd('src/world/buildings.js');
-b = rep(b, `import { terrainHeight } from './terrain.js?v=202609171534';`, `import { terrainHeight } from './terrain.js?v=202609171534';
-import { planarUVs, texture } from './textures.js?v=202609171534';
+b = rep(b, `import { terrainHeight } from './terrain.js?v=202609171548';`, `import { terrainHeight } from './terrain.js?v=202609171548';
+import { planarUVs, texture } from './textures.js?v=202609171548';
 
 // which generated texture dresses each material key, and the tile size in metres
 const TEX = { tile: ['roof_tiles', 2.5], white: ['rendered_wall', 4], ochre: ['rendered_wall', 4], pink: ['rendered_wall', 4], cream: ['rendered_wall', 4],
@@ -56,8 +56,8 @@ wr('src/world/buildings.js', b);
 
 // ---------- harbour: moles, jetty, runway, apron ----------
 let h = rd('src/world/harbour.js');
-h = rep(h, `import { terrainHeight } from './terrain.js?v=202609171534';`, `import { terrainHeight } from './terrain.js?v=202609171534';
-import { planarUVs, texture } from './textures.js?v=202609171534';`, 'import');
+h = rep(h, `import { terrainHeight } from './terrain.js?v=202609171548';`, `import { terrainHeight } from './terrain.js?v=202609171548';
+import { planarUVs, texture } from './textures.js?v=202609171548';`, 'import');
 h = rep(h, `const white = new THREE.MeshStandardMaterial({ color: 0xf0efe8, roughness: 0.8 });`, `const white = new THREE.MeshStandardMaterial({ color: 0xf0efe8, roughness: 0.8 });
 texture(stone, 'stone_quay', 3, { keepColor: false }); texture(concrete, 'tarmac', 6); texture(tarmac, 'tarmac', 5, { tint: new THREE.Color(0x8a8b8e) });
 // boxes get world-scale UVs when they are made
@@ -80,7 +80,7 @@ a = rep(a, `export class Audio {
     this.ctx = null; this.master = null; this.engines = []; this.enabled = true;
     this.music = new Music(this);
     this.settle = 0; this.lastThrottle = 0;
-  }`, `import { Samples } from './samples.js?v=202609171534';
+  }`, `import { Samples } from './samples.js?v=202609171548';
 
 export class Audio {
   constructor() {

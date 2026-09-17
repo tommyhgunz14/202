@@ -1,9 +1,9 @@
-import { AIRCRAFT, SCORE_LABELS, availableOn } from './data/aircraft.js?v=202609171534';
-import { MISSIONS, PILOT } from './data/missions.js?v=202609171534';
-import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171534';
-import { PLATES } from './data/archive.js?v=202609171534';
-import { PACE } from './pace.js?v=202609171534';
-import { forDevice } from './keys.js?v=202609171534';
+import { AIRCRAFT, SCORE_LABELS, availableOn } from './data/aircraft.js?v=202609171548';
+import { MISSIONS, PILOT } from './data/missions.js?v=202609171548';
+import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171548';
+import { PLATES } from './data/archive.js?v=202609171548';
+import { PACE } from './pace.js?v=202609171548';
+import { forDevice } from './keys.js?v=202609171548';
 
 // period photographs (Atlas, RAF official style) shown at the start of a sortie
 const PHOTOS = ['photo_london_gunwharf.jpg', 'photo_briefing.jpg', 'photo_swordfish_slip.jpg', 'photo_sunderland_moor.jpg', 'photo_uboat_air.jpg', 'photo_destroyer.jpg', 'photo_crew_dusk.jpg'];
@@ -83,8 +83,14 @@ export class UI {
   poll() {
     if (this.el.style.display === 'none') return;
     const m = this.input.menuPoll();
-    if (this.screen === 'title' && m.accept) this.act('pilot');
-    else if (this.screen === 'pilot' && (m.accept)) this.act('missions');
+    // screens that are a set of buttons: up/down (or left/right) move the highlight, accept presses it
+    if (['title', 'pilot', 'archive', 'debrief'].includes(this.screen)) {
+      const btns = this.focusables();
+      if (btns.length && (m.up || m.left)) { this.focusIdx = (this.focusIdx + btns.length - 1) % btns.length; this.markFocus(); }
+      if (btns.length && (m.down || m.right)) { this.focusIdx = (this.focusIdx + 1) % btns.length; this.markFocus(); }
+      if (m.accept && btns[this.focusIdx]) { btns[this.focusIdx].click(); return; }
+    }
+    if (this.screen === 'pilot' && m.back) this.act('title');
     else if (this.screen === 'missions') {
       if (m.up) { this.missionIdx = (this.missionIdx + MISSIONS.length - 1) % MISSIONS.length; this.render(); }
       if (m.down) { this.missionIdx = (this.missionIdx + 1) % MISSIONS.length; this.render(); }
@@ -98,13 +104,25 @@ export class UI {
       if (m.back) this.act('missions');
     } else if (this.screen === 'plan') {
       const roles = this.currentPlan().roles;
-      if (roles && (m.up || m.left)) { this.roleIdx = (this.roleIdx + roles.length - 1) % roles.length; this.render(); }
-      if (roles && (m.down || m.right)) { this.roleIdx = (this.roleIdx + 1) % roles.length; this.render(); }
+      if (roles && m.up) { this.roleIdx = (this.roleIdx + roles.length - 1) % roles.length; this.render(); }
+      if (roles && m.down) { this.roleIdx = (this.roleIdx + 1) % roles.length; this.render(); }
+      if (m.left || m.right) { PACE.set(!PACE.quick); this.render(); }   // Quick play or Full sortie
       if (m.accept) this.act('fly');
       if (m.back) this.act('ac-screen');
-    } else if (this.screen === 'debrief' && (m.accept || m.back)) this.act('missions');
+    } else if (this.screen === 'debrief' && m.back) this.act('missions');
     else if (this.screen === 'archive' && m.back) { if (this.plateIdx >= 0) this.act('plateclose'); else this.act('title'); }
     else if ((this.screen === 'controls' || this.screen === 'history') && (m.accept || m.back)) this.act('title');
+  }
+
+  // the buttons a controller can move through on this screen, and the highlight on the current one
+  focusables() { return [...this.el.querySelectorAll('button[data-action]')]; }
+  markFocus() {
+    if (!['title', 'pilot', 'archive', 'debrief'].includes(this.screen)) return;
+    const btns = this.focusables();
+    if (this.focusScreen !== this.screen) { this.focusScreen = this.screen; this.focusIdx = 0; }
+    this.focusIdx = Math.min(this.focusIdx || 0, Math.max(0, btns.length - 1));
+    btns.forEach((b, i) => b.classList.toggle('sel', i === this.focusIdx));
+    if (btns[this.focusIdx] && btns[this.focusIdx].scrollIntoView) btns[this.focusIdx].scrollIntoView({ block: 'nearest' });
   }
 
   debrief(result) { this.result = result; this.screen = 'debrief'; this.show(); }
@@ -127,7 +145,7 @@ export class UI {
           <button data-action="history">Sources &amp; accuracy</button>
           <button data-action="archive">Photograph archive</button>
         </div>
-        <p class="hint">Enter / A to select · Esc / B to go back · plug in a controller at any time</p>
+        <p class="hint">Arrows / D-pad to move · Enter / A to select · Esc / B to go back · plug in a controller at any time</p>
       </div>`;
     } else if (s === 'pilot') {
       html = `<div class="card wide">
@@ -306,5 +324,6 @@ export class UI {
       </div>`;
     }
     this.el.innerHTML = html;
+    this.markFocus();
   }
 }

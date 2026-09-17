@@ -31,11 +31,19 @@ export class Samples {
   // is queued and starts the instant the first click or tap lets sound through, instead of only
   // beginning to download at that moment.
   want(n, stillWanted, then) {
-    if (!n || this.buf[n] || this.fetching[n] || !this.a.ctx) return;
+    if (!n || this.buf[n] || !this.a.ctx) return;
+    const join = () => this.fetching[n].then((ok) => { if (ok && stillWanted()) then(); });
+    if (this.fetching[n]) { join(); return; }   // already coming (prefetched)
     setTimeout(() => {
-      if (this.buf[n] || this.fetching[n] || !stillWanted()) return;
-      this.fetching[n] = this.fetchClip(n).then((ok) => { if (ok && stillWanted()) then(); });
+      if (this.buf[n] || !stillWanted()) return;
+      if (!this.fetching[n]) this.fetching[n] = this.fetchClip(n);
+      join();
     }, 250);
+  }
+  // download and decode now, to be played later (the title cue, ahead of the card it begins on)
+  prefetch(n) {
+    if (!n || this.buf[n] || this.fetching[n] || !this.a.ctx) return;
+    this.fetching[n] = this.fetchClip(n);
   }
   has(n) { return !!this.buf[n]; }
 
@@ -73,5 +81,5 @@ export class Samples {
     this.a.burst(0.05, 3000, b.duration, 0.3);
     return true;
   }
-}import { LITE } from './tier.js?v=202609171534';
+}import { LITE } from './tier.js?v=202609171548';
 

@@ -9,7 +9,7 @@
 // change is loud for a few seconds and then tapers to a background level so the crew (and the
 // player) can hear the rest of the world.
 
-import { Samples } from './samples.js?v=202609171534';
+import { Samples } from './samples.js?v=202609171548';
 
 export class Audio {
   constructor() {
