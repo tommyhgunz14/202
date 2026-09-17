@@ -1,4 +1,4 @@
-import { LITE } from '../tier.js?v=202609171124';
+import { LITE } from '../tier.js?v=202609171221';
 import * as THREE from 'three';
 
 // Surface textures generated with Atlas live in assets/tex/<name>.jpg with optional

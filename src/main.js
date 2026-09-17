@@ -1,38 +1,39 @@
-import { LITE } from './tier.js?v=202609171124';
-import { PACE, QUICK, shortenText } from './pace.js?v=202609171124';
+import { LITE } from './tier.js?v=202609171221';
+import { PACE, QUICK, shortenText } from './pace.js?v=202609171221';
+import { forDevice } from './keys.js?v=202609171221';
 import * as THREE from 'three';
-import { toWorld, toLatLon, H_SCALE, FT, MPH, KT } from './config.js?v=202609171124';
-import { buildTerrain, terrainHeight, buildDepthTexture } from './world/terrain.js?v=202609171124';
-import { buildSea, SEA, seaHeight } from './world/sea.js?v=202609171124';
-import { buildSky, buildClouds } from './world/sky.js?v=202609171124';
-import { loadPanorama, buildPanoramaSky } from './world/skybox.js?v=202609171124';
-import { buildHarbour, JETTY, ENTRANCE, updateMarshallers, updateFlags } from './world/harbour.js?v=202609171124';
-import { loadOrPlaceholder, findNamed, findAllNamed } from './loader.js?v=202609171124';
-import { Flight } from './flight.js?v=202609171124';
-import { Input } from './input.js?v=202609171124';
-import { Weapons } from './weapons.js?v=202609171124';
-import { spawnVessel } from './vessels.js?v=202609171124';
-import { spawnFriendly } from './friendlies.js?v=202609171124';
-import { foamStrip } from './world/foam.js?v=202609171124';
-import { buildTown } from './world/buildings.js?v=202609171124';
-import { buildVegetation } from './world/vegetation.js?v=202609171124';
-import { Radar } from './radar.js?v=202609171124';
-import { Hud } from './hud.js?v=202609171124';
-import { Cockpit } from './cockpit.js?v=202609171124';
-import { Audio } from './audio.js?v=202609171124';
-import { UI } from './ui.js?v=202609171124';
-import { buildCockpitInterior, buildGunnerOverlay } from './cockpitModel.js?v=202609171124';
-import { spawnBandit } from './bandits.js?v=202609171124';
-import { initTouch } from './touch.js?v=202609171124';
-import { Collisions } from './collide.js?v=202609171124';
-import { runIntro } from './intro.js?v=202609171124';
-import { startWalkout } from './walkout.js?v=202609171124';
-import { findCrewShots, startCrewCinematic } from './crewCinematic.js?v=202609171124';
-import { showPromotion } from './promotion.js?v=202609171124';
-import { MISSIONS, SKIES, PILOT } from './data/missions.js?v=202609171124';
-import { AIRCRAFT, availableOn } from './data/aircraft.js?v=202609171124';
-import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171124';
-import { HARBOUR } from './data/geo.js?v=202609171124';
+import { toWorld, toLatLon, H_SCALE, FT, MPH, KT } from './config.js?v=202609171221';
+import { buildTerrain, terrainHeight, buildDepthTexture } from './world/terrain.js?v=202609171221';
+import { buildSea, SEA, seaHeight } from './world/sea.js?v=202609171221';
+import { buildSky, buildClouds } from './world/sky.js?v=202609171221';
+import { loadPanorama, buildPanoramaSky } from './world/skybox.js?v=202609171221';
+import { buildHarbour, JETTY, ENTRANCE, updateMarshallers, updateFlags } from './world/harbour.js?v=202609171221';
+import { loadOrPlaceholder, findNamed, findAllNamed } from './loader.js?v=202609171221';
+import { Flight } from './flight.js?v=202609171221';
+import { Input } from './input.js?v=202609171221';
+import { Weapons } from './weapons.js?v=202609171221';
+import { spawnVessel } from './vessels.js?v=202609171221';
+import { spawnFriendly } from './friendlies.js?v=202609171221';
+import { foamStrip } from './world/foam.js?v=202609171221';
+import { buildTown } from './world/buildings.js?v=202609171221';
+import { buildVegetation } from './world/vegetation.js?v=202609171221';
+import { Radar } from './radar.js?v=202609171221';
+import { Hud } from './hud.js?v=202609171221';
+import { Cockpit } from './cockpit.js?v=202609171221';
+import { Audio } from './audio.js?v=202609171221';
+import { UI } from './ui.js?v=202609171221';
+import { buildCockpitInterior, buildGunnerOverlay } from './cockpitModel.js?v=202609171221';
+import { spawnBandit } from './bandits.js?v=202609171221';
+import { initTouch } from './touch.js?v=202609171221';
+import { Collisions } from './collide.js?v=202609171221';
+import { runIntro } from './intro.js?v=202609171221';
+import { startWalkout } from './walkout.js?v=202609171221';
+import { findCrewShots, startCrewCinematic } from './crewCinematic.js?v=202609171221';
+import { showPromotion } from './promotion.js?v=202609171221';
+import { MISSIONS, SKIES, PILOT } from './data/missions.js?v=202609171221';
+import { AIRCRAFT, availableOn } from './data/aircraft.js?v=202609171221';
+import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171221';
+import { HARBOUR } from './data/geo.js?v=202609171221';
 
 // ---------- renderer & scene ----------
 const canvas = document.getElementById('gl');
@@ -388,7 +389,7 @@ async function startMission(mission, spec, roleId, opts = {}) {
   cockpitScene.add(G.interior.group);
   G.events = [];
   G.view = 'chase';
-  if (mission.rules && mission.rules.range) hud.log('Range procedure: cycle the gun positions with V / Y; the rafts score bullseye inside 10 m, near inside 25 m, wide inside 50 m.');
+  if (mission.rules && mission.rules.range) hud.log(forDevice('Range procedure: cycle the gun positions with V / Y; the rafts score bullseye inside 10 m, near inside 25 m, wide inside 50 m.'));
   audio.init(); audio.resume();
   audio.music.setMood('patrol');
   document.body.classList.add('flying');
@@ -449,6 +450,15 @@ function waitShare() { return G.fast ? QUICK.WAIT : 1; }
 
 // airborne, most of the way from the Bay to the area, heading for it at cruise
 function quickStart(mission, spec) {
+  // a mission can name its own opening: a place, a compass heading and a height
+  if (mission.quickStart) {
+    const q = mission.quickStart, w = toWorld(q.lat, q.lon), d = q.heading * Math.PI / 180;
+    G.flight.reset(new THREE.Vector3(w.x, q.alt || QUICK.START_ALT, w.z), Math.atan2(Math.sin(d), -Math.cos(d)), spec.cruise / MPH, false);
+    G.flight.onWater = false; G.flight.hullY = 0;
+    input.throttle = 0.75;
+    G.tookOff = true; G.tookOffAt = 0; G.taxiedOut = true;
+    return;
+  }
   const aim = mission.area ? toWorld(mission.area.lat, mission.area.lon)
     : (Array.isArray(mission.entities) && mission.entities.find((e) => e.lat != null)) ? toWorld(mission.entities.find((e) => e.lat != null).lat, mission.entities.find((e) => e.lat != null).lon)
     : { x: BASE.x - 3000, z: BASE.z };

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { Collisions } from './collide.js?v=202609171124';
+import { Collisions } from './collide.js?v=202609171221';
 
 // Loads a 404-contract asset module (default export: function(THREE) -> Group), keeping the
 // hierarchy so named nodes (props, guns, cockpit) stay addressable. Prototypes are cached and

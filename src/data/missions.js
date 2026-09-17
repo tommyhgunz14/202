@@ -17,6 +17,9 @@ export const MISSIONS = [
     brief: 'New aircraft on the squadron this week, and the Station Armament Officer has laid a range four miles south-east of Europa Point: two moored target rafts with bull\'s-eyes for the depth charges, a condemned coaster for the guns, and a dummy submarine silhouette. Take off, fly the short leg out past the Point, and work up: run in low along the raft and release as it passes under the nose (hits inside 10 m are bullseyes), then strafe the hulk — accuracy is scored. Stores are unlimited on the range. Cycle through the bomb-aimer\'s and gun positions with V / Y. A French fighter has been sniffing around from Morocco this week; the gunners should stay alert.',
     aircraft: ['catalina', 'sunderland', 'london', 'swordfish'], anyAircraft: true, sky: 'morning', clouds: 20,
     spawn: { ...BASE, heading: 205 },
+    // quick play: over the Bay at 800 ft, running south-east at the Rock, its western face and the town
+    // ahead on the left, the moles and the ships in the harbour below, Europa Point beyond
+    quickStart: { lat: 36.152, lon: -5.376, heading: 150, alt: 250 },
     area: { lat: 36.075, lon: -5.29, radius: 1500 },
     entities: [
       { type: 'raft', name: 'Raft A', lat: 36.078, lon: -5.300, heading: 0 },

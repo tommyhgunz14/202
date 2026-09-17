@@ -1,10 +1,10 @@
 # Our Story
 
-We were the last generation to know them.  Most of us just knew them as our Grandparents, and they for the most part appeared as just ordinary people.  But earlier on in their path through life these same ordinary people had received a calling that led them to lead extraordinary lives, prevailing over extraordinary challenges where many made the ultimate sacrifice.   
+We were the last generation to know them.  Most of us just knew them as our grandparents, and they for the most part appeared as just ordinary people.  But earlier on in their path through life these same ordinary people had received a calling that led them to lead extraordinary lives, prevailing over extraordinary challenges where many made the ultimate sacrifice.   
 They would tell you that **'we wanted to do our part', 'we did it for our country and loved ones', 'it was a privilege to be a part of', 'I would do it again'.**
 They did it because they refused to have our freedoms, values and democracy as we know it today taken away from us.
 They were to become known as the **Greatest Generation**, growing up in the Great Depression but still finding the hope, sense of duty and inspiration to give away the last of what little they had - their lives.
-This game conveys the story of the contribution to the war by one of my family for my children and for anyone else curious to relive a part of the war that is not often recounted or told outside of the stories shared among familes that were involved in the Battle for the Mediterranean.
+This game conveys the story of the contribution to the war by one of my family for my children and for anyone else curious to relive a part of the war that is not often recounted or told outside of the stories shared among families that were involved in the Battle for the Mediterranean.
 
 # Guardians of the Rock
 
@@ -16,6 +16,41 @@ submarines with guns and depth charges while leaving the neutrals alone.
 Built to the [404 game recipe](https://github.com/404-Repo/404-game-recipe): every aircraft and
 vessel is a Three.js module that returns a `Group` (no mesh files, no textures), verified from
 four sides with the recipe's harness. Runs from a folder with no build step.
+
+## How it was made
+
+- **Built** between 12 and 25 September 2026 by one person directing Claude Code (Claude Opus 5),
+  in small commits you can follow in the history. No engine and no build step: plain ES modules
+  and a vendored Three.js.
+- **Every 3D object is code.** The flying boats are lofted from hull stations and wing sections in
+  `assets/*.js`; the warships share a kit (`assets/lib/warship_kit.js`); the Strait, the Rock, the
+  harbour and the towns are generated in `src/world/` from coastline, height and place data. The
+  game has no mesh file loader and ships no mesh files.
+- **Atlas as a research tool first.** Atlas generated a recognition plate of every aircraft and
+  ship (`assets/refs/`) and a set of reference plates (`assets/refs/plates/`), and each model was
+  checked against them for proportions, fittings and markings; `docs/ASSET-BRIEF.md` and
+  `docs/STYLE-LOCK.md` kept the models consistent. Atlas also made the skies, the surface
+  textures, the music, the sound effects, the crew's voices and the period-style photographs,
+  which the game labels as reconstructions.
+- **Sources.** `docs/HISTORY.md` records where each mission, aircraft, ship and place comes from,
+  and every deliberate departure from the record.
+- **Checked** by `npm test` (every model builds with its mounts, the geography holds, the phone
+  build has every file it needs) and by the 404 jam gate run against the live site. The first
+  phone run failed: 23.6 MB, 56 s to ready, over 5,000 draw calls and 7.5 M triangles. The
+  submitted build passes: under 6 MB, under 10 s, under 200 draw calls and 0.8 M triangles.
+- **Thrown away:**
+  - a pipeline for generated GLB meshes and its viewer, removed because the jam asks for every
+    3D object to be code (Atlas's image-to-3D was not available to this account in any case);
+  - a copyrighted recording used as the title music, replaced by an Atlas cue and removed from
+    the repository's history;
+  - the official squadron badge and an archive photograph of a Catalina over Europa Point whose
+    rights could not be established, withdrawn and removed from the history, with a badge that
+    carries no crown or service name in their place;
+  - the first phone build, replaced by a light tier, per-town meshes, merged models, a draw
+    distance and music fetched only when it is needed;
+  - photographs of the Saro London that showed one engine instead of two, remade; houses that
+    had strayed onto the Rock's east face, removed; a French fleet first placed out at sea,
+    moved into harbour.
 
 ## Run it
 

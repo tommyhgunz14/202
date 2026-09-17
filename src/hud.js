@@ -1,4 +1,5 @@
-import { FT, MPH, H_SCALE } from './config.js?v=202609171124';
+import { FT, MPH, H_SCALE } from './config.js?v=202609171221';
+import { forDevice } from './keys.js?v=202609171221';
 
 // the recognition cards in assets/refs
 const REF_CARDS = new Set(["catalina_mk1","fishing_boat","german_freighter","italian_sub_brin","rn_destroyer_wishart","saro_london","spanish_coaster","sunderland_mk1","swordfish_floatplane","uboat_viic","vichy_destroyer_fantasque","vichy_h75"]);
@@ -52,7 +53,7 @@ export class Hud {
       `<span class="${flight.damage > 0.5 ? 'bad' : ''}">DMG <b>${(flight.damage * 100).toFixed(0)}</b>%</span>` +
       `<span>${state.time}</span>` +
       `<span>${view === 'cockpit' ? 'COCKPIT' : view.startsWith('gun:') ? 'GUNNER ' + view.slice(8).toUpperCase() : view === 'bombsight' ? 'BOMB AIMER' : 'CHASE'} · ${state.padName ? '🎮 ' + state.padName.slice(0, 22) : document.body.classList.contains('touch') ? 'touch' : 'keyboard'}</span>`;
-    this.el.obj.innerHTML = objectives.map((o) => `<div class="${o.done ? 'done' : o.failed ? 'failed' : ''}">${o.done ? '☑' : o.failed ? '☒' : '☐'} ${o.text}</div>`).join('');
+    this.el.obj.innerHTML = objectives.map((o) => `<div class="${o.done ? 'done' : o.failed ? 'failed' : ''}">${o.done ? '☑' : o.failed ? '☒' : '☐'} ${forDevice(o.text)}</div>`).join('');
     if (contact) {
       const d = contact.dist / H_SCALE / 1852;
       this.el.contact.style.display = 'block';

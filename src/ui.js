@@ -1,8 +1,9 @@
-import { AIRCRAFT, SCORE_LABELS, availableOn } from './data/aircraft.js?v=202609171124';
-import { MISSIONS, PILOT } from './data/missions.js?v=202609171124';
-import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171124';
-import { PLATES } from './data/archive.js?v=202609171124';
-import { PACE } from './pace.js?v=202609171124';
+import { AIRCRAFT, SCORE_LABELS, availableOn } from './data/aircraft.js?v=202609171221';
+import { MISSIONS, PILOT } from './data/missions.js?v=202609171221';
+import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171221';
+import { PLATES } from './data/archive.js?v=202609171221';
+import { PACE } from './pace.js?v=202609171221';
+import { forDevice } from './keys.js?v=202609171221';
 
 // period photographs (Atlas, RAF official style) shown at the start of a sortie
 const PHOTOS = ['photo_london_gunwharf.jpg', 'photo_briefing.jpg', 'photo_swordfish_slip.jpg', 'photo_sunderland_moor.jpg', 'photo_uboat_air.jpg', 'photo_destroyer.jpg', 'photo_crew_dusk.jpg'];
@@ -149,7 +150,7 @@ export class UI {
       const total = Object.values(a.scores).reduce((x, y) => x + y, 0);
       html = `<div class="card wide">
         <h2>${m.date} · ${m.title}</h2>
-        <p class="brief">${m.brief}</p>
+        <p class="brief">${forDevice(m.brief)}</p>
         <h3>Choose your aircraft</h3>
         <div class="ac-tabs">${list.map((x, i) => `<button class="${i === this.aircraftIdx ? 'sel' : ''}" data-action="aircraft" data-idx="${i}">${x.name}</button>`).join('')}</div>
         <div class="ac-detail">
@@ -194,7 +195,7 @@ export class UI {
           <div>
             ${plan.aim ? `<p class="aim">${plan.aim}</p>` : ''}
             <h3>The plan</h3>
-            <ol class="plan-list">${objectives.map((o) => `<li>${o.text}</li>`).join('')}</ol>
+            <ol class="plan-list">${objectives.map((o) => `<li>${forDevice(o.text)}</li>`).join('')}</ol>
           </div>
           <div>
             <h3>Your part</h3>
