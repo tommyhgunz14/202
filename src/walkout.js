@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { buildFigure, animateFigure, climbFigure } from './world/crew.js?v=202609161601';
+import { buildFigure, animateFigure, climbFigure } from './world/crew.js?v=202609171124';
 
 // Mission-start cinematic in the world: the crew come out of the hut on the pontoon, walk its
 // length to the gangplank and climb in through the hull hatch of the moored aircraft, which is

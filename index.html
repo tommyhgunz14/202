@@ -167,7 +167,17 @@
   #obj-marker.edge i { border-radius: 0; border: none; width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-bottom: 18px solid #ffd27a; }
   #touch #bff { display: none; }
   #touch .ffi { font-size: 13px; letter-spacing: -3px; }
-  body.touch #hud-contact { top: 58px; }
+  body.touch #hud-contact { top: 104px; }
+  #touch #bradar { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 48px); right: max(10px, env(safe-area-inset-right)); width: 46px; height: 36px; border-radius: 8px; font-size: 9px; letter-spacing: 0; }
+  #touch #bradar.on { background: rgba(255,210,122,.85); color: #1b1a17; border-color: #ffd27a; }
+  body.touch.radar-on.flying #asv { display: block !important; top: 100px; bottom: auto; right: 10px; transform: scale(.5); transform-origin: top right; }
+  body.touch.radar-on.flying #plot { display: block !important; top: 218px; bottom: auto; right: 10px; transform: scale(.5); transform-origin: top right; }
+  body.touch.radar-on #hud-contact { top: 344px; }
+  body.touch #hud-contact { font-size: 11px; padding: 5px 8px; max-width: 150px; }
+  body.touch #hud-contact .refcard { width: 132px; height: 74px; }
+  /* phones: the story card fits the screen */
+  @media (max-width: 600px) { #intro .icard.icard { padding: 0 6vw; } #intro .icard .story-head { font-size: 19px; margin-bottom: 0.6em; } #intro .icard .story { font-size: 14.5px; line-height: 1.45; margin-bottom: 0.7em; } }
+  body.touch.radar-on #hud-objectives { max-width: calc(100vw - 170px); }
   body.quick #touch #bff { display: block; }
   body.ff #touch #bff { background: rgba(255,210,122,.45); }
   body.ff #hud-top::after { content: '▸▸ ×6'; color: #ffd27a; font-weight: 700; }
@@ -196,7 +206,7 @@
   body.touch #hud-top { font-size: 11px; gap: 10px; padding: 6px 56px 6px 10px; }
   body.touch #hud-guide { top: 52%; font-size: 12px; padding: 0 12px; }
   @media (max-width: 600px) { body.touch #hud-objectives { top: 92px; } body.touch #hud-ticker { bottom: 200px; } }
-  @media (max-height: 500px) { #stick { width: 110px; height: 110px; } #touch .tbtns { grid-template-columns: repeat(3, 48px); } #touch .tbtns button { width: 48px; height: 48px; } body.touch #lever { top: 40%; transform: translateY(-50%) scale(.55); } body.touch #hud-ticker { bottom: auto; top: 44px; width: 46vw; } body.touch #hud-objectives { max-width: 28vw; } }
+  @media (max-height: 500px) { body.touch.radar-on.flying #asv { top: 10px; right: 58px; transform: scale(.4); } body.touch.radar-on.flying #plot { top: 10px; right: 152px; transform: scale(.4); } body.touch.radar-on #hud-contact { top: 104px; } #stick { width: 110px; height: 110px; } #touch .tbtns { grid-template-columns: repeat(3, 48px); } #touch .tbtns button { width: 48px; height: 48px; } body.touch #lever { top: 40%; transform: translateY(-50%) scale(.55); } body.touch #hud-ticker { bottom: auto; top: 44px; width: 46vw; } body.touch #hud-objectives { max-width: 28vw; } }
   #intro.clear { background: rgba(0, 0, 0, 0.38); }
   #intro.out { opacity: 0; pointer-events: none; }
   #intro .icard { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 1.5s ease; text-align: center; padding: 0 12vw; }
@@ -312,6 +322,6 @@
 <div id="gun-cam"><div class="bar"><b id="gun-cam-title">Tail gunner</b><span id="gun-cam-state"></span></div><div class="frame" id="gun-cam-frame"></div></div>
 <div id="ui"></div>
 <div id="startw"><button id="startb" type="button">Quick sortie &#9656;</button></div>
-<script type="module" src="./src/main.js?v=202609161601"></script>
+<script type="module" src="./src/main.js?v=202609171124"></script>
 </body>
 </html>

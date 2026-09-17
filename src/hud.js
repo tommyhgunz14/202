@@ -1,4 +1,4 @@
-import { FT, MPH, H_SCALE } from './config.js?v=202609161601';
+import { FT, MPH, H_SCALE } from './config.js?v=202609171124';
 
 // the recognition cards in assets/refs
 const REF_CARDS = new Set(["catalina_mk1","fishing_boat","german_freighter","italian_sub_brin","rn_destroyer_wishart","saro_london","spanish_coaster","sunderland_mk1","swordfish_floatplane","uboat_viic","vichy_destroyer_fantasque","vichy_h75"]);

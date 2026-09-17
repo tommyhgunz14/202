@@ -19,7 +19,8 @@ export function initTouch(input) {
   el.innerHTML = `
     <div id="stick"><div class="ring"></div><div class="knob"></div></div>
     <div class="tbtns">${BUTTONS.map(([id, label]) => `<button id="${id}" type="button">${label}</button>`).join('')}</div>
-    <button id="bpause" type="button" aria-label="Pause">II</button>`;
+    <button id="bpause" type="button" aria-label="Pause">II</button>
+    <button id="bradar" type="button" aria-label="Show the radar and plotting chart">Radar</button>`;
   document.body.appendChild(el);
 
   const on = () => document.body.classList.add('touch');
@@ -71,6 +72,9 @@ export function initTouch(input) {
   const press = (id, code) => el.querySelector('#' + id).addEventListener('pointerdown', () => input.pressed.add(code));
   for (const [id, , kind, arg] of BUTTONS) (kind === 'hold' ? hold(id, arg) : press(id, arg));
   press('bpause', 'Escape');
+  // the ASV A-scope and the plotting chart: off by default to keep the small screen clear
+  const radarBtn = el.querySelector('#bradar');
+  radarBtn.addEventListener('pointerdown', () => { const on = document.body.classList.toggle('radar-on'); radarBtn.classList.toggle('on', on); });
 
   // the depth button shows the pistol setting the next charges will carry
   const depthLabel = el.querySelector('#bdepth small');
