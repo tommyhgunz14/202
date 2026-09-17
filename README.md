@@ -37,7 +37,7 @@ four sides with the recipe's harness. Runs from a folder with no build step.
 - **Checked** by `npm test` (every model builds with its mounts, the geography holds, the phone
   build has every file it needs) and by the 404 jam gate run against the live site. The first
   phone run failed: 23.6 MB, 56 s to ready, over 5,000 draw calls and 7.5 M triangles. The
-  submitted build passes: under 5 MB, under 10 s, under 500 draw calls and 1.3 M triangles with the
+  submitted build passes: under 6 MB, under 10 s, under 500 draw calls and 1.3 M triangles with the
   Rock, the town and the harbour all in view.
 - **Thrown away:**
   - a pipeline for generated GLB meshes and its viewer, removed because the jam asks for every
