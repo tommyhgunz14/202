@@ -3,7 +3,7 @@
 // Handles two report styles: a row with one `clip_name` and one file id, and a material row with
 // **(n) name** and ids labelled Albedo / Normal / Roughness (saved as name, name_normal, name_rough).
 import fs from 'fs';
-import { call } from './atlas.mjs?v=202609171508';
+import { call } from './atlas.mjs?v=202609171515';
 const [, , reportPath, outDir, ext] = process.argv;
 const rep = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
 const text = rep.response_text || '';

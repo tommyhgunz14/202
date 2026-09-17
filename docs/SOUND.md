@@ -27,6 +27,12 @@ A third pass added 16 gunner intercom lines (`gun_spot_<position>`, `gun_spot_su
 used by the automated gunners: sighting, opening fire, hits, the kill, and the fighter breaking
 off. Positions are nose, dorsal, tail, waist_l and waist_r.
 
+Two navigator lines followed in the same voice, copied from a crew node with only the text
+changed (18 credits): `voice_nav_edge` ("Jackie, we're running off the edge of the chart. I'm
+bringing her round onto course for the target.") when the aircraft passes 20 km from the middle of
+the Strait and the autopilot turns her back, and `voice_nav_back` ("On course for the target,
+Jackie. She's yours.") when he hands her back.
+
 ## Ideas for taking it further
 
 1. **Period radio bed** — a filtered "wireless" layer with static, a distant BBC-style voice

@@ -1,39 +1,39 @@
-import { LITE } from './tier.js?v=202609171508';
-import { PACE, QUICK, shortenText } from './pace.js?v=202609171508';
-import { forDevice } from './keys.js?v=202609171508';
+import { LITE } from './tier.js?v=202609171515';
+import { PACE, QUICK, shortenText } from './pace.js?v=202609171515';
+import { forDevice } from './keys.js?v=202609171515';
 import * as THREE from 'three';
-import { toWorld, toLatLon, H_SCALE, FT, MPH, KT } from './config.js?v=202609171508';
-import { buildTerrain, terrainHeight, buildDepthTexture } from './world/terrain.js?v=202609171508';
-import { buildSea, SEA, seaHeight } from './world/sea.js?v=202609171508';
-import { buildSky, buildClouds } from './world/sky.js?v=202609171508';
-import { loadPanorama, buildPanoramaSky } from './world/skybox.js?v=202609171508';
-import { buildHarbour, JETTY, ENTRANCE, updateMarshallers, updateFlags } from './world/harbour.js?v=202609171508';
-import { loadOrPlaceholder, findNamed, findAllNamed } from './loader.js?v=202609171508';
-import { Flight } from './flight.js?v=202609171508';
-import { Input } from './input.js?v=202609171508';
-import { Weapons } from './weapons.js?v=202609171508';
-import { spawnVessel } from './vessels.js?v=202609171508';
-import { spawnFriendly } from './friendlies.js?v=202609171508';
-import { foamStrip } from './world/foam.js?v=202609171508';
-import { buildTown } from './world/buildings.js?v=202609171508';
-import { buildVegetation } from './world/vegetation.js?v=202609171508';
-import { Radar } from './radar.js?v=202609171508';
-import { Hud } from './hud.js?v=202609171508';
-import { Cockpit } from './cockpit.js?v=202609171508';
-import { Audio } from './audio.js?v=202609171508';
-import { UI } from './ui.js?v=202609171508';
-import { buildCockpitInterior, buildGunnerOverlay } from './cockpitModel.js?v=202609171508';
-import { spawnBandit } from './bandits.js?v=202609171508';
-import { initTouch } from './touch.js?v=202609171508';
-import { Collisions } from './collide.js?v=202609171508';
-import { runIntro } from './intro.js?v=202609171508';
-import { startWalkout } from './walkout.js?v=202609171508';
-import { findCrewShots, startCrewCinematic } from './crewCinematic.js?v=202609171508';
-import { showPromotion } from './promotion.js?v=202609171508';
-import { MISSIONS, SKIES, PILOT } from './data/missions.js?v=202609171508';
-import { AIRCRAFT, availableOn } from './data/aircraft.js?v=202609171508';
-import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171508';
-import { HARBOUR } from './data/geo.js?v=202609171508';
+import { toWorld, toLatLon, H_SCALE, FT, MPH, KT } from './config.js?v=202609171515';
+import { buildTerrain, terrainHeight, buildDepthTexture } from './world/terrain.js?v=202609171515';
+import { buildSea, SEA, seaHeight } from './world/sea.js?v=202609171515';
+import { buildSky, buildClouds } from './world/sky.js?v=202609171515';
+import { loadPanorama, buildPanoramaSky } from './world/skybox.js?v=202609171515';
+import { buildHarbour, JETTY, ENTRANCE, updateMarshallers, updateFlags } from './world/harbour.js?v=202609171515';
+import { loadOrPlaceholder, findNamed, findAllNamed } from './loader.js?v=202609171515';
+import { Flight } from './flight.js?v=202609171515';
+import { Input } from './input.js?v=202609171515';
+import { Weapons } from './weapons.js?v=202609171515';
+import { spawnVessel } from './vessels.js?v=202609171515';
+import { spawnFriendly } from './friendlies.js?v=202609171515';
+import { foamStrip } from './world/foam.js?v=202609171515';
+import { buildTown } from './world/buildings.js?v=202609171515';
+import { buildVegetation } from './world/vegetation.js?v=202609171515';
+import { Radar } from './radar.js?v=202609171515';
+import { Hud } from './hud.js?v=202609171515';
+import { Cockpit } from './cockpit.js?v=202609171515';
+import { Audio } from './audio.js?v=202609171515';
+import { UI } from './ui.js?v=202609171515';
+import { buildCockpitInterior, buildGunnerOverlay } from './cockpitModel.js?v=202609171515';
+import { spawnBandit } from './bandits.js?v=202609171515';
+import { initTouch } from './touch.js?v=202609171515';
+import { Collisions } from './collide.js?v=202609171515';
+import { runIntro } from './intro.js?v=202609171515';
+import { startWalkout } from './walkout.js?v=202609171515';
+import { findCrewShots, startCrewCinematic } from './crewCinematic.js?v=202609171515';
+import { showPromotion } from './promotion.js?v=202609171515';
+import { MISSIONS, SKIES, PILOT } from './data/missions.js?v=202609171515';
+import { AIRCRAFT, availableOn } from './data/aircraft.js?v=202609171515';
+import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171515';
+import { HARBOUR } from './data/geo.js?v=202609171515';
 
 // ---------- renderer & scene ----------
 const canvas = document.getElementById('gl');
@@ -538,7 +538,7 @@ function checkChartEdge(f) {
     G.edgeTurn = true;
     G.edgeAlt = THREE.MathUtils.clamp(p.y, 150, 600);
     if (G.ff) pressOn(false);
-    audio.burst(0.05, 3000, 0.5, 0.3);   // the intercom crackles
+    if (!audio.say('voice_nav_edge', 30)) audio.burst(0.05, 3000, 0.5, 0.3);   // the navigator on the intercom
     ctx.log(`Navigator: "${CALLSIGN}, we're running off the edge of the chart. I'm bringing her round onto course for the target."`);
   }
   if (!G.edgeTurn) return;
@@ -547,6 +547,7 @@ function checkChartEdge(f) {
   err = Math.atan2(Math.sin(err), Math.cos(err));
   if (out < CHART_EDGE - 1500 || (Math.abs(err) < 0.3 && out < CHART_EDGE + 500)) {
     G.edgeTurn = false; G.edgeArmed = false;
+    audio.say('voice_nav_back', 30);
     ctx.log(`Navigator: "On course for the target, ${CALLSIGN}. She's yours."`, 'ok');
   }
 }

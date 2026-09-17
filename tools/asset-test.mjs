@@ -9,9 +9,9 @@
 import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
-import * as THREE from '../vendor/three.module.js?v=202609171508';
-import { AIRCRAFT } from '../src/data/aircraft.js?v=202609171508';
-import { CLIPS, MUSIC } from '../src/samples.js?v=202609171508';
+import * as THREE from '../vendor/three.module.js?v=202609171515';
+import { AIRCRAFT } from '../src/data/aircraft.js?v=202609171515';
+import { CLIPS, MUSIC } from '../src/samples.js?v=202609171515';
 
 // a few assets paint small canvas textures; outside a browser give them a canvas that draws nothing
 if (typeof globalThis.document === 'undefined') {

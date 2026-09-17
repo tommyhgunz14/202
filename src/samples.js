@@ -2,7 +2,7 @@
 // assets/sfx/<name>.(mp3|wav). Anything missing simply is not used and the synth carries on.
 export const CLIPS = ['engine_idle', 'engine_cruise', 'engine_full', 'water_wash', 'wind', 'gulls', 'vickers_k', 'browning_twin',
   'depth_charge', 'splash', 'shell_splash', 'explosion', 'flak_hits', 'morse',
-  'voice_bow_ready', 'voice_contact', 'voice_charges_away', 'voice_straddle', 'voice_bandit', 'voice_diving', 'voice_neutral', 'voice_ours', 'voice_wt', 'voice_down', 'voice_alongside',
+  'voice_bow_ready', 'voice_contact', 'voice_charges_away', 'voice_straddle', 'voice_bandit', 'voice_diving', 'voice_neutral', 'voice_ours', 'voice_wt', 'voice_down', 'voice_alongside', 'voice_nav_edge', 'voice_nav_back',
   'gun_spot_dorsal', 'gun_spot_tail', 'gun_spot_waist_l', 'gun_spot_waist_r', 'gun_spot_nose', 'gun_spot_surface',
   'gun_fire_dorsal', 'gun_fire_tail', 'gun_fire_waist_l', 'gun_fire_waist_r', 'gun_fire_nose',
   'gun_hits', 'gun_kill_1', 'gun_kill_2', 'gun_escape_1', 'gun_escape_2'];
@@ -72,5 +72,5 @@ export class Samples {
     this.a.burst(0.05, 3000, b.duration, 0.3);
     return true;
   }
-}import { LITE } from './tier.js?v=202609171508';
+}import { LITE } from './tier.js?v=202609171515';
 
