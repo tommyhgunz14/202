@@ -211,6 +211,9 @@
   #intro.out { opacity: 0; pointer-events: none; }
   #intro .icard { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 1.5s ease; text-align: center; padding: 0 12vw; }
   #intro .icard.on { opacity: 1; }
+  #intro .begin { font-family: Georgia, "Times New Roman", serif; font-style: italic; font-size: clamp(18px, 2vw, 30px); letter-spacing: 2px; margin: 0; }
+  #intro:not(.begun) .skip { display: none; }
+  #intro .begin-sub { font-size: 12px; letter-spacing: 0.35em; text-transform: uppercase; opacity: 0.6; margin: 14px 0 0; }
   #intro .true { font-family: Georgia, "Times New Roman", serif; font-size: clamp(34px, 6vw, 84px); letter-spacing: 0.35em; text-transform: uppercase; font-weight: normal; margin: 0; }
   #intro .story-block { max-width: 1100px; }
   #intro .story-head { font-family: Georgia, "Times New Roman", serif; font-style: italic; font-size: clamp(22px, 2.4vw, 40px); letter-spacing: 2px; margin: 0 0 0.9em; }
@@ -322,6 +325,6 @@
 <div id="gun-cam"><div class="bar"><b id="gun-cam-title">Tail gunner</b><span id="gun-cam-state"></span></div><div class="frame" id="gun-cam-frame"></div></div>
 <div id="ui"></div>
 <div id="startw"><button id="startb" type="button">Quick sortie &#9656;</button></div>
-<script type="module" src="./src/main.js?v=202609171548"></script>
+<script type="module" src="./src/main.js?v=202609171608"></script>
 </body>
 </html>

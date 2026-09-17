@@ -1,5 +1,6 @@
 // Launch intro: a cinematic run of cards shown once per page load before the title menu.
-//   black → "A True Story.." → the situation in 1941 → the title over the harbour → three
+//   black → "click, tap or press any key to begin" (passed over where sound is already allowed) →
+//   "A True Story" → the situation in 1941 (the music begins here) → the title over the harbour → three
 //   stills of the crew walking out and boarding (about six seconds) → the passing-out photograph of
 //   winter 1930 with T. Q. Horner in the front row, coming up from grey into colour → the menu.
 // Any key, click or controller button skips the whole sequence.
@@ -18,10 +19,11 @@ const STORY = [
   'Led by Wing Commander Thomas Q. Horner - callsign \'Jackie\' - these dedicated airmen were tasked to locate and destroy the enemy subs, protect the supply convoys and help win the war for the Allies in the Mediterranean Ocean.',
 ];
 
-export function runIntro(root, input, { onDone, onTitle, onMusic, onStory } = {}) {
+export function runIntro(root, input, { onDone, onTitle, onMusic, onStory, soundAllowed } = {}) {
   const el = document.createElement('div');
   el.id = 'intro';
   el.innerHTML = `
+    <div class="icard" id="intro-begin"><p class="begin">Click, tap or press any key to begin</p><p class="begin-sub">Sound on</p></div>
     <div class="icard" id="intro-true"><p class="true">A True Story</p></div>
     <div class="icard" id="intro-story"><div class="story-block"><p class="story-head">${STORY_HEAD}</p>${STORY.map((p) => `<p class="story">${p}</p>`).join('')}</div></div>
     <div class="icard title" id="intro-title"><div class="photos">${PICS.map((n) => `<div class="ph${n === FINALE ? ' finale' : ''}" data-pic="${n}"></div>`).join('')}</div><div class="tt"><h1>Guardians of the Rock</h1><p class="sub">No. 202 Squadron &middot; Gibraltar &middot; 1939&ndash;1944</p></div></div>
@@ -49,9 +51,27 @@ export function runIntro(root, input, { onDone, onTitle, onMusic, onStory } = {}
   // a click to focus the window must not lose the sequence: only Escape, Enter, Space, a
   // controller button or a click on the skip label end it
   const skip = (e) => { if (e && e.type === 'keydown' && !['Escape', 'Enter', 'Space'].includes(e.code)) return; if (e && e.type === 'pointerdown' && !(e.target && e.target.closest && e.target.closest('.skip'))) return; finish(); };
-  setTimeout(() => { window.addEventListener('keydown', skip); window.addEventListener('pointerdown', skip); }, 800);
+  const armSkip = () => setTimeout(() => { if (!done) { window.addEventListener('keydown', skip); window.addEventListener('pointerdown', skip); } }, 800);
   // controller: poll the menu buttons
-  const poll = setInterval(() => { if (done) return clearInterval(poll); const m = input.menuPoll(); if (m.accept || m.back) finish(); }, 120);
+  let begun = false, beginNow = null;
+  const poll = setInterval(() => { if (done) return clearInterval(poll); const m = input.menuPoll(); if (!begun) { if ((m.accept || m.back) && beginNow) beginNow(); return; } if (m.accept || m.back) finish(); }, 120);
+
+  // A browser plays no sound until the page itself has been clicked, tapped or keyed (the click that
+  // opened the link does not count), so the intro opens by asking for that press, which also lets
+  // the music begin on the story card. Where sound is already allowed the card is passed over.
+  const begin = () => new Promise((resolve) => {
+    const go = () => {
+      if (begun) return; begun = true; el.classList.add('begun');
+      window.removeEventListener('pointerdown', onPress); window.removeEventListener('keydown', onPress);
+      resolve();
+    };
+    const onPress = (e) => { if (e.target && e.target.closest && e.target.closest('#startw')) return; go(); };
+    beginNow = go;
+    window.addEventListener('pointerdown', onPress);
+    window.addEventListener('keydown', onPress);
+    cancel.push(() => { window.removeEventListener('pointerdown', onPress); window.removeEventListener('keydown', onPress); });
+    setTimeout(() => { if (!begun && soundAllowed && soundAllowed()) go(); }, 400);
+  });
 
   // sound is set up at once (the title cue downloads now) and again on the first touch of the page,
   // in case the browser held it back until then; the cue itself begins with the story card (onStory)
@@ -64,6 +84,12 @@ export function runIntro(root, input, { onDone, onTitle, onMusic, onStory } = {}
   }
 
   (async () => {
+    await wait(400);
+    if (!(soundAllowed && soundAllowed())) show('intro-begin', true);
+    await begin();
+    if (done) return;
+    show('intro-begin', false);
+    armSkip();
     await wait(900);
     show('intro-true', true); await wait(3200); show('intro-true', false); await wait(1400);
     show('intro-story', true); if (onStory) onStory(); await wait(14000); if (!done) preload(); await wait(20000); show('intro-story', false); await wait(1400);
