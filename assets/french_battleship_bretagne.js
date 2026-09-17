@@ -2,7 +2,7 @@
 // 166 m, five twin 340 mm turrets on the centreline (two forward, one between the funnels, two
 // aft, the inner pair of each end superfiring), two funnels, a tripod foremast with its fire
 // control top, and a row of casemate guns along the hull. French navy light grey.
-import { warshipKit } from './lib/warship_kit.js?v=202609171515';
+import { warshipKit } from './lib/warship_kit.js?v=202609171534';
 
 export default function (THREE) {
   const g = new THREE.Group();

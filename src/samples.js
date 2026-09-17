@@ -25,16 +25,17 @@ export class Samples {
       this.buf[n] = await this.a.ctx.decodeAudioData(await r.arrayBuffer()); return true;
     } catch (_) { return false; }
   }
-  // A music cue, fetched once and only when it is still wanted a moment later and the browser
-  // is letting sound play (a page nobody has touched yet cannot be heard, so it downloads nothing).
+  // A music cue, fetched once and only if it is still wanted a moment later (a quick sortie tapped
+  // straight away never asks for the title cue). It is downloaded and decoded at once, before the
+  // page has been touched: a browser will not play sound until then, but it will decode, so the cue
+  // is queued and starts the instant the first click or tap lets sound through, instead of only
+  // beginning to download at that moment.
   want(n, stillWanted, then) {
     if (!n || this.buf[n] || this.fetching[n] || !this.a.ctx) return;
-    const go = () => {
+    setTimeout(() => {
       if (this.buf[n] || this.fetching[n] || !stillWanted()) return;
-      if (this.a.ctx.state !== 'running') { setTimeout(go, 700); return; }
       this.fetching[n] = this.fetchClip(n).then((ok) => { if (ok && stillWanted()) then(); });
-    };
-    setTimeout(go, 600);
+    }, 250);
   }
   has(n) { return !!this.buf[n]; }
 
@@ -72,5 +73,5 @@ export class Samples {
     this.a.burst(0.05, 3000, b.duration, 0.3);
     return true;
   }
-}import { LITE } from './tier.js?v=202609171515';
+}import { LITE } from './tier.js?v=202609171534';
 

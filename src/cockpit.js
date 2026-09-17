@@ -1,4 +1,4 @@
-import { FT, MPH } from './config.js?v=202609171515';
+import { FT, MPH } from './config.js?v=202609171534';
 
 // Instrument panel for the first-person view, drawn on a 2D canvas in the RAF "basic six"
 // layout: airspeed, artificial horizon, climb; altimeter, direction indicator, turn & slip;

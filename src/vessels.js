@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { loadOrPlaceholder, findNamed } from './loader.js?v=202609171515';
-import { toWorld, KT } from './config.js?v=202609171515';
-import { terrainHeight } from './world/terrain.js?v=202609171515';
-import { foamStrip } from './world/foam.js?v=202609171515';
-import { seaHeight } from './world/sea.js?v=202609171515';
+import { loadOrPlaceholder, findNamed } from './loader.js?v=202609171534';
+import { toWorld, KT } from './config.js?v=202609171534';
+import { terrainHeight } from './world/terrain.js?v=202609171534';
+import { foamStrip } from './world/foam.js?v=202609171534';
+import { seaHeight } from './world/sea.js?v=202609171534';
 
 export const VESSEL_TYPES = {
   uboat: { asset: 'assets/uboat_viic.js', length: 67.1, beam: 6.2, kind: 'submarine', faction: 'german', label: 'German U-boat (Type VIIC)', hp: 1.0, surfSpeed: 17, subSpeed: 6, flak: true },
