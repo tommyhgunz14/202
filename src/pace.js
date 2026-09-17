@@ -1,4 +1,4 @@
-import { LITE } from './tier.js?v=202609171500';
+import { LITE } from './tier.js?v=202609171508';
 
 // Quick play: the sortie cut down to its action, for phones and short sittings. The aircraft starts
 // in the air most of the way to the area, the quiet stretches can be run at six times speed, the

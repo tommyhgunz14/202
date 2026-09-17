@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { COAST, PEAKS, RIDGES, pointInPoly, distToPoly, FRENCH_HARBOUR } from '../data/geo.js?v=202609171500';
-import { toWorld, H_SCALE, V_SCALE, WORLD_HALF, GIB_ZOOM } from '../config.js?v=202609171500';
-import { loadTex, terrainDetail } from './textures.js?v=202609171500';
-import { LITE } from '../tier.js?v=202609171500';
+import { COAST, PEAKS, RIDGES, pointInPoly, distToPoly, FRENCH_HARBOUR } from '../data/geo.js?v=202609171508';
+import { toWorld, H_SCALE, V_SCALE, WORLD_HALF, GIB_ZOOM } from '../config.js?v=202609171508';
+import { loadTex, terrainDetail } from './textures.js?v=202609171508';
+import { LITE } from '../tier.js?v=202609171508';
 
 // Convert coast polygons to world space once.
 const POLYS = {};

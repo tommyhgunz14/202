@@ -1,9 +1,9 @@
-import { AIRCRAFT, SCORE_LABELS, availableOn } from './data/aircraft.js?v=202609171500';
-import { MISSIONS, PILOT } from './data/missions.js?v=202609171500';
-import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171500';
-import { PLATES } from './data/archive.js?v=202609171500';
-import { PACE } from './pace.js?v=202609171500';
-import { forDevice } from './keys.js?v=202609171500';
+import { AIRCRAFT, SCORE_LABELS, availableOn } from './data/aircraft.js?v=202609171508';
+import { MISSIONS, PILOT } from './data/missions.js?v=202609171508';
+import { PLANS, DEFAULT_PLAN } from './data/plans.js?v=202609171508';
+import { PLATES } from './data/archive.js?v=202609171508';
+import { PACE } from './pace.js?v=202609171508';
+import { forDevice } from './keys.js?v=202609171508';
 
 // period photographs (Atlas, RAF official style) shown at the start of a sortie
 const PHOTOS = ['photo_london_gunwharf.jpg', 'photo_briefing.jpg', 'photo_swordfish_slip.jpg', 'photo_sunderland_moor.jpg', 'photo_uboat_air.jpg', 'photo_destroyer.jpg', 'photo_crew_dusk.jpg'];

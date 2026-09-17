@@ -1,11 +1,11 @@
-import { partBox } from '../collide.js?v=202609171500';
+import { partBox } from '../collide.js?v=202609171508';
 import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
-import { toWorld, H_SCALE, V_SCALE, GIB_ZOOM } from '../config.js?v=202609171500';
-import { terrainHeight, rockFrame } from './terrain.js?v=202609171500';
-import { FRENCH_HARBOUR } from '../data/geo.js?v=202609171500';
-import { planarUVs, texture } from './textures.js?v=202609171500';
-import { LITE } from '../tier.js?v=202609171500';
+import { toWorld, H_SCALE, V_SCALE, GIB_ZOOM } from '../config.js?v=202609171508';
+import { terrainHeight, rockFrame } from './terrain.js?v=202609171508';
+import { FRENCH_HARBOUR } from '../data/geo.js?v=202609171508';
+import { planarUVs, texture } from './textures.js?v=202609171508';
+import { LITE } from '../tier.js?v=202609171508';
 
 // which generated texture dresses each material key, and the tile size in metres
 const TEX = { tile: ['roof_tiles', 2.5], white: ['rendered_wall', 4], ochre: ['rendered_wall', 4], pink: ['rendered_wall', 4], cream: ['rendered_wall', 4],

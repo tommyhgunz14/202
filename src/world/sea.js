@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { WORLD_HALF } from '../config.js?v=202609171500';
-import { terrainHeight } from './terrain.js?v=202609171500';
-import { LITE } from '../tier.js?v=202609171500';
+import { WORLD_HALF } from '../config.js?v=202609171508';
+import { terrainHeight } from './terrain.js?v=202609171508';
+import { LITE } from '../tier.js?v=202609171508';
 
 // Sea surface. Vertex: seven directional waves of different lengths, headings and phases summed
 // (no two share a direction, so the swell never reads as a grid). Fragment: the analytic slope of
@@ -137,7 +137,9 @@ void main() {
 // Two tiers share one material: a coarse far plane covering the whole world and a fine patch
 // (10 m vertex spacing) that follows the camera so the swell has real shape close in.
 export function buildSea(sunDir, fogColor, fogDensity, depthTex = null) {
-  const geo = new THREE.PlaneGeometry(WORLD_HALF * 2.4, WORLD_HALF * 2.4, LITE ? 100 : 160, LITE ? 100 : 160);
+  // out to 27 km from the centre: the navigator turns the aircraft back at 20 km (main.js), and the
+  // haze hides what lies beyond
+  const geo = new THREE.PlaneGeometry(WORLD_HALF * 3.4, WORLD_HALF * 3.4, LITE ? 100 : 160, LITE ? 100 : 160);
   geo.rotateX(-Math.PI / 2);
   const mat = new THREE.ShaderMaterial({
     vertexShader: VERT_SRC, fragmentShader: FRAG,
